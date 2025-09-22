@@ -1,0 +1,309 @@
+# -------------------------------
+# Global / OS
+# -------------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+*.swp
+*.swo
+*.tmp
+*.temp
+*.bak
+*.orig
+*.log
+*.pid
+*.seed
+*.cover
+*.tgz
+*.tar.gz
+
+# -------------------------------
+# Environment & Secrets
+# -------------------------------
+.env
+.env.*
+!.env.example
+.envrc
+*.key
+*.pem
+
+# -------------------------------
+# Python
+# -------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.python-version
+.Python
+dist/
+build/
+develop-eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+*.egg
+MANIFEST
+.installed.cfg
+# Virtual envs
+.env/
+.venv/
+venv/
+env/
+ENV/
+# Testing & coverage
+.coverage
+.coverage.*
+.cache/
+.pytest_cache/
+.tox/
+.nox/
+coverage.xml
+htmlcov/
+.hypothesis/
+# Type check / tooling
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+.dmypy.json
+# Packaging / lock
+pip-log.txt
+pip-delete-this-directory.txt
+pip-selfcheck.json
+# Framework / libs
+__pypackages__/
+site/
+# Jupyter / IPython
+.ipynb_checkpoints/
+profile_default/
+.ipython/
+# Misc Python
+.pybuilder/
+.pyre/
+# Django / Flask
+staticfiles/
+media/
+instance/
+*.mo
+*.pot
+
+# -------------------------------
+# JavaScript / Node / Frontend
+# -------------------------------
+node_modules/
+bower_components/
+jspm_packages/
+web_modules/
+dist/
+build/
+.cache/
+.tmp/
+.temp/
+.nyc_output/
+coverage/
+lib-cov/
+*.lcov
+.parcel-cache/
+.next/
+.out/
+.nuxt/
+.svelte-kit/
+.storybook/out/
+.storybook-static/
+.vite/
+.vite-inspect/
+.turbo/
+.eslintcache
+.stylelintcache
+.pnpm-store/
+.yarn-cache/
+.yarn/**
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.yarnrc.yml
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+# Lockfiles (keep usually) - uncomment to ignore
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# -------------------------------
+# Go
+# -------------------------------
+bin/
+build/
+dist/
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.o
+*.a
+# Coverage
+coverage.txt
+coverage.out
+# Dependency / modules cache (normally keep go.sum)
+# vendor/
+# Temporary
+*.tmp
+
+# -------------------------------
+# Java / JVM
+# -------------------------------
+# Build output
+target/
+build/
+out/
+classes/
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+# Gradle
+.gradle/
+**/build/
+gradle-app.setting
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+# Logs
+hs_err_pid*
+replay_pid*
+# Compiled
+*.class
+# Packaging
+*.war
+*.ear
+*.jar
+*.nar
+*.zip
+*.tar
+*.tar.gz
+# Annotation processing
+.generated/
+# Lombok
+lombok.config
+
+# -------------------------------
+# Editors / IDEs
+# -------------------------------
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.sample.json
+.history/
+*.sublime-workspace
+*.sublime-project
+
+# -------------------------------
+# Containers / Cloud (generic)
+# -------------------------------
+.dockerignore
+docker-compose.override.yml
+*.dockerfile.local
+# Kubernetes local
+k8s-local/
+
+# -------------------------------
+# Misc Tools
+# -------------------------------
+.psql_history
+.rediscli_history
+sqlite.db
+*.sqlite3
+*.db
+*.db-*
+.mirror/
+.cache-loader/
+*.orig
+
+# -------------------------------
+# Archives / Dumps
+# -------------------------------
+*.sql
+*.sqlite
+dump.rdb
+*.7z
+*.rar
+*.gz
+*.bz2
+*.zip
+
+# -------------------------------
+# Coverage / Reports (generic)
+# -------------------------------
+coverage-final.json
+lcov.info
+reports/
+report/
+
+# -------------------------------
+# Security / Audit
+# -------------------------------
+.secrets/
+secret/
+secrets/
+*.secrets.*
+*.credential
+.credentials/
+
+# -------------------------------
+# Lock / State
+# -------------------------------
+.yarn-integrity
+pnpm-debug.log
+
+# -------------------------------
+# Temporary Merge / Patches
+# -------------------------------
+*.rej
+*.patch
+*.orig
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+
+# -------------------------------
+# C / C++ (indirect via extensions)
+# -------------------------------
+*.obj
+*.pch
+*.pdb
+
+# -------------------------------
+# Ignore generated documentation
+# -------------------------------
+docs/_build/
+site/
+
+# -------------------------------
+# Optional: Uncomment to ignore IDE metadata you keep
+# -------------------------------
+# .idea/
+# .vscode/

@@ -7,7 +7,8 @@ import axios from 'axios';
 export const VERSION = '0.1.0';
 
 export interface TavoConfig {
-  apiKey: string;
+  apiKey?: string;
+  jwtToken?: string;
   baseURL?: string;
   apiVersion?: string;
   timeout?: number;
@@ -77,8 +78,14 @@ export class TavoClient {
   private readonly axios: any;
 
   constructor(config: TavoConfig) {
+    // Validate authentication
+    if (!config.apiKey && !config.jwtToken) {
+      throw new Error('Either API key or JWT token must be provided');
+    }
+
     this.config = {
-      apiKey: config.apiKey,
+      apiKey: config.apiKey || '',
+      jwtToken: config.jwtToken || '',
       baseURL: config.baseURL || 'https://api.tavo.ai',
       apiVersion: config.apiVersion || 'v1',
       timeout: config.timeout || 30000,
@@ -90,14 +97,22 @@ export class TavoClient {
   }
 
   private createAxiosInstance() {
+    const headers: any = {
+      'Content-Type': 'application/json',
+      'User-Agent': `tavo-js-sdk/${VERSION}`,
+    };
+
+    // Set authentication header
+    if (this.config.jwtToken) {
+      headers['Authorization'] = `Bearer ${this.config.jwtToken}`;
+    } else if (this.config.apiKey) {
+      headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+    }
+
     return axios.create({
       baseURL: `${this.config.baseURL}/api/${this.config.apiVersion}`,
       timeout: this.config.timeout,
-      headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
-        'Content-Type': 'application/json',
-        'User-Agent': `tavo-js-sdk/${VERSION}`,
-      },
+      headers,
     });
   }
 
@@ -148,6 +163,64 @@ export class TavoClient {
       cancel: async (scanId: string): Promise<void> => {
         await this.axios.post(`/scans/${scanId}/cancel`);
       },
+
+      /**
+       * Scan rules operations
+       */
+      rules: {
+        /**
+         * Create scan rule
+         */
+        create: async (ruleData: any): Promise<any> => {
+          const response = await this.axios.post('/scans/rules', ruleData);
+          return response.data;
+        },
+
+        /**
+         * List scan rules
+         */
+        list: async (): Promise<any> => {
+          const response = await this.axios.get('/scans/rules');
+          return response.data;
+        },
+
+        /**
+         * Get scan rule
+         */
+        get: async (ruleId: string): Promise<any> => {
+          const response = await this.axios.get(`/scans/rules/${ruleId}`);
+          return response.data;
+        },
+
+        /**
+         * Update scan rule
+         */
+        update: async (ruleId: string, ruleData: any): Promise<any> => {
+          const response = await this.axios.put(`/scans/rules/${ruleId}`, ruleData);
+          return response.data;
+        },
+
+        /**
+         * Delete scan rule
+         */
+        delete: async (ruleId: string): Promise<void> => {
+          await this.axios.delete(`/scans/rules/${ruleId}`);
+        },
+
+        /**
+         * Upload scan rules file
+         */
+        upload: async (file: File): Promise<any> => {
+          const formData = new FormData();
+          formData.append('file', file);
+          const response = await this.axios.post('/scans/rules/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          return response.data;
+        },
+      },
     };
   }
 
@@ -173,6 +246,348 @@ export class TavoClient {
         scanId?: string;
       }): Promise<any> => {
         const response = await this.axios.get('/reports', { params });
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * Authentication operations
+   */
+  get auth() {
+    return {
+      /**
+       * Login with username/password
+       */
+      login: async (username: string, password: string): Promise<any> => {
+        const response = await this.axios.post('/auth/login', {
+          username,
+          password,
+        });
+        return response.data;
+      },
+
+      /**
+       * Register a new user
+       */
+      register: async (userData: any): Promise<any> => {
+        const response = await this.axios.post('/auth/register', userData);
+        return response.data;
+      },
+
+      /**
+       * Refresh JWT token
+       */
+      refreshToken: async (refreshToken: string): Promise<any> => {
+        const response = await this.axios.post('/auth/refresh', {
+          refresh_token: refreshToken,
+        });
+        return response.data;
+      },
+
+      /**
+       * Get current user info
+       */
+      me: async (): Promise<any> => {
+        const response = await this.axios.get('/auth/me');
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * User management operations
+   */
+  get users() {
+    return {
+      /**
+       * Create user (admin only)
+       */
+      create: async (userData: any): Promise<any> => {
+        const response = await this.axios.post('/users', userData);
+        return response.data;
+      },
+
+      /**
+       * List users (admin only)
+       */
+      list: async (): Promise<any> => {
+        const response = await this.axios.get('/users');
+        return response.data;
+      },
+
+      /**
+       * Get user details
+       */
+      get: async (userId: string): Promise<any> => {
+        const response = await this.axios.get(`/users/${userId}`);
+        return response.data;
+      },
+
+      /**
+       * Update user
+       */
+      update: async (userId: string, userData: any): Promise<any> => {
+        const response = await this.axios.put(`/users/${userId}`, userData);
+        return response.data;
+      },
+
+      /**
+       * Get current user profile
+       */
+      getMe: async (): Promise<any> => {
+        const response = await this.axios.get('/users/me');
+        return response.data;
+      },
+
+      /**
+       * Update current user profile
+       */
+      updateMe: async (userData: any): Promise<any> => {
+        const response = await this.axios.put('/users/me', userData);
+        return response.data;
+      },
+
+      /**
+       * API key operations
+       */
+      apiKeys: (() => ({
+        /**
+         * List my API keys
+         */
+        list: async (): Promise<any> => {
+          const response = await this.axios.get('/users/me/api-keys');
+          return response.data;
+        },
+
+        /**
+         * Create new API key
+         */
+        create: async (name: string, options?: any): Promise<any> => {
+          const response = await this.axios.post('/users/me/api-keys', {
+            name,
+            ...options,
+          });
+          return response.data;
+        },
+      }))(),
+    };
+  }
+
+  /**
+   * Job operations
+   */
+  get jobs() {
+    return {
+      /**
+       * Get job status
+       */
+      status: async (jobId: string): Promise<any> => {
+        const response = await this.axios.get(`/jobs/status/${jobId}`);
+        return response.data;
+      },
+
+      /**
+       * Get job dashboard
+       */
+      dashboard: async (): Promise<any> => {
+        const response = await this.axios.get('/jobs/dashboard');
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * Webhook operations
+   */
+  get webhooks() {
+    return {
+      /**
+       * List webhook events
+       */
+      listEvents: async (): Promise<any> => {
+        const response = await this.axios.get('/webhooks/events');
+        return response.data;
+      },
+
+      /**
+       * Get webhook event
+       */
+      getEvent: async (eventId: string): Promise<any> => {
+        const response = await this.axios.get(`/webhooks/events/${eventId}`);
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * AI analysis operations
+   */
+  get ai() {
+    return {
+      /**
+       * Analyze code for fixes
+       */
+      analyzeCode: async (scanId: string, options?: any): Promise<any> => {
+        const response = await this.axios.post(`/ai/analyze/${scanId}`, options || {});
+        return response.data;
+      },
+
+      /**
+       * Classify vulnerabilities
+       */
+      classifyVulnerabilities: async (scanId: string, options?: any): Promise<any> => {
+        const response = await this.axios.post(`/ai/classify/${scanId}`, options || {});
+        return response.data;
+      },
+
+      /**
+       * Calculate risk score
+       */
+      calculateRiskScore: async (scanId: string, options?: any): Promise<any> => {
+        const response = await this.axios.post(`/ai/risk-score/${scanId}`, options || {});
+        return response.data;
+      },
+
+      /**
+       * Generate compliance report
+       */
+      generateComplianceReport: async (scanId: string, options?: any): Promise<any> => {
+        const response = await this.axios.post(`/ai/compliance/${scanId}`, options || {});
+        return response.data;
+      },
+
+      /**
+       * Perform predictive analysis
+       */
+      predictiveAnalysis: async (scanId: string, options?: any): Promise<any> => {
+        const response = await this.axios.post(`/ai/predictive/${scanId}`, options || {});
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * Billing operations
+   */
+  get billing() {
+    return {
+      /**
+       * Get usage report
+       */
+      getUsage: async (): Promise<any> => {
+        const response = await this.axios.get('/billing/usage');
+        return response.data;
+      },
+
+      /**
+       * Get usage summary
+       */
+      getUsageSummary: async (): Promise<any> => {
+        const response = await this.axios.get('/billing/usage/summary');
+        return response.data;
+      },
+
+      /**
+       * Get subscription info
+       */
+      getSubscription: async (): Promise<any> => {
+        const response = await this.axios.get('/billing/subscription');
+        return response.data;
+      },
+
+      /**
+       * Get feature access
+       */
+      getFeatures: async (): Promise<any> => {
+        const response = await this.axios.get('/billing/features');
+        return response.data;
+      },
+
+      /**
+       * Get billing information
+       */
+      getBillingInfo: async (): Promise<any> => {
+        const response = await this.axios.get('/billing/billing');
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * Organization operations
+   */
+  get organizations() {
+    return {
+      /**
+       * Create organization
+       */
+      create: async (orgData: any): Promise<any> => {
+        const response = await this.axios.post('/organizations', orgData);
+        return response.data;
+      },
+
+      /**
+       * List organizations
+       */
+      list: async (): Promise<any> => {
+        const response = await this.axios.get('/organizations');
+        return response.data;
+      },
+
+      /**
+       * Get organization details
+       */
+      get: async (orgId: string): Promise<any> => {
+        const response = await this.axios.get(`/organizations/${orgId}`);
+        return response.data;
+      },
+
+      /**
+       * Update organization
+       */
+      update: async (orgId: string, orgData: any): Promise<any> => {
+        const response = await this.axios.put(`/organizations/${orgId}`, orgData);
+        return response.data;
+      },
+
+      /**
+       * List organization members
+       */
+      listMembers: async (orgId: string): Promise<any> => {
+        const response = await this.axios.get(`/organizations/${orgId}/members`);
+        return response.data;
+      },
+
+      /**
+       * Create organization invite
+       */
+      createInvite: async (orgId: string, inviteData: any): Promise<any> => {
+        const response = await this.axios.post(`/organizations/${orgId}/invites`, inviteData);
+        return response.data;
+      },
+
+      /**
+       * List organization invites
+       */
+      listInvites: async (orgId: string): Promise<any> => {
+        const response = await this.axios.get(`/organizations/${orgId}/invites`);
+        return response.data;
+      },
+
+      /**
+       * Accept organization invite
+       */
+      acceptInvite: async (token: string): Promise<any> => {
+        const response = await this.axios.post(`/organizations/invites/${token}/accept`);
+        return response.data;
+      },
+
+      /**
+       * Reject organization invite
+       */
+      rejectInvite: async (token: string): Promise<any> => {
+        const response = await this.axios.post(`/organizations/invites/${token}/reject`);
         return response.data;
       },
     };
