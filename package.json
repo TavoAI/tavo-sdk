@@ -1,0 +1,67 @@
+{
+  "name": "tavo-api",
+  "version": "0.1.0",
+  "description": "Tavo AI SDK Monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "bootstrap": "npm install",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "test:all": "npm run test",
+    "test:integration": "npm run test:integration --workspaces",
+    "test:performance": "npm run test:performance --workspaces",
+    "codegen": "npm run codegen --workspace=tools/codegen",
+    "release": "npm run release --workspace=tools/release",
+    "release:python": "npm run release --workspace=packages/python",
+    "release:javascript": "npm run release --workspace=packages/javascript",
+    "release:java": "npm run release --workspace=packages/java",
+    "release:go": "npm run release --workspace=packages/go",
+    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspaces",
+    "clean": "npm run clean --workspaces",
+    "mock:start": "npm run start --workspace=tools/testing",
+    "docs:build": "npm run build --workspace=docs",
+    "docs:serve": "npm run serve --workspace=docs"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.26.0",
+    "@types/node": "^20.0.0",
+    "lerna": "^7.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^13.0.0",
+    "markdownlint-cli": "^0.35.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TavoAI/tavo-api.git"
+  },
+  "author": "Tavo AI",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TavoAI/tavo-api/issues"
+  },
+  "homepage": "https://github.com/TavoAI/tavo-api#readme",
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{md,markdown}": [
+      "markdownlint --fix"
+    ],
+    "*.{py}": [
+      "black",
+      "isort"
+    ]
+  }
+}
