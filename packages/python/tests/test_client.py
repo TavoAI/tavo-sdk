@@ -60,7 +60,7 @@ class TestTavoClient:
     def test_init_no_api_key(self):
         """Test client initialization without API key"""
         with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(ValueError, match="API key must be provided"):
+            with pytest.raises(ValueError, match="Either API key or JWT token must be provided"):
                 TavoClient()
 
     def test_init_custom_config(self):

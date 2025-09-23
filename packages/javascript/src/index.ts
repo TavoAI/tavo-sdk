@@ -73,6 +73,46 @@ export interface CodeLocation {
   snippet?: string;
 }
 
+export interface ReportRequest {
+  scanId: string;
+  reportType?: 'scan_summary' | 'compliance' | 'sarif' | 'custom';
+  format?: 'json' | 'sarif' | 'pdf' | 'csv' | 'html';
+  title?: string;
+  description?: string;
+  complianceFramework?: string;
+}
+
+export interface ReportResult {
+  id: string;
+  reportId: string;
+  title: string;
+  reportType: string;
+  format: string;
+  status: 'generating' | 'completed' | 'failed';
+  scanId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+  content?: any;
+  filePath?: string;
+  fileSize?: number;
+  complianceFramework?: string;
+  totalFindings?: number;
+  criticalCount?: number;
+  highCount?: number;
+  mediumCount?: number;
+  lowCount?: number;
+  infoCount?: number;
+}
+
+export interface ReportSummary {
+  totalReports: number;
+  reportsByType: Record<string, number>;
+  reportsByStatus: Record<string, number>;
+  recentReports: number;
+}
+
 export class TavoClient {
   private readonly config: Required<TavoConfig>;
   private readonly axios: any;
@@ -158,10 +198,19 @@ export class TavoClient {
       },
 
       /**
-       * Cancel a scan
+       * Get scan results
        */
-      cancel: async (scanId: string): Promise<void> => {
-        await this.axios.post(`/scans/${scanId}/cancel`);
+      results: async (scanId: string, params?: any): Promise<any> => {
+        const response = await this.axios.get(`/scans/${scanId}/results`, { params });
+        return response.data;
+      },
+
+      /**
+       * Cancel a running scan
+       */
+      cancel: async (scanId: string): Promise<{ message: string }> => {
+        const response = await this.axios.post(`/scans/${scanId}/cancel`);
+        return response.data;
       },
 
       /**
@@ -230,9 +279,17 @@ export class TavoClient {
   get reports() {
     return {
       /**
-       * Get report details
+       * Create a new report
        */
-      get: async (reportId: string): Promise<any> => {
+      create: async (reportData: ReportRequest): Promise<ReportResult> => {
+        const response = await this.axios.post('/reports', reportData);
+        return response.data;
+      },
+
+      /**
+       * Get report by ID
+       */
+      get: async (reportId: string): Promise<ReportResult> => {
         const response = await this.axios.get(`/reports/${reportId}`);
         return response.data;
       },
@@ -243,9 +300,81 @@ export class TavoClient {
       list: async (params?: {
         limit?: number;
         offset?: number;
-        scanId?: string;
-      }): Promise<any> => {
+        scan_id?: string;
+        format?: string;
+      }): Promise<{ reports: ReportResult[]; total: number }> => {
         const response = await this.axios.get('/reports', { params });
+        return response.data;
+      },
+
+      /**
+       * Update report
+       */
+      update: async (reportId: string, reportData: Partial<ReportRequest>): Promise<ReportResult> => {
+        const response = await this.axios.put(`/reports/${reportId}`, reportData);
+        return response.data;
+      },
+
+      /**
+       * Delete report
+       */
+      delete: async (reportId: string): Promise<void> => {
+        await this.axios.delete(`/reports/${reportId}`);
+      },
+
+      /**
+       * Download report in specified format
+       */
+      download: async (reportId: string, format?: string): Promise<Blob> => {
+        const params = format ? { format } : {};
+        const response = await this.axios.get(`/reports/${reportId}/download`, {
+          params,
+          responseType: 'blob',
+        });
+        return response.data;
+      },
+
+      /**
+       * Generate PDF report
+       */
+      generatePdf: async (scanId: string): Promise<ReportResult> => {
+        const response = await this.axios.post('/reports/generate', {
+          scan_id: scanId,
+          format: 'pdf',
+        });
+        return response.data;
+      },
+
+      /**
+       * Generate CSV report
+       */
+      generateCsv: async (scanId: string): Promise<ReportResult> => {
+        const response = await this.axios.post('/reports/generate', {
+          scan_id: scanId,
+          format: 'csv',
+        });
+        return response.data;
+      },
+
+      /**
+       * Generate JSON report
+       */
+      generateJson: async (scanId: string): Promise<ReportResult> => {
+        const response = await this.axios.post('/reports/generate', {
+          scan_id: scanId,
+          format: 'json',
+        });
+        return response.data;
+      },
+
+      /**
+       * Generate SARIF report
+       */
+      generateSarif: async (scanId: string): Promise<ReportResult> => {
+        const response = await this.axios.post('/reports/generate', {
+          scan_id: scanId,
+          format: 'sarif',
+        });
         return response.data;
       },
     };
@@ -509,6 +638,16 @@ export class TavoClient {
        */
       getBillingInfo: async (): Promise<any> => {
         const response = await this.axios.get('/billing/billing');
+        return response.data;
+      },
+
+      /**
+       * Upgrade subscription
+       */
+      upgradeSubscription: async (newTier: string): Promise<any> => {
+        const response = await this.axios.post('/billing/upgrade', null, {
+          params: { new_tier: newTier }
+        });
         return response.data;
       },
     };

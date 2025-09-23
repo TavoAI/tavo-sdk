@@ -155,10 +155,6 @@ class TavoClient:
         """Access scan-related operations"""
         return ScanOperations(self)
 
-    def reports(self):
-        """Access report-related operations"""
-        return ReportOperations(self)
-
     def webhooks(self):
         """Access webhook operations"""
         return WebhookOperations(self)
@@ -170,6 +166,10 @@ class TavoClient:
     def billing(self):
         """Access billing operations"""
         return BillingOperations(self)
+
+    def reports(self):
+        """Access report operations"""
+        return ReportOperations(self)
 
 
 class ScanOperations:
@@ -191,6 +191,12 @@ class ScanOperations:
         """List scans"""
         return await self._client._request("GET", "/scans", params=params)
 
+    async def results(self, scan_id: str, **params) -> Dict[str, Any]:
+        """Get scan results"""
+        return await self._client._request(
+            "GET", f"/scans/{scan_id}/results", params=params
+        )
+
     async def cancel(self, scan_id: str) -> Dict[str, Any]:
         """Cancel a running scan"""
         return await self._client._request("POST", f"/scans/{scan_id}/cancel")
@@ -198,21 +204,6 @@ class ScanOperations:
     def rules(self):
         """Access scan rules operations"""
         return ScanRuleOperations(self._client)
-
-
-class ReportOperations:
-    """Operations for reports"""
-
-    def __init__(self, client: TavoClient):
-        self._client = client
-
-    async def get(self, report_id: str) -> Dict[str, Any]:
-        """Get report details"""
-        return await self._client._request("GET", f"/reports/{report_id}")
-
-    async def list(self, **params) -> Dict[str, Any]:
-        """List reports"""
-        return await self._client._request("GET", "/reports", params=params)
 
 
 class AuthOperations:
@@ -538,3 +529,168 @@ class BillingOperations:
         """Get billing information."""
         response = await self._client._request("GET", "/billing/billing")
         return response
+
+    async def upgrade_subscription(self, new_tier: str) -> Dict[str, Any]:
+        """Upgrade subscription tier."""
+        params = {"new_tier": new_tier}
+        response = await self._client._request(
+            "POST", "/billing/upgrade", params=params
+        )
+        return response
+
+
+class ReportOperations:
+    """Operations for security reports"""
+
+    def __init__(self, client: "TavoClient"):
+        self._client = client
+
+    async def create(
+        self,
+        scan_id: str,
+        report_type: str = "scan_summary",
+        format: str = "json",
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Create a new report"""
+        data = {
+            "scan_id": scan_id,
+            "report_type": report_type,
+            "format": format,
+            "title": title,
+            "description": description,
+            **kwargs
+        }
+        return await self._client._request("POST", "/reports", data=data)
+
+    async def get(self, report_id: str) -> Dict[str, Any]:
+        """Get report details"""
+        return await self._client._request("GET", f"/reports/{report_id}")
+
+    async def list(
+        self,
+        skip: Optional[int] = None,
+        limit: Optional[int] = None,
+        report_type: Optional[str] = None,
+        status: Optional[str] = None,
+        scan_id: Optional[str] = None,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
+        **params
+    ) -> Dict[str, Any]:
+        """List reports with optional filtering"""
+        query_params = {
+            "skip": skip,
+            "limit": limit,
+            "report_type": report_type,
+            "status": status,
+            "scan_id": scan_id,
+            "sort_by": sort_by,
+            "sort_order": sort_order,
+            **params
+        }
+        # Remove None values
+        query_params = {k: v for k, v in query_params.items() if v is not None}
+        return await self._client._request("GET", "/reports", params=query_params)
+
+    async def update(self, report_id: str, report_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update report status and content"""
+        return await self._client._request("PUT", f"/reports/{report_id}", data=report_data)
+
+    async def delete(self, report_id: str) -> Dict[str, Any]:
+        """Delete a report"""
+        await self._client._request("DELETE", f"/reports/{report_id}")
+        return {"message": "Report deleted successfully"}
+
+    async def download(self, report_id: str) -> Dict[str, Any]:
+        """Download report file content"""
+        # For now, return the report data
+        # TODO: Implement actual file download for binary formats
+        report = await self.get(report_id)
+        return report
+
+    async def get_summary(self) -> Dict[str, Any]:
+        """Get report summary statistics"""
+        return await self._client._request("GET", "/reports/summary")
+
+    async def generate_scan_summary(
+        self,
+        scan_id: str,
+        format: str = "json",
+        title: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Generate a scan summary report"""
+        return await self.create(
+            scan_id=scan_id,
+            report_type="scan_summary",
+            format=format,
+            title=title,
+            description=description
+        )
+
+    async def generate_sarif(
+        self,
+        scan_id: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Generate a SARIF report"""
+        return await self.create(
+            scan_id=scan_id,
+            report_type="sarif",
+            format="sarif",
+            title=title,
+            description=description
+        )
+
+    async def generate_compliance(
+        self,
+        scan_id: str,
+        framework: str = "OWASP",
+        format: str = "json",
+        title: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Generate a compliance report"""
+        return await self.create(
+            scan_id=scan_id,
+            report_type="compliance",
+            format=format,
+            title=title,
+            description=description,
+            compliance_framework=framework
+        )
+
+    async def generate_pdf(
+        self,
+        scan_id: str,
+        report_type: str = "scan_summary",
+        title: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Generate a PDF report"""
+        return await self.create(
+            scan_id=scan_id,
+            report_type=report_type,
+            format="pdf",
+            title=title,
+            description=description
+        )
+
+    async def generate_csv(
+        self,
+        scan_id: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Generate a CSV report"""
+        return await self.create(
+            scan_id=scan_id,
+            report_type="scan_summary",
+            format="csv",
+            title=title,
+            description=description
+        )
