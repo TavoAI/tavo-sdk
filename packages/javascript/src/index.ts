@@ -325,10 +325,8 @@ export class TavoClient {
       /**
        * Download report in specified format
        */
-      download: async (reportId: string, format?: string): Promise<Blob> => {
-        const params = format ? { format } : {};
+      download: async (reportId: string): Promise<Blob> => {
         const response = await this.axios.get(`/reports/${reportId}/download`, {
-          params,
           responseType: 'blob',
         });
         return response.data;
@@ -374,6 +372,17 @@ export class TavoClient {
         const response = await this.axios.post('/reports/generate', {
           scan_id: scanId,
           format: 'sarif',
+        });
+        return response.data;
+      },
+
+      /**
+       * Generate HTML report
+       */
+      generateHtml: async (scanId: string): Promise<ReportResult> => {
+        const response = await this.axios.post('/reports/generate', {
+          scan_id: scanId,
+          format: 'html',
         });
         return response.data;
       },

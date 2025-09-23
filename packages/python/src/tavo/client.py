@@ -604,12 +604,14 @@ class ReportOperations:
         await self._client._request("DELETE", f"/reports/{report_id}")
         return {"message": "Report deleted successfully"}
 
-    async def download(self, report_id: str) -> Dict[str, Any]:
+    async def download(self, report_id: str) -> bytes:
         """Download report file content"""
-        # For now, return the report data
-        # TODO: Implement actual file download for binary formats
-        report = await self.get(report_id)
-        return report
+        # Make direct HTTP request to get the file content
+        response = await self._client._client.get(
+            f"/reports/{report_id}/download"
+        )
+        response.raise_for_status()
+        return response.content
 
     async def get_summary(self) -> Dict[str, Any]:
         """Get report summary statistics"""
@@ -691,6 +693,22 @@ class ReportOperations:
             scan_id=scan_id,
             report_type="scan_summary",
             format="csv",
+            title=title,
+            description=description
+        )
+
+    async def generate_html(
+        self,
+        scan_id: str,
+        report_type: str = "scan_summary",
+        title: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Generate an HTML report"""
+        return await self.create(
+            scan_id=scan_id,
+            report_type=report_type,
+            format="html",
             title=title,
             description=description
         )
