@@ -1,5 +1,4 @@
 package tavo
-package tavo
 
 import (
 	"os"
