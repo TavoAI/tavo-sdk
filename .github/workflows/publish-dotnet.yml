@@ -1,0 +1,65 @@
+name: Publish .NET SDK
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Publish to NuGet
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Update version
+      run: |
+        cd packages/dotnet
+        # Update version in .csproj file
+        sed -i "s/<Version>.*<\/Version>/<Version>${{ inputs.version }}<\/Version>/" TavoAI.csproj
+
+    - name: Restore dependencies
+      run: |
+        cd packages/dotnet
+        dotnet restore
+
+    - name: Build package
+      run: |
+        cd packages/dotnet
+        dotnet build --configuration Release
+
+    - name: Run tests
+      run: |
+        cd packages/dotnet
+        dotnet test --configuration Release
+
+    - name: Pack NuGet package
+      run: |
+        cd packages/dotnet
+        dotnet pack --configuration Release --output nupkg
+
+    - name: Publish to NuGet
+      run: |
+        cd packages/dotnet
+        dotnet nuget push "nupkg/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+    - name: Create Git tag
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag dotnet-v${{ inputs.version }}
+        git push origin dotnet-v${{ inputs.version }}
+
+    - name: Notify success
+      run: |
+        echo "✅ .NET SDK v${{ inputs.version }} published successfully!"
+        echo "📦 Available on NuGet: https://www.nuget.org/packages/TavoAI.SDK/${{ inputs.version }}"

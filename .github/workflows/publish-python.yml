@@ -1,0 +1,73 @@
+name: Publish Python SDK
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Update version
+      run: |
+        cd packages/python
+        # Update version in pyproject.toml
+        sed -i "s/version = \".*\"/version = \"${{ inputs.version }}\"/" pyproject.toml
+
+    - name: Build package
+      run: |
+        cd packages/python
+        python -m build
+
+    - name: Check package
+      run: |
+        cd packages/python
+        twine check dist/*
+
+    - name: Publish to TestPyPI
+      if: contains(inputs.version, 'alpha') || contains(inputs.version, 'beta')
+      run: |
+        cd packages/python
+        twine upload --repository testpypi dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+
+    - name: Publish to PyPI
+      if: ${{ !contains(inputs.version, 'alpha') && !contains(inputs.version, 'beta') }}
+      run: |
+        cd packages/python
+        twine upload dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
+    - name: Create Git tag
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag python-v${{ inputs.version }}
+        git push origin python-v${{ inputs.version }}
+
+    - name: Notify success
+      run: |
+        echo "✅ Python SDK v${{ inputs.version }} published successfully!"
+        echo "📦 Available on PyPI: https://pypi.org/project/tavo-ai-sdk/${{ inputs.version }}/"

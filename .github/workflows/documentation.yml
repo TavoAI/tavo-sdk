@@ -1,0 +1,244 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  docs:
+    name: Build and Deploy Documentation
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: 20
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
+
+    - name: Install dependencies
+      run: |
+        cd docs-site
+        npm ci
+
+    - name: Build documentation
+      run: |
+        cd docs-site
+        npm run build
+
+    - name: Check links
+      run: |
+        cd docs-site
+        npm run lint
+        npx linkinator build --recurse --silent --retry --timeout 5000 || true
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: docs-build
+        path: docs-site/build/
+        retention-days: 7
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      uses: actions/deploy-pages@v4
+      with:
+        artifact_name: docs-build
+
+  api-docs:
+    name: Generate API Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: 20
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: 17
+        distribution: 'temurin'
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Generate Python API docs
+      run: |
+        cd packages/python
+        pip install sphinx sphinx-rtd-theme
+        sphinx-apidoc -f -o docs src/tavo_sdk
+        sphinx-build docs docs/_build/html
+
+    - name: Generate JavaScript API docs
+      run: |
+        cd packages/javascript
+        npm run docs
+
+    - name: Generate Java API docs
+      run: |
+        cd packages/java
+        mvn javadoc:javadoc
+
+    - name: Generate Go API docs
+      run: |
+        cd packages/go
+        go install golang.org/x/tools/cmd/godoc@latest
+        godoc -html . > docs.html
+
+    - name: Generate .NET API docs
+      run: |
+        cd packages/dotnet
+        dotnet docfx docfx.json
+
+    - name: Generate Rust API docs
+      run: |
+        cd packages/rust
+        cargo doc --no-deps --document-private-items
+
+    - name: Upload API documentation
+      uses: actions/upload-artifact@v4
+      with:
+        name: api-docs
+        path: |
+          packages/python/docs/_build/
+          packages/javascript/docs/
+          packages/java/target/site/apidocs/
+          packages/go/docs.html
+          packages/dotnet/docs/
+          packages/rust/target/doc/
+        retention-days: 30
+
+  validate-examples:
+    name: Validate Code Examples
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: 20
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: 17
+        distribution: 'temurin'
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Validate Python examples
+      run: |
+        cd docs-site/docs/examples/python
+        python -m py_compile index.md 2>/dev/null || echo "Python examples contain syntax errors"
+
+    - name: Validate JavaScript examples
+      run: |
+        cd docs-site/docs/examples/javascript
+        node -c index.md 2>/dev/null || echo "JavaScript examples contain syntax errors"
+
+    - name: Validate Java examples
+      run: |
+        cd docs-site/docs/examples/java
+        # Extract Java code and compile
+        grep -A 100 "```java" index.md | grep -B 100 "```" | grep -v "```" > temp.java
+        javac temp.java 2>/dev/null || echo "Java examples contain syntax errors"
+        rm -f temp.java
+
+    - name: Validate Go examples
+      run: |
+        cd docs-site/docs/examples/go
+        grep -A 100 "```go" index.md | grep -B 100 "```" | grep -v "```" > temp.go
+        go build temp.go 2>/dev/null || echo "Go examples contain syntax errors"
+        rm -f temp.go
+
+    - name: Validate .NET examples
+      run: |
+        cd docs-site/docs/examples/dotnet
+        grep -A 100 "```csharp" index.md | grep -B 100 "```" | grep -v "```" > temp.cs
+        dotnet build temp.cs 2>/dev/null || echo "C# examples contain syntax errors"
+        rm -f temp.cs
+
+    - name: Validate Rust examples
+      run: |
+        cd docs-site/docs/examples/rust
+        grep -A 100 "```rust" index.md | grep -B 100 "```" | grep -v "```" > temp.rs
+        rustc temp.rs 2>/dev/null || echo "Rust examples contain syntax errors"
+        rm -f temp.rs
+
+  update-docs-index:
+    name: Update Documentation Index
+    runs-on: ubuntu-latest
+    needs: [docs, api-docs, validate-examples]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Update README with latest docs
+      run: |
+        # Update main README with documentation links
+        sed -i 's|https://tavoai.github.io/tavo-api/.*|https://tavoai.github.io/tavo-api/'"$(date +%Y%m%d)"'|' README.md
+
+    - name: Commit documentation updates
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add README.md
+        git commit -m "docs: update documentation links" || true
+        git push

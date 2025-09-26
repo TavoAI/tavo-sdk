@@ -1,0 +1,65 @@
+name: Publish Rust SDK
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Publish to Crates.io
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Update version
+      run: |
+        cd packages/rust
+        # Update version in Cargo.toml
+        sed -i "s/version = \".*\"/version = \"${{ inputs.version }}\"/" Cargo.toml
+
+    - name: Check formatting
+      run: |
+        cd packages/rust
+        cargo fmt --check
+
+    - name: Run clippy
+      run: |
+        cd packages/rust
+        cargo clippy -- -D warnings
+
+    - name: Run tests
+      run: |
+        cd packages/rust
+        cargo test
+
+    - name: Build documentation
+      run: |
+        cd packages/rust
+        cargo doc
+
+    - name: Publish to Crates.io
+      run: |
+        cd packages/rust
+        cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+
+    - name: Create Git tag
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag rust-v${{ inputs.version }}
+        git push origin rust-v${{ inputs.version }}
+
+    - name: Notify success
+      run: |
+        echo "✅ Rust SDK v${{ inputs.version }} published successfully!"
+        echo "📦 Available on Crates.io: https://crates.io/crates/tavo-sdk/${{ inputs.version }}"
