@@ -22,7 +22,7 @@ export const environment = {
   production: false,
   tavo: {
     apiKey: 'your-api-key-here',
-    baseUrl: 'https://api.tavo.ai',
+    baseUrl: 'https://api.tavoai.net',
     timeout: 30000,
   },
 };
@@ -34,7 +34,7 @@ export const environment = {
   production: true,
   tavo: {
     apiKey: process.env['TAVO_API_KEY'] || 'your-production-api-key',
-    baseUrl: 'https://api.tavo.ai',
+    baseUrl: 'https://api.tavoai.net',
     timeout: 30000,
   },
 };
@@ -803,7 +803,7 @@ export class ErrorInterceptor implements HttpInterceptor {
         }
 
         // Dispatch error action for Tavo API requests
-        if (req.url.includes('tavo.ai')) {
+        if (req.url.includes('tavoai.net')) {
           this.store.dispatch(TavoActions.scanCodeFailure({ error: errorMessage }));
         }
 
@@ -981,7 +981,7 @@ http {
         }
 
         location /api {
-            proxy_pass https://api.tavo.ai;
+            proxy_pass https://api.tavoai.net;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

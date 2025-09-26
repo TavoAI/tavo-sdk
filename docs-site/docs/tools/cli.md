@@ -167,7 +167,7 @@ Create a `.tavo.yaml` file in your project root:
 # Tavo CLI Configuration
 api:
   key: "${TAVO_API_KEY}"
-  base_url: "https://api.tavo.ai"
+  base_url: "https://api.tavoai.net"
   timeout: 30
 
 scanning:
@@ -379,7 +379,7 @@ go build -o opengrep ./cmd/opengrep
 
 ```bash
 # Test API connectivity
-curl -H "Authorization: Bearer $TAVO_API_KEY" https://api.tavo.ai/health
+curl -H "Authorization: Bearer $TAVO_API_KEY" https://api.tavoai.net/health
 
 # Check configuration
 tavo config list

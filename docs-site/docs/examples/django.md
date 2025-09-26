@@ -24,7 +24,7 @@ import os
 
 TAVO_CONFIG = {
     'API_KEY': os.getenv('TAVO_API_KEY'),
-    'BASE_URL': os.getenv('TAVO_BASE_URL', 'https://api.tavo.ai'),
+    'BASE_URL': os.getenv('TAVO_BASE_URL', 'https://api.tavoai.net'),
     'TIMEOUT': 30.0,
     'MAX_RETRIES': 3,
 }
@@ -451,7 +451,7 @@ class TavoServiceTest(TestCase):
 ```bash
 # Production environment variables
 TAVO_API_KEY=your-production-api-key
-TAVO_BASE_URL=https://api.tavo.ai
+TAVO_BASE_URL=https://api.tavoai.net
 TAVO_AUTO_SCAN=true
 ```
 

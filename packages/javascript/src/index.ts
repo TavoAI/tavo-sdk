@@ -126,7 +126,7 @@ export class TavoClient {
     this.config = {
       apiKey: config.apiKey || '',
       jwtToken: config.jwtToken || '',
-      baseURL: config.baseURL || 'https://api.tavo.ai',
+      baseURL: config.baseURL || 'https://api.tavoai.net',
       apiVersion: config.apiVersion || 'v1',
       timeout: config.timeout || 30000,
       maxRetries: config.maxRetries || 3,

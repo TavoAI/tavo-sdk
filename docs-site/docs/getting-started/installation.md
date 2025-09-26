@@ -63,7 +63,7 @@ Add to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>ai.tavo</groupId>
+    <groupId>net.tavoai</groupId>
     <artifactId>tavo-java-sdk</artifactId>
     <version>0.1.0</version>
 </dependency>
@@ -74,7 +74,7 @@ Add to your `pom.xml`:
 Add to your `build.gradle`:
 
 ```gradle
-implementation 'ai.tavo:tavo-java-sdk:0.1.0'
+implementation 'net.tavoai:tavo-java-sdk:0.1.0'
 ```
 
 ## Go SDK
@@ -121,7 +121,7 @@ set TAVO_API_KEY="your-api-key-here"
 ### Base URL Configuration (Optional)
 
 ```bash
-export TAVO_BASE_URL="https://api.tavo.ai"
+export TAVO_BASE_URL="https://api.tavoai.net"
 ```
 
 ## Next Steps

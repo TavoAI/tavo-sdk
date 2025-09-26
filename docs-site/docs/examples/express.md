@@ -19,7 +19,7 @@ npm install tavo-ai express cors helmet
 ```javascript
 // .env
 TAVO_API_KEY=your-api-key-here
-TAVO_BASE_URL=https://api.tavo.ai
+TAVO_BASE_URL=https://api.tavoai.net
 TAVO_TIMEOUT=30000
 TAVO_MAX_RETRIES=3
 ```
@@ -34,7 +34,7 @@ class TavoService {
     constructor() {
         this.config = new TavoConfig({
             apiKey: process.env.TAVO_API_KEY,
-            baseUrl: process.env.TAVO_BASE_URL || 'https://api.tavo.ai',
+            baseUrl: process.env.TAVO_BASE_URL || 'https://api.tavoai.net',
             timeout: parseInt(process.env.TAVO_TIMEOUT) || 30000,
             maxRetries: parseInt(process.env.TAVO_MAX_RETRIES) || 3,
         });
@@ -723,7 +723,7 @@ services:
       - "3000:3000"
     environment:
       - TAVO_API_KEY=${TAVO_API_KEY}
-      - TAVO_BASE_URL=https://api.tavo.ai
+      - TAVO_BASE_URL=https://api.tavoai.net
       - NODE_ENV=production
     restart: unless-stopped
 ```
@@ -735,7 +735,7 @@ services:
 ```bash
 # Production environment
 TAVO_API_KEY=your-production-api-key
-TAVO_BASE_URL=https://api.tavo.ai
+TAVO_BASE_URL=https://api.tavoai.net
 NODE_ENV=production
 PORT=3000
 CORS_ORIGIN=https://yourdomain.com

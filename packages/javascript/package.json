@@ -33,7 +33,7 @@
     "typescript",
     "javascript"
   ],
-  "author": "Tavo AI <dev@tavo.ai>",
+  "author": "Tavo AI <dev@tavoai.net>",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -43,7 +43,7 @@
   "bugs": {
     "url": "https://github.com/TavoAI/tavo-api/issues"
   },
-  "homepage": "https://docs.tavo.ai/javascript/",
+  "homepage": "https://docs.tavoai.net/javascript/",
   "engines": {
     "node": ">=16.0.0"
   },

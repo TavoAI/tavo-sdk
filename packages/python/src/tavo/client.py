@@ -16,7 +16,7 @@ class TavoConfig(BaseModel):
         default=None, description="JWT token for authentication"
     )
     base_url: str = Field(
-        default="https://api.tavo.ai", description="Base URL for API"
+        default="https://api.tavoai.net", description="Base URL for API"
     )
     api_version: str = Field(default="v1", description="API version to use")
     timeout: float = Field(
@@ -34,7 +34,7 @@ class TavoClient:
         self,
         api_key: Optional[str] = None,
         jwt_token: Optional[str] = None,
-        base_url: str = "https://api.tavo.ai",
+        base_url: str = "https://api.tavoai.net",
         api_version: str = "v1",
         timeout: float = 30.0,
         max_retries: int = 3,

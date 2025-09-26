@@ -19,7 +19,7 @@ pip install fastapi uvicorn httpx tavo-ai
 ```python
 # .env
 TAVO_API_KEY=your-api-key-here
-TAVO_BASE_URL=https://api.tavo.ai
+TAVO_BASE_URL=https://api.tavoai.net
 TAVO_TIMEOUT=30
 ```
 
@@ -31,7 +31,7 @@ from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     tavo_api_key: str = os.getenv("TAVO_API_KEY", "")
-    tavo_base_url: str = os.getenv("TAVO_BASE_URL", "https://api.tavo.ai")
+    tavo_base_url: str = os.getenv("TAVO_BASE_URL", "https://api.tavoai.net")
     tavo_timeout: int = int(os.getenv("TAVO_TIMEOUT", "30"))
 
     class Config:
@@ -666,7 +666,7 @@ import os
 def client():
     # Set test environment variables
     os.environ["TAVO_API_KEY"] = "test-api-key"
-    os.environ["TAVO_BASE_URL"] = "https://api.tavo.ai"
+    os.environ["TAVO_BASE_URL"] = "https://api.tavoai.net"
 
     with TestClient(app) as test_client:
         yield test_client
@@ -862,7 +862,7 @@ services:
       - "8000:8000"
     environment:
       - TAVO_API_KEY=${TAVO_API_KEY}
-      - TAVO_BASE_URL=https://api.tavo.ai
+      - TAVO_BASE_URL=https://api.tavoai.net
       - TAVO_TIMEOUT=30
     volumes:
       - .:/app
@@ -912,7 +912,7 @@ from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     tavo_api_key: str = os.getenv("TAVO_API_KEY", "")
-    tavo_base_url: str = os.getenv("TAVO_BASE_URL", "https://api.tavo.ai")
+    tavo_base_url: str = os.getenv("TAVO_BASE_URL", "https://api.tavoai.net")
     tavo_timeout: int = int(os.getenv("TAVO_TIMEOUT", "30"))
 
     # Production settings

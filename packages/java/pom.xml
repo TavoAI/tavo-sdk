@@ -5,7 +5,7 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ai.tavo</groupId>
+    <groupId>net.tavoai</groupId>
     <artifactId>tavo-java-sdk</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
@@ -24,9 +24,9 @@
     <developers>
         <developer>
             <name>Tavo AI</name>
-            <email>dev@tavo.ai</email>
+            <email>dev@tavoai.net</email>
             <organization>Tavo AI</organization>
-            <organizationUrl>https://tavo.ai</organizationUrl>
+            <organizationUrl>https://tavoai.net</organizationUrl>
         </developer>
     </developers>
 

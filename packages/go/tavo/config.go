@@ -19,7 +19,7 @@ type Config struct {
 // NewConfig creates a new configuration with default values
 func NewConfig() *Config {
 	config := &Config{
-		BaseURL:    "https://api.tavo.ai",
+		BaseURL:    "https://api.tavoai.net",
 		APIVersion: "v1",
 		Timeout:    30 * time.Second,
 		MaxRetries: 3,

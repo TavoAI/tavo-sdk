@@ -12,7 +12,7 @@ func main() {
 	// Create configuration
 	config := tavo.NewConfig().
 		WithAPIKey("your-api-key-here").
-		WithBaseURL("https://api.tavo.ai")
+		WithBaseURL("https://api.tavoai.net")
 
 	// Create client
 	client := tavo.NewClient(config)

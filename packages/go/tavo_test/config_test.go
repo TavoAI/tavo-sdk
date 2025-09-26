@@ -13,8 +13,8 @@ func TestNewConfig(t *testing.T) {
 		t.Fatal("NewConfig() returned nil")
 	}
 
-	if config.BaseURL != "https://api.tavo.ai" {
-		t.Errorf("Expected BaseURL to be 'https://api.tavo.ai', got '%s'", config.BaseURL)
+	if config.BaseURL != "https://api.tavoai.net" {
+		t.Errorf("Expected BaseURL to be 'https://api.tavoai.net', got '%s'", config.BaseURL)
 	}
 
 	if config.APIVersion != "v1" {

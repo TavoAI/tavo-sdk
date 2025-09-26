@@ -19,7 +19,7 @@ npm install tavo-ai axios vue-router vuex
 ```javascript
 // .env
 VUE_APP_TAVO_API_KEY=your-api-key-here
-VUE_APP_TAVO_BASE_URL=https://api.tavo.ai
+VUE_APP_TAVO_BASE_URL=https://api.tavoai.net
 VUE_APP_TAVO_TIMEOUT=30000
 ```
 
@@ -32,7 +32,7 @@ import axios from 'axios';
 class TavoService {
     constructor() {
         this.client = axios.create({
-            baseURL: process.env.VUE_APP_TAVO_BASE_URL || 'https://api.tavo.ai',
+            baseURL: process.env.VUE_APP_TAVO_BASE_URL || 'https://api.tavoai.net',
             timeout: parseInt(process.env.VUE_APP_TAVO_TIMEOUT) || 30000,
             headers: {
                 'Authorization': `Bearer ${process.env.VUE_APP_TAVO_API_KEY}`,
@@ -910,7 +910,7 @@ services:
       - "8080:8080"
     environment:
       - VUE_APP_TAVO_API_KEY=${TAVO_API_KEY}
-      - VUE_APP_TAVO_BASE_URL=https://api.tavo.ai
+      - VUE_APP_TAVO_BASE_URL=https://api.tavoai.net
     restart: unless-stopped
 ```
 
@@ -945,7 +945,7 @@ server {
     }
 
     location /api {
-        proxy_pass https://api.tavo.ai;
+        proxy_pass https://api.tavoai.net;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

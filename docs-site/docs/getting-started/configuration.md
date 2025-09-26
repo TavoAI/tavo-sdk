@@ -13,7 +13,7 @@ The SDK supports configuration through environment variables:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `TAVO_API_KEY` | Your API key for authentication | Required |
-| `TAVO_BASE_URL` | API base URL | `https://api.tavo.ai` |
+| `TAVO_BASE_URL` | API base URL | `https://api.tavoai.net` |
 | `TAVO_API_VERSION` | API version | `v1` |
 | `TAVO_TIMEOUT` | Request timeout in seconds | `30` |
 | `TAVO_MAX_RETRIES` | Maximum retry attempts | `3` |
@@ -29,7 +29,7 @@ client = TavoClient()
 # Explicit configuration
 config = TavoConfig(
     api_key="your-api-key",
-    base_url="https://api.tavo.ai",
+    base_url="https://api.tavoai.net",
     timeout=30.0,
     max_retries=3
 )
@@ -47,7 +47,7 @@ const client = new TavoClient();
 // Explicit configuration
 const client = new TavoClient({
   apiKey: 'your-api-key',
-  baseUrl: 'https://api.tavo.ai',
+  baseUrl: 'https://api.tavoai.net',
   timeout: 30000, // milliseconds
   maxRetries: 3,
 });
@@ -75,8 +75,8 @@ const client = new TavoClient(config);
 ## Java Configuration
 
 ```java
-import ai.tavo.TavoClient;
-import ai.tavo.TavoConfig;
+import net.tavoai.TavoClient;
+import net.tavoai.TavoConfig;
 
 // Using environment variables
 TavoClient client = new TavoClient();
@@ -84,7 +84,7 @@ TavoClient client = new TavoClient();
 // Builder pattern configuration
 TavoConfig config = TavoConfig.builder()
     .apiKey("your-api-key")
-    .baseUrl("https://api.tavo.ai")
+    .baseUrl("https://api.tavoai.net")
     .timeout(30, TimeUnit.SECONDS)
     .maxRetries(3)
     .build();
@@ -110,7 +110,7 @@ func main() {
     // Builder pattern configuration
     config := tavo.NewConfig().
         WithAPIKey("your-api-key").
-        WithBaseURL("https://api.tavo.ai").
+        WithBaseURL("https://api.tavoai.net").
         WithTimeout(30 * time.Second).
         WithMaxRetries(3)
 

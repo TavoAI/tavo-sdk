@@ -41,7 +41,7 @@ npm install @tavoai/sdk
 
 # Java
 <dependency>
-    <groupId>ai.tavo</groupId>
+    <groupId>net.tavoai</groupId>
     <artifactId>tavo-java-sdk</artifactId>
     <version>0.1.0</version>
 </dependency>
@@ -70,8 +70,8 @@ const result = await client.scanCode("console.log('hello world');");
 
 ```java
 // Java
-import ai.tavo.TavoClient;
-import ai.tavo.TavoConfig;
+import net.tavoai.TavoClient;
+import net.tavoai.TavoConfig;
 
 TavoConfig config = TavoConfig.builder()
     .apiKey("your-api-key")

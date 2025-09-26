@@ -7,7 +7,7 @@ name = "tavo-python-sdk"
 version = "0.1.0"
 description = "Python SDK for Tavo AI API"
 authors = [
-    {name = "Tavo AI", email = "dev@tavo.ai"}
+    {name = "Tavo AI", email = "dev@tavoai.net"}
 ]
 readme = "README.md"
 license = {text = "MIT"}
@@ -46,7 +46,7 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/TavoAI/tavo-api"
-Documentation = "https://docs.tavo.ai/python/"
+Documentation = "https://docs.tavoai.net/python/"
 Repository = "https://github.com/TavoAI/tavo-api"
 Issues = "https://github.com/TavoAI/tavo-api/issues"
 

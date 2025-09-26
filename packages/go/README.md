@@ -24,7 +24,7 @@ func main() {
     // Create configuration
     config := tavo.NewConfig().
         WithAPIKey("your-api-key-here").
-        WithBaseURL("https://api.tavo.ai")
+        WithBaseURL("https://api.tavoai.net")
 
     // Create client
     client := tavo.NewClient(config)
@@ -52,7 +52,7 @@ The SDK can be configured using environment variables or the builder pattern:
 ```go
 config := tavo.NewConfig().
     WithAPIKey("your-api-key").
-    WithBaseURL("https://api.tavo.ai").
+    WithBaseURL("https://api.tavoai.net").
     WithTimeout(30 * time.Second).
     WithMaxRetries(3)
 ```

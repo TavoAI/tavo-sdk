@@ -1,4 +1,4 @@
-package ai.tavo;
+package net.tavoai;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;

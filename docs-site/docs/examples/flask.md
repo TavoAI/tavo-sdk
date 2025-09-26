@@ -19,7 +19,7 @@ pip install tavo-ai flask flask-cors python-dotenv
 ```bash
 # .env
 TAVO_API_KEY=your-api-key-here
-TAVO_BASE_URL=https://api.tavo.ai
+TAVO_BASE_URL=https://api.tavoai.net
 TAVO_TIMEOUT=30.0
 TAVO_MAX_RETRIES=3
 FLASK_ENV=development
@@ -38,7 +38,7 @@ class TavoService:
     def __init__(self):
         self.config = TavoConfig(
             api_key=os.getenv('TAVO_API_KEY'),
-            base_url=os.getenv('TAVO_BASE_URL', 'https://api.tavo.ai'),
+            base_url=os.getenv('TAVO_BASE_URL', 'https://api.tavoai.net'),
             timeout=float(os.getenv('TAVO_TIMEOUT', 30.0)),
             max_retries=int(os.getenv('TAVO_MAX_RETRIES', 3)),
         )
@@ -861,7 +861,7 @@ services:
       - "5000:5000"
     environment:
       - TAVO_API_KEY=${TAVO_API_KEY}
-      - TAVO_BASE_URL=https://api.tavo.ai
+      - TAVO_BASE_URL=https://api.tavoai.net
       - FLASK_ENV=production
     restart: unless-stopped
 

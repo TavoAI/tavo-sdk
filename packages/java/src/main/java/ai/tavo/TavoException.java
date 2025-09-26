@@ -1,4 +1,4 @@
-package ai.tavo;
+package net.tavoai;
 
 /**
  * Exception thrown by Tavo API client operations

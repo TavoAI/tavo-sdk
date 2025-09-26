@@ -1,4 +1,4 @@
-package ai.tavo;
+package net.tavoai;
 
 import java.util.Map;
 

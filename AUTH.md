@@ -42,12 +42,12 @@ API keys provide secure, programmatic access to Tavo AI APIs.
 #### Obtaining an API Key
 
 1. **Via GitHub OAuth** (Fastest):
-   - Visit https://app.tavo.ai
+   - Visit https://app.tavoai.net
    - Sign in with GitHub
    - Copy your automatically generated API key
 
 2. **Via Email/Password**:
-   - Register at https://app.tavo.ai
+   - Register at https://app.tavoai.net
    - Verify your email
    - Access your API key from the dashboard
 
@@ -94,7 +94,7 @@ export TAVO_API_KEY=your-api-key
 export TAVO_JWT_TOKEN=your-jwt-token
 
 # Custom API endpoint (for development)
-export TAVO_BASE_URL=https://api.tavo.ai
+export TAVO_BASE_URL=https://api.tavoai.net
 ```
 
 ## Error Handling
@@ -187,7 +187,7 @@ See the `tests/integration.test.*` files in each SDK package for comprehensive t
 
 ### Getting Help
 
-- **SDK Documentation**: https://docs.tavo.ai
-- **API Reference**: https://api.tavo.ai/docs
+- **SDK Documentation**: https://docs.tavoai.net
+- **API Reference**: https://api.tavoai.net/docs
 - **GitHub Issues**: https://github.com/TavoAI/tavo-api/issues
-- **Support**: support@tavo.ai
+- **Support**: support@tavoai.net

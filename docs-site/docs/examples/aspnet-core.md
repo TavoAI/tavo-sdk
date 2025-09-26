@@ -23,7 +23,7 @@ dotnet add package Microsoft.Extensions.Configuration
 {
   "Tavo": {
     "ApiKey": "your-api-key-here",
-    "BaseUrl": "https://api.tavo.ai",
+    "BaseUrl": "https://api.tavoai.net",
     "TimeoutSeconds": 30
   },
   "Logging": {
@@ -54,7 +54,7 @@ builder.Services.AddHttpClient<ITavoClient, TavoClient>((serviceProvider, client
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
     var tavoConfig = configuration.GetSection("Tavo");
 
-    client.BaseAddress = new Uri(tavoConfig["BaseUrl"] ?? "https://api.tavo.ai");
+    client.BaseAddress = new Uri(tavoConfig["BaseUrl"] ?? "https://api.tavoai.net");
     client.Timeout = TimeSpan.FromSeconds(int.Parse(tavoConfig["TimeoutSeconds"] ?? "30"));
 
     var apiKey = tavoConfig["ApiKey"];
@@ -1201,7 +1201,7 @@ volumes:
 {
   "Tavo": {
     "ApiKey": "your-production-api-key",
-    "BaseUrl": "https://api.tavo.ai",
+    "BaseUrl": "https://api.tavoai.net",
     "TimeoutSeconds": 30
   },
   "Logging": {

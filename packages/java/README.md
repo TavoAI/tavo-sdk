@@ -10,7 +10,7 @@ Add the following dependency to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>ai.tavo</groupId>
+    <groupId>net.tavoai</groupId>
     <artifactId>tavo-java-sdk</artifactId>
     <version>0.1.0</version>
 </dependency>
@@ -21,19 +21,19 @@ Add the following dependency to your `pom.xml`:
 Add the following to your `build.gradle`:
 
 ```gradle
-implementation 'ai.tavo:tavo-java-sdk:0.1.0'
+implementation 'net.tavoai:tavo-java-sdk:0.1.0'
 ```
 
 ## Quick Start
 
 ```java
-import ai.tavo.TavoClient;
-import ai.tavo.TavoConfig;
+import net.tavoai.TavoClient;
+import net.tavoai.TavoConfig;
 
 // Create configuration
 TavoConfig config = TavoConfig.builder()
     .apiKey("your-api-key-here")
-    .baseUrl("https://api.tavo.ai")
+    .baseUrl("https://api.tavoai.net")
     .build();
 
 // Create client
@@ -59,7 +59,7 @@ The SDK can be configured using environment variables or the builder pattern:
 ```java
 TavoConfig config = TavoConfig.builder()
     .apiKey(System.getenv("TAVO_API_KEY"))
-    .baseUrl(System.getenv("TAVO_BASE_URL")) // Optional, defaults to https://api.tavo.ai
+    .baseUrl(System.getenv("TAVO_BASE_URL")) // Optional, defaults to https://api.tavoai.net
     .maxRetries(3) // Optional, defaults to 3
     .timeout(30000) // Optional, timeout in milliseconds
     .build();

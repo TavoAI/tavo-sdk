@@ -12,7 +12,7 @@ Add the Tavo AI dependency to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>ai.tavo</groupId>
+    <groupId>net.tavoai</groupId>
     <artifactId>tavo-java-sdk</artifactId>
     <version>1.0.0</version>
 </dependency>
@@ -21,7 +21,7 @@ Add the Tavo AI dependency to your `pom.xml`:
 Or for Gradle:
 
 ```gradle
-implementation 'ai.tavo:tavo-java-sdk:1.0.0'
+implementation 'net.tavoai:tavo-java-sdk:1.0.0'
 ```
 
 ## Configuration
@@ -31,7 +31,7 @@ implementation 'ai.tavo:tavo-java-sdk:1.0.0'
 ```properties
 # application.properties
 tavo.api.key=${TAVO_API_KEY:your-api-key-here}
-tavo.api.base-url=${TAVO_BASE_URL:https://api.tavo.ai}
+tavo.api.base-url=${TAVO_BASE_URL:https://api.tavoai.net}
 tavo.api.timeout=${TAVO_TIMEOUT:30000}
 tavo.api.max-retries=${TAVO_MAX_RETRIES:3}
 tavo.scanning.enabled=${TAVO_SCANNING_ENABLED:true}
@@ -44,8 +44,8 @@ tavo.scanning.rate-limit=${TAVO_RATE_LIMIT:100}
 // config/TavoConfig.java
 package com.example.tavo.config;
 
-import ai.tavo.sdk.TavoClient;
-import ai.tavo.sdk.TavoClientConfig;
+import net.tavoai.sdk.TavoClient;
+import net.tavoai.sdk.TavoClientConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -90,11 +90,11 @@ public class TavoConfiguration {
 // service/TavoService.java
 package com.example.tavo.service;
 
-import ai.tavo.sdk.TavoClient;
-import ai.tavo.sdk.model.ScanRequest;
-import ai.tavo.sdk.model.ScanResult;
-import ai.tavo.sdk.model.ReportRequest;
-import ai.tavo.sdk.model.ReportResult;
+import net.tavoai.sdk.TavoClient;
+import net.tavoai.sdk.model.ScanRequest;
+import net.tavoai.sdk.model.ScanResult;
+import net.tavoai.sdk.model.ReportRequest;
+import net.tavoai.sdk.model.ReportResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -181,7 +181,7 @@ public class TavoService {
 package com.example.tavo.controller;
 
 import com.example.tavo.service.TavoService;
-import ai.tavo.sdk.model.ScanResult;
+import net.tavoai.sdk.model.ScanResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -296,7 +296,7 @@ public class ScanController {
 package com.example.tavo.controller;
 
 import com.example.tavo.service.TavoService;
-import ai.tavo.sdk.model.ReportResult;
+import net.tavoai.sdk.model.ReportResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -517,8 +517,8 @@ public class AsyncConfig implements AsyncConfigurer {
 // service/AsyncTavoService.java
 package com.example.tavo.service;
 
-import ai.tavo.sdk.model.ScanResult;
-import ai.tavo.sdk.model.ReportResult;
+import net.tavoai.sdk.model.ScanResult;
+import net.tavoai.sdk.model.ReportResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -965,8 +965,8 @@ public class WebController {
 package com.example.tavo;
 
 import com.example.tavo.service.TavoService;
-import ai.tavo.sdk.TavoClient;
-import ai.tavo.sdk.model.ScanResult;
+import net.tavoai.sdk.TavoClient;
+import net.tavoai.sdk.model.ScanResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -984,7 +984,7 @@ class TavoServiceTest {
     private TavoClient tavoClient;
 
     @Mock
-    private ai.tavo.sdk.api.ScansApi scansApi;
+    private net.tavoai.sdk.api.ScansApi scansApi;
 
     @InjectMocks
     private TavoService tavoService;
@@ -1127,7 +1127,7 @@ services:
       - "8080:8080"
     environment:
       - TAVO_API_KEY=${TAVO_API_KEY}
-      - TAVO_BASE_URL=https://api.tavo.ai
+      - TAVO_BASE_URL=https://api.tavoai.net
       - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
 ```

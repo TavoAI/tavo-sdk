@@ -38,8 +38,8 @@ const client = new TavoClient({
 
 ```java
 // Java
-import ai.tavo.TavoClient;
-import ai.tavo.TavoConfig;
+import net.tavoai.TavoClient;
+import net.tavoai.TavoConfig;
 
 TavoConfig config = TavoConfig.builder()
     .apiKey("your-api-key-here")
@@ -119,7 +119,7 @@ For security and convenience, use environment variables:
 export TAVO_API_KEY="your-api-key-here"
 
 # Optional: Set base URL for custom deployments
-export TAVO_BASE_URL="https://your-custom-api.tavo.ai"
+export TAVO_BASE_URL="https://your-custom-api.tavoai.net"
 ```
 
 ```python
@@ -138,7 +138,7 @@ const client = new TavoClient();  // Reads process.env.TAVO_API_KEY
 
 ```java
 // Java - Automatically uses environment variables
-import ai.tavo.TavoClient;
+import net.tavoai.TavoClient;
 
 TavoClient client = new TavoClient();  // Reads System.getenv("TAVO_API_KEY")
 ```

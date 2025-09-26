@@ -19,7 +19,7 @@ npm install tavo-ai axios
 ```javascript
 // .env
 REACT_APP_TAVO_API_KEY=your-api-key-here
-REACT_APP_TAVO_BASE_URL=https://api.tavo.ai
+REACT_APP_TAVO_BASE_URL=https://api.tavoai.net
 REACT_APP_TAVO_TIMEOUT=30000
 ```
 
@@ -32,7 +32,7 @@ import axios from 'axios';
 class TavoService {
     constructor() {
         this.client = axios.create({
-            baseURL: process.env.REACT_APP_TAVO_BASE_URL || 'https://api.tavo.ai',
+            baseURL: process.env.REACT_APP_TAVO_BASE_URL || 'https://api.tavoai.net',
             timeout: parseInt(process.env.REACT_APP_TAVO_TIMEOUT) || 30000,
             headers: {
                 'Authorization': `Bearer ${process.env.REACT_APP_TAVO_API_KEY}`,
@@ -854,7 +854,7 @@ services:
       - "3000:3000"
     environment:
       - REACT_APP_TAVO_API_KEY=${TAVO_API_KEY}
-      - REACT_APP_TAVO_BASE_URL=https://api.tavo.ai
+      - REACT_APP_TAVO_BASE_URL=https://api.tavoai.net
     restart: unless-stopped
 ```
 
@@ -881,7 +881,7 @@ services:
 ```bash
 # Production environment
 REACT_APP_TAVO_API_KEY=your-production-api-key
-REACT_APP_TAVO_BASE_URL=https://api.tavo.ai
+REACT_APP_TAVO_BASE_URL=https://api.tavoai.net
 GENERATE_SOURCEMAP=false
 ```
 
@@ -900,7 +900,7 @@ server {
     }
 
     location /api {
-        proxy_pass https://api.tavo.ai;
+        proxy_pass https://api.tavoai.net;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

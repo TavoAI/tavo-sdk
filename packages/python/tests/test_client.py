@@ -30,7 +30,7 @@ class TestTavoConfig:
         """Test config with default values"""
         config = TavoConfig(api_key="test-key")
         assert config.api_key == "test-key"
-        assert config.base_url == "https://api.tavo.ai"
+        assert config.base_url == "https://api.tavoai.net"
         assert config.api_version == "v1"
         assert config.timeout == pytest.approx(30.0)
         assert config.max_retries == 3
@@ -49,7 +49,7 @@ class TestTavoClient:
         """Test client initialization with direct API key"""
         client = TavoClient(api_key="test-key")
         assert client.config.api_key == "test-key"
-        assert client.config.base_url == "https://api.tavo.ai"
+        assert client.config.base_url == "https://api.tavoai.net"
 
     def test_init_with_env_var(self):
         """Test client initialization with environment variable"""
@@ -88,7 +88,7 @@ class TestTavoClient:
 
         mock_async_client.assert_called_once()
         call_args = mock_async_client.call_args
-        assert call_args[1]['base_url'] == "https://api.tavo.ai/api/v1"
+        assert call_args[1]['base_url'] == "https://api.tavoai.net/api/v1"
         assert call_args[1]['headers']['Authorization'] == "Bearer test-key"
         assert call_args[1]['headers']['Content-Type'] == "application/json"
         assert call_args[1]['headers']['User-Agent'] == "tavo-python-sdk/0.1.0"

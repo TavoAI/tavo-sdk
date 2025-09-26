@@ -1,10 +1,10 @@
-package ai.tavo;
+package net.tavoai;
 
 /**
  * Configuration for Tavo API client
  */
 public class TavoConfig {
-    public static final String DEFAULT_BASE_URL = "https://api.tavo.ai";
+    public static final String DEFAULT_BASE_URL = "https://api.tavoai.net";
     public static final String DEFAULT_API_VERSION = "v1";
     public static final int DEFAULT_TIMEOUT = 30;
     public static final int DEFAULT_MAX_RETRIES = 3;

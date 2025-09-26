@@ -1,4 +1,4 @@
-package ai.tavo;
+package net.tavoai;
 
 import okhttp3.*;
 import com.google.gson.Gson;

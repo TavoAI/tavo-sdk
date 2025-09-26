@@ -51,7 +51,7 @@ const result = await client.scans.create({
 
 ```java
 // Java
-import ai.tavo.TavoClient;
+import net.tavoai.TavoClient;
 
 TavoClient client = new TavoClient("your-api-key");
 ScanResult result = client.scans().create("https://github.com/user/repo");
@@ -136,7 +136,7 @@ SDKs are generated from the API server's OpenAPI specification:
 
 ```bash
 # Generate updated OpenAPI spec from api-server
-curl https://api.tavo.ai/api/v1/openapi.json > specs/v1.json
+curl https://api.tavoai.net/api/v1/openapi.json > specs/v1.json
 
 # Generate SDKs
 npm run codegen
@@ -247,7 +247,7 @@ npm run release -- --version 1.2.3
 
 - **Python**: PyPI (`pip install tavo-python-sdk`)
 - **JavaScript**: npm (`npm install tavo-js-sdk`)
-- **Java**: Maven Central (`groupId: ai.tavo`)
+- **Java**: Maven Central (`groupId: net.tavoai`)
 - **Go**: Go Modules (`github.com/tavoai/tavo-go-sdk`)
 
 ## 🔄 CI/CD Pipelines
@@ -284,7 +284,7 @@ npm run release -- --version 1.2.3
 
    ```bash
    # Update OpenAPI spec
-   curl https://api.tavo.ai/api/v1/openapi.json > specs/v1.json
+   curl https://api.tavoai.net/api/v1/openapi.json > specs/v1.json
    ```
 
 3. **Regenerate SDKs**
@@ -355,10 +355,10 @@ test(go): add integration tests
 
 Auto-generated from OpenAPI spec:
 
-- [Python SDK Docs](https://docs.tavo.ai/python/)
-- [JavaScript SDK Docs](https://docs.tavo.ai/javascript/)
-- [Java SDK Docs](https://docs.tavo.ai/java/)
-- [Go SDK Docs](https://docs.tavo.ai/go/)
+- [Python SDK Docs](https://docs.tavoai.net/python/)
+- [JavaScript SDK Docs](https://docs.tavoai.net/javascript/)
+- [Java SDK Docs](https://docs.tavoai.net/java/)
+- [Go SDK Docs](https://docs.tavoai.net/go/)
 
 ### Usage Examples
 
@@ -436,13 +436,13 @@ client.on('request', (event) => {
 
 - **Bug Reports**: Use language-specific labels
 - **Feature Requests**: Check roadmap first
-- **Security Issues**: <security@tavo.ai>
+- **Security Issues**: <security@tavoai.net>
 
 ### Support Channels
 
-- **Documentation**: <https://docs.tavo.ai>
-- **Community Forum**: <https://community.tavo.ai>
-- **Enterprise Support**: <support@tavo.ai>
+- **Documentation**: <https://docs.tavoai.net>
+- **Community Forum**: <https://community.tavoai.net>
+- **Enterprise Support**: <support@tavoai.net>
 
 ## 📈 Roadmap
 

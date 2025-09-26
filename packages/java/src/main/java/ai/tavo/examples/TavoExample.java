@@ -1,7 +1,7 @@
-package ai.tavo.examples;
+package net.tavoai.examples;
 
-import ai.tavo.TavoClient;
-import ai.tavo.TavoConfig;
+import net.tavoai.TavoClient;
+import net.tavoai.TavoConfig;
 import java.util.Map;
 
 /**
@@ -13,7 +13,7 @@ public class TavoExample {
         // Create configuration
         TavoConfig config = TavoConfig.builder()
             .apiKey("your-api-key-here")
-            .baseUrl("https://api.tavo.ai")
+            .baseUrl("https://api.tavoai.net")
             .build();
 
         // Create client
