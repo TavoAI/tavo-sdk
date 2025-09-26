@@ -67,6 +67,8 @@ public class TavoClient implements AutoCloseable {
 
         if (config.getJwtToken() != null && !config.getJwtToken().trim().isEmpty()) {
             headers.add("Authorization", "Bearer " + config.getJwtToken());
+        } else if (config.getSessionToken() != null && !config.getSessionToken().trim().isEmpty()) {
+            headers.add("X-Session-Token", config.getSessionToken());
         } else if (config.getApiKey() != null && !config.getApiKey().trim().isEmpty()) {
             headers.add("X-API-Key", config.getApiKey());
         }

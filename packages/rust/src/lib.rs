@@ -52,7 +52,9 @@ pub type Result<T> = std::result::Result<T, TavoError>;
 /// Main client for interacting with the Tavo AI API
 pub struct TavoClient {
     client: Client,
-    api_key: String,
+    api_key: Option<String>,
+    jwt_token: Option<String>,
+    session_token: Option<String>,
     base_url: String,
 }
 
@@ -72,16 +74,11 @@ impl TavoClient {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn new(api_key: impl Into<String>) -> Result<Self> {
-        Self::with_base_url(api_key, "https://api.tavo.ai")
+        Self::with_api_key(api_key)
     }
 
-    /// Create a new TavoClient with a custom base URL
-    ///
-    /// # Arguments
-    ///
-    /// * `api_key` - Your Tavo AI API key
-    /// * `base_url` - Custom base URL for the API
-    pub fn with_base_url(api_key: impl Into<String>, base_url: impl Into<String>) -> Result<Self> {
+    /// Create a new TavoClient with API key authentication
+    pub fn with_api_key(api_key: impl Into<String>) -> Result<Self> {
         let api_key = api_key.into();
         if api_key.is_empty() {
             return Err(TavoError::InvalidApiKey);
@@ -89,9 +86,58 @@ impl TavoClient {
 
         Ok(Self {
             client: Client::new(),
-            api_key,
-            base_url: base_url.into(),
+            api_key: Some(api_key),
+            jwt_token: None,
+            session_token: None,
+            base_url: "https://api.tavo.ai".to_string(),
         })
+    }
+
+    /// Create a new TavoClient with JWT token authentication
+    pub fn with_jwt_token(jwt_token: impl Into<String>) -> Result<Self> {
+        let jwt_token = jwt_token.into();
+        if jwt_token.is_empty() {
+            return Err(TavoError::InvalidApiKey);
+        }
+
+        Ok(Self {
+            client: Client::new(),
+            api_key: None,
+            jwt_token: Some(jwt_token),
+            session_token: None,
+            base_url: "https://api.tavo.ai".to_string(),
+        })
+    }
+
+    /// Create a new TavoClient with session token authentication
+    pub fn with_session_token(session_token: impl Into<String>) -> Result<Self> {
+        let session_token = session_token.into();
+        if session_token.is_empty() {
+            return Err(TavoError::InvalidApiKey);
+        }
+
+        Ok(Self {
+            client: Client::new(),
+            api_key: None,
+            jwt_token: None,
+            session_token: Some(session_token),
+            base_url: "https://api.tavo.ai".to_string(),
+        })
+    }
+
+    /// Create a request builder with appropriate authentication headers
+    fn authenticated_request(&self, method: reqwest::Method, url: &str) -> reqwest::RequestBuilder {
+        let mut request = self.client.request(method, url);
+
+        if let Some(jwt_token) = &self.jwt_token {
+            request = request.header("Authorization", format!("Bearer {}", jwt_token));
+        } else if let Some(session_token) = &self.session_token {
+            request = request.header("X-Session-Token", session_token);
+        } else if let Some(api_key) = &self.api_key {
+            request = request.header("X-API-Key", api_key);
+        }
+
+        request
     }
 
     /// Scan code for security vulnerabilities
@@ -122,9 +168,7 @@ impl TavoClient {
 
         let url = format!("{}/api/v1/scan", self.base_url);
         let response = self
-            .client
-            .post(&url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
+            .authenticated_request(reqwest::Method::POST, &url)
             .json(&request)
             .send()
             .await?;
@@ -166,9 +210,7 @@ impl TavoClient {
     pub async fn analyze_model(&self, model_config: serde_json::Value) -> Result<ModelAnalysisResult> {
         let url = format!("{}/api/v1/analyze/model", self.base_url);
         let response = self
-            .client
-            .post(&url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
+            .authenticated_request(reqwest::Method::POST, &url)
             .json(&model_config)
             .send()
             .await?;

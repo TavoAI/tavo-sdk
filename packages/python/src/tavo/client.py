@@ -15,6 +15,9 @@ class TavoConfig(BaseModel):
     jwt_token: Optional[str] = Field(
         default=None, description="JWT token for authentication"
     )
+    session_token: Optional[str] = Field(
+        default=None, description="Session token for authentication"
+    )
     base_url: str = Field(
         default="https://api.tavoai.net", description="Base URL for API"
     )
@@ -34,6 +37,7 @@ class TavoClient:
         self,
         api_key: Optional[str] = None,
         jwt_token: Optional[str] = None,
+        session_token: Optional[str] = None,
         base_url: str = "https://api.tavoai.net",
         api_version: str = "v1",
         timeout: float = 30.0,
@@ -45,26 +49,29 @@ class TavoClient:
             api_key: API key for authentication. If not provided, will look
                 for TAVO_API_KEY env var
             jwt_token: JWT token for authentication
+            session_token: Session token for authentication
             base_url: Base URL for the API
             api_version: API version to use
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries for failed requests
         """
-        # Handle authentication - prefer JWT token over API key
-        if jwt_token is None and api_key is None:
+        # Handle authentication - prefer JWT token over session token over API key
+        if jwt_token is None and session_token is None and api_key is None:
             import os
             api_key = os.getenv("TAVO_API_KEY")
             jwt_token = os.getenv("TAVO_JWT_TOKEN")
+            session_token = os.getenv("TAVO_SESSION_TOKEN")
 
-        if jwt_token is None and api_key is None:
+        if jwt_token is None and session_token is None and api_key is None:
             raise ValueError(
-                "Either API key or JWT token must be provided, or set "
-                "TAVO_API_KEY or TAVO_JWT_TOKEN environment variables"
+                "Either API key, JWT token, or session token must be provided, or set "
+                "TAVO_API_KEY, TAVO_JWT_TOKEN, or TAVO_SESSION_TOKEN environment variables"
             )
 
         self.config = TavoConfig(
             api_key=api_key,
             jwt_token=jwt_token,
+            session_token=session_token,
             base_url=base_url,
             api_version=api_version,
             timeout=timeout,
@@ -86,6 +93,8 @@ class TavoClient:
 
         if self.config.jwt_token:
             headers["Authorization"] = f"Bearer {self.config.jwt_token}"
+        elif self.config.session_token:
+            headers["X-Session-Token"] = self.config.session_token
         elif self.config.api_key:
             headers["X-API-Key"] = self.config.api_key
 

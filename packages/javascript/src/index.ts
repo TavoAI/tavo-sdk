@@ -9,6 +9,7 @@ export const VERSION = '0.1.0';
 export interface TavoConfig {
   apiKey?: string;
   jwtToken?: string;
+  sessionToken?: string;
   baseURL?: string;
   apiVersion?: string;
   timeout?: number;
@@ -119,13 +120,14 @@ export class TavoClient {
 
   constructor(config: TavoConfig) {
     // Validate authentication
-    if (!config.apiKey && !config.jwtToken) {
-      throw new Error('Either API key or JWT token must be provided');
+    if (!config.apiKey && !config.jwtToken && !config.sessionToken) {
+      throw new Error('Either API key, JWT token, or session token must be provided');
     }
 
     this.config = {
       apiKey: config.apiKey || '',
       jwtToken: config.jwtToken || '',
+      sessionToken: config.sessionToken || '',
       baseURL: config.baseURL || 'https://api.tavoai.net',
       apiVersion: config.apiVersion || 'v1',
       timeout: config.timeout || 30000,
@@ -142,9 +144,11 @@ export class TavoClient {
       'User-Agent': `tavo-js-sdk/${VERSION}`,
     };
 
-    // Set authentication header - API keys use X-API-Key, JWT tokens use Authorization
+    // Set authentication header - API keys use X-API-Key, JWT tokens use Authorization, session tokens use X-Session-Token
     if (this.config.jwtToken) {
       headers['Authorization'] = `Bearer ${this.config.jwtToken}`;
+    } else if (this.config.sessionToken) {
+      headers['X-Session-Token'] = this.config.sessionToken;
     } else if (this.config.apiKey) {
       headers['X-API-Key'] = this.config.apiKey;
     }

@@ -37,10 +37,12 @@ func NewClient(config *Config) *Client {
 	}
 
 	// Set authentication headers
-	if config.APIKey != "" {
-		httpClient.SetAuthToken(config.APIKey)
-	} else if config.JWTToken != "" {
+	if config.JWTToken != "" {
 		httpClient.SetAuthToken(config.JWTToken)
+	} else if config.SessionToken != "" {
+		httpClient.SetHeader("X-Session-Token", config.SessionToken)
+	} else if config.APIKey != "" {
+		httpClient.SetHeader("X-API-Key", config.APIKey)
 	}
 
 	return client

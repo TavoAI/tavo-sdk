@@ -7,12 +7,13 @@ import (
 
 // Config holds configuration for the Tavo API client
 type Config struct {
-	APIKey     string        `json:"api_key,omitempty"`
-	JWTToken   string        `json:"jwt_token,omitempty"`
-	BaseURL    string        `json:"base_url"`
-	APIVersion string        `json:"api_version"`
-	Timeout    time.Duration `json:"timeout"`
-	MaxRetries int           `json:"max_retries"`
+	APIKey       string        `json:"api_key,omitempty"`
+	JWTToken     string        `json:"jwt_token,omitempty"`
+	SessionToken string        `json:"session_token,omitempty"`
+	BaseURL      string        `json:"base_url"`
+	APIVersion   string        `json:"api_version"`
+	Timeout      time.Duration `json:"timeout"`
+	MaxRetries   int           `json:"max_retries"`
 }
 
 // NewConfig creates a new configuration with default values
@@ -27,6 +28,14 @@ func NewConfig() *Config {
 	// Load from environment variables if available
 	if apiKey := os.Getenv("TAVO_API_KEY"); apiKey != "" {
 		config.APIKey = apiKey
+	}
+
+	if jwtToken := os.Getenv("TAVO_JWT_TOKEN"); jwtToken != "" {
+		config.JWTToken = jwtToken
+	}
+
+	if sessionToken := os.Getenv("TAVO_SESSION_TOKEN"); sessionToken != "" {
+		config.SessionToken = sessionToken
 	}
 
 	if baseURL := os.Getenv("TAVO_BASE_URL"); baseURL != "" {
@@ -49,6 +58,12 @@ func (c *Config) WithAPIKey(apiKey string) *Config {
 // WithJWTToken sets the JWT token
 func (c *Config) WithJWTToken(token string) *Config {
 	c.JWTToken = token
+	return c
+}
+
+// WithSessionToken sets the session token
+func (c *Config) WithSessionToken(token string) *Config {
+	c.SessionToken = token
 	return c
 }
 

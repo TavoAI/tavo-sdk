@@ -11,6 +11,7 @@ public class TavoConfig {
 
     private String apiKey;
     private String jwtToken;
+    private String sessionToken;
     private String baseUrl;
     private String apiVersion;
     private int timeout;
@@ -44,11 +45,22 @@ public class TavoConfig {
     }
 
     /**
-     * Full constructor
+     * Constructor with session token authentication
      */
-    public TavoConfig(String apiKey, String jwtToken, String baseUrl, String apiVersion, int timeout, int maxRetries) {
+    public TavoConfig(String apiKey, String jwtToken, String sessionToken) {
+        this();
         this.apiKey = apiKey;
         this.jwtToken = jwtToken;
+        this.sessionToken = sessionToken;
+    }
+
+    /**
+     * Full constructor
+     */
+    public TavoConfig(String apiKey, String jwtToken, String sessionToken, String baseUrl, String apiVersion, int timeout, int maxRetries) {
+        this.apiKey = apiKey;
+        this.jwtToken = jwtToken;
+        this.sessionToken = sessionToken;
         this.baseUrl = baseUrl != null ? baseUrl : DEFAULT_BASE_URL;
         this.apiVersion = apiVersion != null ? apiVersion : DEFAULT_API_VERSION;
         this.timeout = timeout > 0 ? timeout : DEFAULT_TIMEOUT;
@@ -70,6 +82,14 @@ public class TavoConfig {
 
     public void setJwtToken(String jwtToken) {
         this.jwtToken = jwtToken;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
     }
 
     public String getBaseUrl() {
@@ -110,10 +130,11 @@ public class TavoConfig {
      */
     public void validate() {
         if ((apiKey == null || apiKey.trim().isEmpty()) &&
-            (jwtToken == null || jwtToken.trim().isEmpty())) {
+            (jwtToken == null || jwtToken.trim().isEmpty()) &&
+            (sessionToken == null || sessionToken.trim().isEmpty())) {
             throw new IllegalArgumentException(
-                "Either API key or JWT token must be provided, or set " +
-                "TAVO_API_KEY or TAVO_JWT_TOKEN environment variables"
+                "Either API key, JWT token, or session token must be provided, or set " +
+                "TAVO_API_KEY, TAVO_JWT_TOKEN, or TAVO_SESSION_TOKEN environment variables"
             );
         }
     }
@@ -124,10 +145,12 @@ public class TavoConfig {
     public static TavoConfig fromEnvironment() {
         String apiKey = System.getenv("TAVO_API_KEY");
         String jwtToken = System.getenv("TAVO_JWT_TOKEN");
+        String sessionToken = System.getenv("TAVO_SESSION_TOKEN");
 
         TavoConfig config = new TavoConfig();
         config.setApiKey(apiKey);
         config.setJwtToken(jwtToken);
+        config.setSessionToken(sessionToken);
 
         return config;
     }
@@ -142,6 +165,7 @@ public class TavoConfig {
     public static class Builder {
         private String apiKey;
         private String jwtToken;
+        private String sessionToken;
         private String baseUrl = DEFAULT_BASE_URL;
         private String apiVersion = DEFAULT_API_VERSION;
         private int timeout = DEFAULT_TIMEOUT;
@@ -154,6 +178,11 @@ public class TavoConfig {
 
         public Builder jwtToken(String jwtToken) {
             this.jwtToken = jwtToken;
+            return this;
+        }
+
+        public Builder sessionToken(String sessionToken) {
+            this.sessionToken = sessionToken;
             return this;
         }
 
@@ -178,7 +207,7 @@ public class TavoConfig {
         }
 
         public TavoConfig build() {
-            return new TavoConfig(apiKey, jwtToken, baseUrl, apiVersion, timeout, maxRetries);
+            return new TavoConfig(apiKey, jwtToken, sessionToken, baseUrl, apiVersion, timeout, maxRetries);
         }
     }
 }
