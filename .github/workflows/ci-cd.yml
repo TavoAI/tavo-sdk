@@ -112,7 +112,7 @@ jobs:
       run: npm run build
 
     - name: Publish Python SDK
-      if: github.event.release.tag_name =~ /^python/
+      if: startsWith(github.event.release.tag_name, 'python')
       run: |
         cd packages/python
         python -m pip install --upgrade pip
@@ -124,7 +124,7 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
     - name: Publish JavaScript SDK
-      if: github.event.release.tag_name =~ /^js/
+      if: startsWith(github.event.release.tag_name, 'js')
       run: |
         cd packages/javascript
         npm publish
@@ -132,7 +132,7 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     - name: Publish Java SDK
-      if: github.event.release.tag_name =~ /^java/
+      if: startsWith(github.event.release.tag_name, 'java')
       run: |
         cd packages/java
         ./gradlew publish
@@ -141,7 +141,7 @@ jobs:
         MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
     - name: Publish Go SDK
-      if: github.event.release.tag_name =~ /^go/
+      if: startsWith(github.event.release.tag_name, 'go')
       run: |
         cd packages/go
         git tag ${GITHUB_REF#refs/tags/}
