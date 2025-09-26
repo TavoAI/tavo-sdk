@@ -87,7 +87,7 @@ class TavoClient:
         if self.config.jwt_token:
             headers["Authorization"] = f"Bearer {self.config.jwt_token}"
         elif self.config.api_key:
-            headers["Authorization"] = f"Bearer {self.config.api_key}"
+            headers["X-API-Key"] = self.config.api_key
 
         return headers
 

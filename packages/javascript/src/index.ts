@@ -142,11 +142,11 @@ export class TavoClient {
       'User-Agent': `tavo-js-sdk/${VERSION}`,
     };
 
-    // Set authentication header
+    // Set authentication header - API keys use X-API-Key, JWT tokens use Authorization
     if (this.config.jwtToken) {
       headers['Authorization'] = `Bearer ${this.config.jwtToken}`;
     } else if (this.config.apiKey) {
-      headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+      headers['X-API-Key'] = this.config.apiKey;
     }
 
     return axios.create({

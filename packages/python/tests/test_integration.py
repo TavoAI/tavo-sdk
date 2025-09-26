@@ -1,5 +1,6 @@
 """Integration tests for Tavo Python SDK"""
 
+import os
 import pytest
 
 from tavo.client import TavoClient
@@ -10,39 +11,84 @@ class TestTavoClientIntegration:
 
     @pytest.mark.asyncio
     async def test_health_check_success(self):
-        """Test successful health check"""
-        async with TavoClient(api_key="test-key") as client:
-            # This would normally make a real HTTP request
-            # For integration testing, we'd use a mock server
-            # For now, we'll test the method exists and can be called
+        """Test successful health check - mirrors api-server test patterns"""
+        api_key = os.getenv('TAVO_TEST_API_KEY', 'test-api-key')
+        base_url = os.getenv('TAVO_TEST_BASE_URL', 'http://localhost:8000')
+
+        async with TavoClient(api_key=api_key, base_url=base_url) as client:
+            # This mirrors health check tests in api-server
             assert hasattr(client, 'health_check')
             assert callable(client.health_check)
 
     @pytest.mark.asyncio
     async def test_scan_operations_integration(self):
-        """Test scan operations integration"""
-        async with TavoClient(api_key="test-key") as client:
+        """Test scan operations integration - mirrors api-server scan tests"""
+        api_key = os.getenv('TAVO_TEST_API_KEY', 'test-api-key')
+        base_url = os.getenv('TAVO_TEST_BASE_URL', 'http://localhost:8000')
+
+        async with TavoClient(api_key=api_key, base_url=base_url) as client:
             scans = client.scans()
 
-            # Test that all expected methods exist
+            # Test that all expected methods exist (mirrors api-server endpoint tests)
             assert hasattr(scans, 'create')
             assert hasattr(scans, 'get')
             assert hasattr(scans, 'list')
+            assert hasattr(scans, 'results')  # Additional method for results
             assert callable(scans.create)
             assert callable(scans.get)
             assert callable(scans.list)
+            assert callable(scans.results)
 
     @pytest.mark.asyncio
     async def test_report_operations_integration(self):
-        """Test report operations integration"""
-        async with TavoClient(api_key="test-key") as client:
+        """Test report operations integration - mirrors api-server report tests"""
+        api_key = os.getenv('TAVO_TEST_API_KEY', 'test-api-key')
+        base_url = os.getenv('TAVO_TEST_BASE_URL', 'http://localhost:8000')
+
+        async with TavoClient(api_key=api_key, base_url=base_url) as client:
             reports = client.reports()
 
-            # Test that all expected methods exist
+            # Test that all expected methods exist (mirrors api-server endpoint tests)
+            assert hasattr(reports, 'create')
             assert hasattr(reports, 'get')
             assert hasattr(reports, 'list')
+            assert callable(reports.create)
             assert callable(reports.get)
             assert callable(reports.list)
+
+    @pytest.mark.asyncio
+    async def test_api_key_authentication_header(self):
+        """Test that API key authentication uses X-API-Key header"""
+        api_key = 'test-api-key-123'
+        base_url = 'http://localhost:8000'
+
+        client = TavoClient(api_key=api_key, base_url=base_url)
+
+        # Check that the auth headers are set correctly
+        # This mirrors authentication header tests in api-server
+        auth_headers = client._get_auth_headers()
+        assert 'X-API-Key' in auth_headers
+        assert auth_headers['X-API-Key'] == api_key
+        assert 'Authorization' not in auth_headers  # Should not have Bearer token
+
+        await client._client.aclose()
+
+    @pytest.mark.asyncio
+    async def test_jwt_token_authentication_header(self):
+        """Test that JWT token authentication uses Authorization header"""
+        jwt_token = 'test-jwt-token-123'
+        base_url = 'http://localhost:8000'
+
+        client = TavoClient(jwt_token=jwt_token, base_url=base_url)
+
+        # Check that the auth headers are set correctly
+        # This mirrors JWT authentication tests in api-server
+        auth_headers = client._get_auth_headers()
+        assert 'Authorization' in auth_headers
+        assert auth_headers['Authorization'] == f'Bearer {jwt_token}'
+        assert 'X-API-Key' not in auth_headers  # Should not have API key header
+
+        await client._client.aclose()
 
 
 class TestTavoClientErrorHandling:
