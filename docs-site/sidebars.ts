@@ -46,6 +46,8 @@ const sidebars: SidebarsConfig = {
         'examples/angular',
         'examples/fastapi',
         'examples/aspnet-core',
+        'examples/dotnet',
+        'examples/rust',
       ],
     },
   ],
