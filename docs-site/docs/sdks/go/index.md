@@ -59,7 +59,7 @@ client, err := tavo.NewClient("your-api-key")
 // With custom options
 client, err := tavo.NewClientWithOptions(&tavo.ClientOptions{
     APIKey:      "your-api-key",
-    BaseURL:     "https://api-staging.tavo.ai",
+    BaseURL:     "https://api-staging.tavoai.net",
     Timeout:     30 * time.Second,
     MaxRetries:  3,
     RetryDelay:  time.Second,

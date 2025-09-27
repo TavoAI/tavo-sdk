@@ -44,7 +44,7 @@ async def main():
     # Configure client
     config = TavoConfig(
         api_key="your-api-key",
-        base_url="https://api.tavo.ai",
+        base_url="https://api.tavoai.net",
         timeout=30.0,
         max_retries=3
     )

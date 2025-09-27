@@ -97,7 +97,7 @@ async function main() {
     // Configure client
     const options: TavoClientOptions = {
         apiKey: 'your-api-key',
-        baseUrl: 'https://api.tavo.ai',
+        baseUrl: 'https://api.tavoai.net',
         timeout: 30000,
         maxRetries: 3,
         retryDelay: 1000

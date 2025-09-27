@@ -78,7 +78,7 @@ public class ConfiguredScanExample {
         // Configure client
         TavoClientConfig config = TavoClientConfig.builder()
                 .apiKey("your-api-key")
-                .baseUrl("https://api.tavo.ai")
+                .baseUrl("https://api.tavoai.net")
                 .timeout(Duration.ofSeconds(30))
                 .maxRetries(3)
                 .retryDelay(Duration.ofSeconds(1))

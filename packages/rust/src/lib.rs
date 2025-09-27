@@ -89,7 +89,7 @@ impl TavoClient {
             api_key: Some(api_key),
             jwt_token: None,
             session_token: None,
-            base_url: "https://api.tavo.ai".to_string(),
+            base_url: "https://api.tavoai.net".to_string(),
         })
     }
 
@@ -105,7 +105,7 @@ impl TavoClient {
             api_key: None,
             jwt_token: Some(jwt_token),
             session_token: None,
-            base_url: "https://api.tavo.ai".to_string(),
+            base_url: "https://api.tavoai.net".to_string(),
         })
     }
 
@@ -121,7 +121,7 @@ impl TavoClient {
             api_key: None,
             jwt_token: None,
             session_token: Some(session_token),
-            base_url: "https://api.tavo.ai".to_string(),
+            base_url: "https://api.tavoai.net".to_string(),
         })
     }
 

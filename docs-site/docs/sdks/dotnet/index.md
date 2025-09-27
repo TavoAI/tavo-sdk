@@ -61,7 +61,7 @@ var client = new TavoClient("your-api-key");
 var client = new TavoClient(new TavoClientOptions
 {
     ApiKey = "your-api-key",
-    BaseUrl = "https://api-staging.tavo.ai",
+    BaseUrl = "https://api-staging.tavoai.net",
     Timeout = TimeSpan.FromSeconds(30),
     MaxRetries = 3,
     RetryDelay = TimeSpan.FromSeconds(1)

@@ -85,7 +85,7 @@ TavoClient client = new TavoClient.Builder()
 // With custom configuration
 TavoClient client = new TavoClient.Builder()
         .apiKey("your-api-key")
-        .baseUrl("https://api-staging.tavo.ai")
+        .baseUrl("https://api-staging.tavoai.net")
         .timeout(Duration.ofSeconds(30))
         .build();
 ```
@@ -227,7 +227,7 @@ try {
 ```java
 TavoClient client = new TavoClient.Builder()
         .apiKey("your-api-key")
-        .baseUrl("https://api-staging.tavo.ai")
+        .baseUrl("https://api-staging.tavoai.net")
         .build();
 ```
 

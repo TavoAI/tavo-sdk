@@ -20,7 +20,7 @@ namespace TavoAI
         /// </summary>
         /// <param name="apiKey">Your Tavo AI API key</param>
         /// <param name="baseUrl">Base URL for the API (optional)</param>
-        public TavoClient(string apiKey, string baseUrl = "https://api.tavo.ai")
+        public TavoClient(string apiKey, string baseUrl = "https://api.tavoai.net")
         {
             _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
             _httpClient = new HttpClient

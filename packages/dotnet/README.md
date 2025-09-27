@@ -60,7 +60,7 @@ Console.WriteLine($"Model is safe: {analysis.Safe}");
 #### Constructor
 
 ```csharp
-public TavoClient(string apiKey, string baseUrl = "https://api.tavo.ai")
+public TavoClient(string apiKey, string baseUrl = "https://api.tavoai.net")
 ```
 
 #### Methods
@@ -112,7 +112,7 @@ var client = new TavoClient(apiKey);
 ### Custom Base URL
 
 ```csharp
-var client = new TavoClient("your-api-key", "https://custom-api.tavo.ai");
+var client = new TavoClient("your-api-key", "https://custom-api.tavoai.net");
 ```
 
 ## Error Handling

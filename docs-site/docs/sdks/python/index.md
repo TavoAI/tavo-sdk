@@ -183,7 +183,7 @@ except TavoError as e:
 # Use custom API endpoint
 client = TavoClient(
     api_key="your-api-key",
-    base_url="https://api-staging.tavo.ai"
+    base_url="https://api-staging.tavoai.net"
 )
 ```
 

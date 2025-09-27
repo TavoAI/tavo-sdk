@@ -71,7 +71,7 @@ func main() {
     // Configure client
     client, err := tavo.NewClientWithOptions(&tavo.ClientOptions{
         APIKey:      "your-api-key",
-        BaseURL:     "https://api.tavo.ai",
+        BaseURL:     "https://api.tavoai.net",
         Timeout:     30 * time.Second,
         MaxRetries:  3,
         RetryDelay:  time.Second,

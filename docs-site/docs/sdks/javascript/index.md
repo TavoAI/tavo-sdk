@@ -80,7 +80,7 @@ const client = new TavoClient({
 // Or with additional options
 const client = new TavoClient({
   apiKey: 'your-api-key',
-  baseURL: 'https://api-staging.tavo.ai',
+  baseURL: 'https://api-staging.tavoai.net',
   timeout: 30000
 });
 ```
@@ -229,7 +229,7 @@ try {
 ```typescript
 const client = new TavoClient({
   apiKey: 'your-api-key',
-  baseURL: 'https://api-staging.tavo.ai'
+  baseURL: 'https://api-staging.tavoai.net'
 });
 ```
 

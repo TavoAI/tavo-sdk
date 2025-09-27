@@ -53,7 +53,7 @@ let client = Client::new("your-api-key")?;
 // With custom options
 let client = Client::with_options(ClientOptions {
     api_key: "your-api-key".to_string(),
-    base_url: "https://api-staging.tavo.ai".to_string(),
+    base_url: "https://api-staging.tavoai.net".to_string(),
     timeout: Duration::from_secs(30),
     max_retries: 3,
     retry_delay: Duration::from_secs(1),
