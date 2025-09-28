@@ -1,0 +1,5 @@
+rules:
+  - id: test-rule
+    pattern: "openai"
+    message: "Found openai"
+    languages: [python]

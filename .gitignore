@@ -55,6 +55,7 @@ MANIFEST
 .env/
 .venv/
 venv/
+build-venv/
 env/
 ENV/
 # Testing & coverage
@@ -93,6 +94,16 @@ media/
 instance/
 *.mo
 *.pot
+
+# -------------------------------
+# Tavo Scanner Engines
+# -------------------------------
+packages/scanner/engines/
+packages/scanner/engines/*
+packages/scanner/build/
+packages/scanner/dist/
+packages/scanner/*.spec
+.tavoai/
 
 # -------------------------------
 # JavaScript / Node / Frontend

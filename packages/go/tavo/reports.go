@@ -42,3 +42,8 @@ func (r *ReportOperations) DeleteReport(reportID string) error {
 func (r *ReportOperations) DownloadReport(reportID string) (map[string]interface{}, error) {
 	return r.client.makeRequest("GET", "/reports/"+reportID+"/download", nil)
 }
+
+// GetSummary returns report summary statistics
+func (r *ReportOperations) GetSummary() (map[string]interface{}, error) {
+	return r.client.makeRequest("GET", "/reports/summary", nil)
+}

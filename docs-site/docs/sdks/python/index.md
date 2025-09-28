@@ -142,20 +142,67 @@ webhooks = await client.list_webhooks()
 await client.delete_webhook(webhook.id)
 ```
 
-### Billing & Reports
+### API Key Management
 
 ```python
-# Get billing information
-billing = await client.get_billing_info()
+# List your API keys
+api_keys = await client.users().api_keys().list_my_keys()
 
-# Generate report
-report = await client.generate_report({
-    "type": "security_audit",
-    "date_range": {
-        "start": "2024-01-01",
-        "end": "2024-01-31"
-    }
+# Create a new API key
+new_key = await client.users().api_keys().create_key("My API Key")
+
+# Update an API key
+updated_key = await client.users().api_keys().update_key(
+    api_key_id, "Updated Name"
+)
+
+# Rotate an API key (generates new secret)
+rotated_key = await client.users().api_keys().rotate_key(api_key_id)
+
+# Delete an API key
+await client.users().api_keys().delete_key(api_key_id)
+```
+
+### Report Management
+
+```python
+# Create a new report
+report = await client.reports().create({
+    "scan_id": scan_id,
+    "report_type": "scan_summary",
+    "format": "pdf",
+    "title": "Security Audit Report"
 })
+
+# Get report details
+report_details = await client.reports().get(report_id)
+
+# List reports with filtering
+reports = await client.reports().list(
+    limit=10,
+    report_type="scan_summary",
+    status="completed"
+)
+
+# Update report
+updated_report = await client.reports().update(report_id, {
+    "title": "Updated Report Title"
+})
+
+# Download report file
+report_content = await client.reports().download(report_id)
+
+# Get report summary statistics
+summary = await client.reports().get_summary()
+print(f"Total reports: {summary['total_reports']}")
+print(f"Reports by type: {summary['reports_by_type']}")
+
+# Generate reports in different formats
+pdf_report = await client.reports().generate_pdf(scan_id)
+csv_report = await client.reports().generate_csv(scan_id)
+json_report = await client.reports().generate_json(scan_id)
+sarif_report = await client.reports().generate_sarif(scan_id)
+html_report = await client.reports().generate_html(scan_id)
 ```
 
 ## Error Handling
@@ -318,7 +365,3 @@ async def scan_code(code: str):
 3. **Use Async/Await**: Take advantage of async operations for better performance
 4. **Set Reasonable Timeouts**: Configure timeouts based on your use case
 5. **Monitor Rate Limits**: Be aware of API rate limits and implement backoff strategies
-
-## API Reference
-
-For complete API documentation, see the [Python SDK API Reference](../api/python.md).

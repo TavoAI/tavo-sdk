@@ -1,5 +1,4 @@
 package tavo_test
-package tavo_test
 
 import (
 	"testing"

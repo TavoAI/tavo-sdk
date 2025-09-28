@@ -41,4 +41,11 @@ public class ReportOperations {
     public Map<String, Object> delete(String reportId) throws TavoException {
         return client.makeRequest("DELETE", REPORTS_ENDPOINT + "/" + reportId, null);
     }
+
+    /**
+     * Get report summary statistics
+     */
+    public Map<String, Object> getSummary() throws TavoException {
+        return client.makeRequest("GET", REPORTS_ENDPOINT + "/summary", null);
+    }
 }

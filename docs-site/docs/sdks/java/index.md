@@ -135,6 +135,21 @@ User updatedUser = client.updateUser(user.getId(), Map.of(
     "name", "New Name",
     "email", "new@example.com"
 )).join();
+
+// API Key Management
+List<ApiKey> apiKeys = client.listApiKeys().join();
+
+// Update API key
+ApiKey updatedKey = client.updateApiKey(apiKeyId, Map.of(
+    "name", "Updated API Key Name",
+    "description", "Updated description"
+)).join();
+
+// Rotate API key (generates new secret)
+ApiKey rotatedKey = client.rotateApiKey(apiKeyId).join();
+
+// Delete API key
+client.deleteApiKey(apiKeyId).join();
 ```
 
 ### Organization Management
@@ -196,6 +211,13 @@ Report report = client.generateReport(Map.of(
         "end", "2024-01-31"
     )
 )).join();
+
+// Get report summary statistics
+ReportSummary summary = client.getReportSummary().join();
+
+System.out.println("Total scans: " + summary.getTotalScans());
+System.out.println("Total vulnerabilities: " + summary.getTotalVulnerabilities());
+System.out.println("Critical issues: " + summary.getCriticalIssues());
 ```
 
 ## Error Handling
@@ -467,7 +489,3 @@ class SecurityServiceTest {
 - **Async Operations**: Use async methods to avoid blocking threads
 - **Batch Processing**: Group multiple operations when possible
 - **Caching**: Implement result caching for frequently scanned code
-
-## API Reference
-
-For complete API documentation, see the [Java SDK API Reference](../api/java.md).

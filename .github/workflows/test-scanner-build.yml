@@ -1,0 +1,53 @@
+name: Test Scanner Binary Build
+
+on:
+    workflow_dispatch:
+    pull_request:
+        paths:
+            - "packages/scanner/**"
+            - "tavo-rules/bundles/llm-security/**"
+            - "build_binary.sh"
+            - ".github/workflows/scanner-binary-release.yml"
+
+jobs:
+    test-build:
+        name: Test Binary Build
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v5
+
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install pyinstaller pyyaml
+
+            - name: Download engines
+              run: |
+                  cd packages/scanner
+                  chmod +x download_engines.sh
+                  ./download_engines.sh
+
+            - name: Build binary
+              run: |
+                  cd packages/scanner
+                  pyinstaller --onefile --hidden-import yaml --add-data "engines:engines" --name tavo-scanner tavo_scanner.py
+
+            - name: Test binary
+              run: |
+                  cd packages/scanner/dist
+                  chmod +x tavo-scanner
+                  ./tavo-scanner --help
+                  ./tavo-scanner ../test_llm.py --format json | head -5
+
+            - name: Upload test artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: test-tavo-scanner-linux-x64
+                  path: packages/scanner/dist/tavo-scanner

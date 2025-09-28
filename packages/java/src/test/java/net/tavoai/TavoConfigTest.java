@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TavoConfigTest {
     private static final String TEST_API_KEY = "test-api-key";
     private static final String TEST_JWT_TOKEN = "test-jwt-token";
+    private static final String TEST_SESSION_TOKEN = "test-session-token";
     private static final String TEST_BASE_URL = "https://custom.api.com";
     private static final String TEST_API_VERSION = "v2";
 
@@ -36,10 +37,11 @@ class TavoConfigTest {
         int timeout = 60;
         int maxRetries = 5;
 
-        TavoConfig config = new TavoConfig(TEST_API_KEY, TEST_JWT_TOKEN, TEST_BASE_URL, TEST_API_VERSION, timeout, maxRetries);
+        TavoConfig config = new TavoConfig(TEST_API_KEY, TEST_JWT_TOKEN, TEST_SESSION_TOKEN, TEST_BASE_URL, TEST_API_VERSION, timeout, maxRetries);
 
         assertEquals(TEST_API_KEY, config.getApiKey());
         assertEquals(TEST_JWT_TOKEN, config.getJwtToken());
+        assertEquals(TEST_SESSION_TOKEN, config.getSessionToken());
         assertEquals(TEST_BASE_URL, config.getBaseUrl());
         assertEquals(TEST_API_VERSION, config.getApiVersion());
         assertEquals(timeout, config.getTimeout());
@@ -81,6 +83,6 @@ class TavoConfigTest {
     void testValidationFailure() {
         TavoConfig config = new TavoConfig();
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, config::validate);
-        assertTrue(exception.getMessage().contains("API key or JWT token"));
+        assertTrue(exception.getMessage().contains("Either API key, JWT token, or session token"));
     }
 }

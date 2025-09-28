@@ -182,20 +182,69 @@ const webhooks = await client.webhooks.list();
 await client.webhooks.delete(webhook.id);
 ```
 
-### Billing & Reports
+### API Key Management
 
 ```typescript
-// Get billing information
-const billing = await client.billing.getInfo();
+// List your API keys
+const apiKeys = await client.apiKeys.list();
 
-// Generate report
-const report = await client.reports.generate({
-  type: 'security_audit',
-  dateRange: {
-    start: '2024-01-01',
-    end: '2024-01-31'
-  }
+// Create a new API key
+const newKey = await client.apiKeys.create('My API Key', {
+  description: 'For production use'
 });
+
+// Update an API key
+const updatedKey = await client.apiKeys.update(apiKeyId, 'Updated Name', {
+  description: 'Updated description'
+});
+
+// Rotate an API key (generates new secret)
+const rotatedKey = await client.apiKeys.rotate(apiKeyId);
+
+// Delete an API key
+await client.apiKeys.delete(apiKeyId);
+```
+
+### Report Management
+
+```typescript
+// Create a new report
+const report = await client.reports.create({
+  scanId: 'scan-uuid',
+  reportType: 'scan_summary',
+  format: 'pdf',
+  title: 'Security Audit Report'
+});
+
+// Get report details
+const reportDetails = await client.reports.get(reportId);
+
+// List reports with filtering
+const reports = await client.reports.list({
+  limit: 10,
+  reportType: 'scan_summary',
+  status: 'completed'
+});
+
+// Update report
+const updatedReport = await client.reports.update(reportId, {
+  title: 'Updated Report Title'
+});
+
+// Download report file
+const reportBlob = await client.reports.download(reportId);
+
+// Get report summary statistics
+const summary = await client.reports.getSummary();
+console.log(`Total reports: ${summary.totalReports}`);
+console.log(`Reports by type:`, summary.reportsByType);
+
+// Generate reports in different formats
+const pdfReport = await client.reports.generatePdf(scanId);
+const csvReport = await client.reports.generateCsv(scanId);
+const jsonReport = await client.reports.generateJson(scanId);
+const sarifReport = await client.reports.generateSarif(scanId);
+const htmlReport = await client.reports.generateHtml(scanId);
 ```
 
 ## Error Handling
@@ -458,7 +507,3 @@ export default async function handler(
 3. **Type Safety**: Use TypeScript interfaces for better development experience
 4. **Timeouts**: Set appropriate timeouts for your use case
 5. **Rate Limiting**: Implement proper rate limiting and backoff strategies
-
-## API Reference
-
-For complete API documentation, see the [JavaScript SDK API Reference](../api/javascript.md).

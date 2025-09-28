@@ -1,0 +1,13 @@
+rules:
+  - id: test-opengrep-pattern
+    pattern: |
+      openai.chat.completions.create(
+        model=$MODEL,
+        messages=[
+          {"role": "system", "content": $SYSTEM_MSG},
+          {"role": "user", "content": $USER_INPUT}
+        ]
+      )
+    message: "Found OpenAI API call with user input"
+    severity: INFO
+    languages: [python]

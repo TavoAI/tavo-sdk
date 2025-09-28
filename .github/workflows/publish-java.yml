@@ -13,48 +13,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: 17
-        distribution: 'temurin'
-        server-id: ossrh
-        server-username: MAVEN_USERNAME
-        server-password: MAVEN_PASSWORD
-        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 17
+          distribution: "temurin"
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-    - name: Update version
-      run: |
-        cd packages/java
-        # Update version in pom.xml
-        sed -i "s/<version>.*<\/version>/<version>${{ inputs.version }}<\/version>/" pom.xml
+      - name: Update version
+        run: |
+          cd packages/java
+          # Update version in pom.xml
+          sed -i "s/<version>.*<\/version>/<version>${{ inputs.version }}<\/version>/" pom.xml
 
-    - name: Build and test
-      run: |
-        cd packages/java
-        mvn clean verify
+      - name: Build and test
+        run: |
+          cd packages/java
+          mvn clean verify
 
-    - name: Publish to Maven Central
-      run: |
-        cd packages/java
-        mvn deploy -P release
-      env:
-        MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-        MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      - name: Publish to Maven Central
+        run: |
+          cd packages/java
+          mvn deploy -P release
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
-    - name: Create Git tag
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git tag java-v${{ inputs.version }}
-        git push origin java-v${{ inputs.version }}
+      - name: Create Git tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag java-v${{ inputs.version }}
+          git push origin java-v${{ inputs.version }}
 
-    - name: Notify success
-      run: |
-        echo "✅ Java SDK v${{ inputs.version }} published successfully!"
-        echo "📦 Available on Maven Central: https://search.maven.org/artifact/net.tavoai/tavo-java-sdk/${{ inputs.version }}/jar"
+      - name: Notify success
+        run: |
+          echo "✅ Java SDK v${{ inputs.version }} published successfully!"
+          echo "📦 Available on Maven Central: https://search.maven.org/artifact/net.tavoai/tavo-java-sdk/${{ inputs.version }}/jar"

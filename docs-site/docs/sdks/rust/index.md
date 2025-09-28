@@ -112,6 +112,22 @@ updates.insert("name".to_string(), serde_json::json!("New Name"));
 updates.insert("email".to_string(), serde_json::json!("new@example.com"));
 
 let updated_user = client.update_user(user.id, updates).await?;
+
+// API Key Management
+let api_keys = client.list_api_keys().await?;
+
+// Update API key
+let mut key_updates = HashMap::new();
+key_updates.insert("name".to_string(), serde_json::json!("Updated API Key Name"));
+key_updates.insert("description".to_string(), serde_json::json!("Updated description"));
+
+let updated_key = client.update_api_key(api_key_id, key_updates).await?;
+
+// Rotate API key (generates new secret)
+let rotated_key = client.rotate_api_key(api_key_id).await?;
+
+// Delete API key
+client.delete_api_key(api_key_id).await?;
 ```
 
 ### Organization Management
@@ -184,6 +200,13 @@ let report = client.generate_report(ReportConfig {
         end: "2024-01-31".to_string(),
     }),
 }).await?;
+
+// Get report summary statistics
+let summary = client.get_report_summary().await?;
+
+println!("Total scans: {}", summary.total_scans);
+println!("Total vulnerabilities: {}", summary.total_vulnerabilities);
+println!("Critical issues: {}", summary.critical_issues);
 ```
 
 ## Error Handling
@@ -610,7 +633,3 @@ mod tests {
 - **Connection Reuse**: HTTP connections are automatically reused
 - **Memory Safety**: Compile-time guarantees prevent memory errors
 - **Concurrent Operations**: Use futures for parallel scanning
-
-## API Reference
-
-For complete API documentation, see the [Rust SDK API Reference](../api/rust.md).

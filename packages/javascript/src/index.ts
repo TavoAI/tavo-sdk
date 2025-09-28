@@ -3,6 +3,10 @@
  */
 
 import axios from 'axios';
+import { RuleManager, SecurityScanner } from './rules';
+
+// Rule management exports
+export * from './rules';
 
 export const VERSION = '0.1.0';
 
@@ -114,11 +118,53 @@ export interface ReportSummary {
   recentReports: number;
 }
 
+export interface ScanUpdateMessage {
+  scan_id: string;
+  update_type: 'started' | 'progress' | 'result' | 'completed' | 'error';
+  message: string;
+  data?: any;
+  timestamp?: string;
+}
+
+export interface NotificationMessage {
+  type: 'info' | 'warning' | 'error' | 'success';
+  title: string;
+  message: string;
+  data?: any;
+  timestamp?: string;
+}
+
+export interface GeneralMessage {
+  type: string;
+  message: string;
+  data?: any;
+  timestamp?: string;
+}
+
+export interface WebSocketConfig {
+  reconnectInterval?: number;
+  maxReconnectAttempts?: number;
+  heartbeatInterval?: number;
+}
+
+export interface WebSocketConnection {
+  websocket: WebSocket;
+  clientId: string;
+  reconnectAttempts: number;
+  isConnected: boolean;
+  heartbeatTimer?: NodeJS.Timeout;
+  reconnectTimer?: NodeJS.Timeout;
+}
+
 export class TavoClient {
   private readonly config: Required<TavoConfig>;
   private readonly axios: any;
+  private readonly ruleManager: RuleManager;
+  private readonly scanner: SecurityScanner;
+  private readonly websocketConnections: Map<string, WebSocketConnection> = new Map();
+  private readonly wsConfig: Required<WebSocketConfig>;
 
-  constructor(config: TavoConfig) {
+  constructor(config: TavoConfig, wsConfig?: WebSocketConfig) {
     // Validate authentication
     if (!config.apiKey && !config.jwtToken && !config.sessionToken) {
       throw new Error('Either API key, JWT token, or session token must be provided');
@@ -134,8 +180,18 @@ export class TavoClient {
       maxRetries: config.maxRetries || 3,
     };
 
+    this.wsConfig = {
+      reconnectInterval: wsConfig?.reconnectInterval || 5000,
+      maxReconnectAttempts: wsConfig?.maxReconnectAttempts || 5,
+      heartbeatInterval: wsConfig?.heartbeatInterval || 30000,
+    };
+
     // Initialize axios instance
     this.axios = this.createAxiosInstance();
+
+    // Initialize rule management
+    this.ruleManager = new RuleManager();
+    this.scanner = new SecurityScanner(this.ruleManager);
   }
 
   private createAxiosInstance() {
@@ -390,6 +446,14 @@ export class TavoClient {
         });
         return response.data;
       },
+
+      /**
+       * Get report summary statistics
+       */
+      getSummary: async (): Promise<ReportSummary> => {
+        const response = await this.axios.get('/reports/summary');
+        return response.data;
+      },
     };
   }
 
@@ -510,6 +574,32 @@ export class TavoClient {
             name,
             ...options,
           });
+          return response.data;
+        },
+
+        /**
+         * Update API key
+         */
+        update: async (apiKeyId: string, name: string, options?: any): Promise<any> => {
+          const response = await this.axios.put(`/users/me/api-keys/${apiKeyId}`, {
+            name,
+            ...options,
+          });
+          return response.data;
+        },
+
+        /**
+         * Delete API key
+         */
+        delete: async (apiKeyId: string): Promise<void> => {
+          await this.axios.delete(`/users/me/api-keys/${apiKeyId}`);
+        },
+
+        /**
+         * Rotate API key
+         */
+        rotate: async (apiKeyId: string, options?: any): Promise<any> => {
+          const response = await this.axios.post(`/users/me/api-keys/${apiKeyId}/rotate`, options || {});
           return response.data;
         },
       }))(),
@@ -743,6 +833,465 @@ export class TavoClient {
         return response.data;
       },
     };
+  }
+
+  /**
+   * Rule management methods
+   */
+  get rules() {
+    return {
+      /**
+       * Download a rule bundle
+       */
+      downloadBundle: async (bundleName: string) => {
+        return await this.ruleManager.downloadBundle(bundleName);
+      },
+
+      /**
+       * Scan codebase with local rules
+       */
+      scanCodebase: async (path: string, bundleName: string = 'llm-security', useBinary?: boolean) => {
+        return await this.scanner.scanCodebase(path, bundleName, useBinary);
+      },
+
+      /**
+       * Scan codebase using scanner binary (if available)
+       */
+      scanWithBinary: async (path: string, bundleName: string = 'llm-security') => {
+        return await this.scanner.scanCodebase(path, bundleName, true);
+      },
+
+      /**
+       * List available rule bundles
+       */
+      listBundles: () => {
+        return this.ruleManager.listBundles();
+      },
+    };
+  }
+
+  /**
+   * Rule management API operations
+   */
+  get ruleManagement() {
+    return {
+      /**
+       * List available rule bundles from API
+       */
+      listBundles: async (options?: {
+        category?: string;
+        officialOnly?: boolean;
+        page?: number;
+        perPage?: number;
+      }): Promise<any> => {
+        const params: any = {};
+        if (options?.category) params.category = options.category;
+        if (options?.officialOnly) params.official_only = options.officialOnly;
+        if (options?.page) params.page = options.page;
+        if (options?.perPage) params.per_page = options.perPage;
+
+        const response = await this.axios.get('/rules/bundles', { params });
+        return response.data;
+      },
+
+      /**
+       * Get rules from a specific bundle
+       */
+      getBundleRules: async (bundleId: string): Promise<any> => {
+        const response = await this.axios.get(`/rules/bundles/${bundleId}/rules`);
+        return response.data;
+      },
+
+      /**
+       * Install a rule bundle
+       */
+      installBundle: async (bundleId: string, organizationId?: string): Promise<any> => {
+        const data: any = {};
+        if (organizationId) data.organization_id = organizationId;
+
+        const response = await this.axios.post(`/rules/bundles/${bundleId}/install`, data);
+        return response.data;
+      },
+
+      /**
+       * Uninstall a rule bundle
+       */
+      uninstallBundle: async (bundleId: string): Promise<any> => {
+        const response = await this.axios.delete(`/rules/bundles/${bundleId}/install`);
+        return response.data;
+      },
+
+      /**
+       * Validate rule syntax
+       */
+      validateRules: async (rules: any[]): Promise<any> => {
+        const response = await this.axios.post('/rules/validate', { rules });
+        return response.data;
+      },
+
+      /**
+       * Check for bundle updates
+       */
+      checkUpdates: async (bundleIds?: string[]): Promise<any> => {
+        const params: any = {};
+        if (bundleIds) params.bundle_ids = bundleIds.join(',');
+
+        const response = await this.axios.get('/rules/updates', { params });
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * Device authentication operations
+   */
+  get deviceAuth() {
+    return {
+      /**
+       * Create device code for authentication
+       */
+      createDeviceCode: async (options?: {
+        clientId?: string;
+        clientName?: string;
+      }): Promise<any> => {
+        const data: any = {};
+        if (options?.clientId) data.client_id = options.clientId;
+        if (options?.clientName) data.client_name = options.clientName || 'Tavo SDK';
+
+        const response = await this.axios.post('/device/code', data);
+        return response.data;
+      },
+
+      /**
+       * Poll for device token
+       */
+      pollDeviceToken: async (deviceCode: string): Promise<any> => {
+        const response = await this.axios.post('/device/token', {
+          device_code: deviceCode,
+        });
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * Session authentication operations
+   */
+  get sessionAuth() {
+    return {
+      /**
+       * Create session token
+       */
+      createSessionToken: async (description?: string): Promise<any> => {
+        const response = await this.axios.post('/auth/session/create', {
+          description: description || 'SDK Session',
+        });
+        return response.data;
+      },
+
+      /**
+       * List session tokens
+       */
+      listSessionTokens: async (): Promise<any> => {
+        const response = await this.axios.get('/auth/session/list');
+        return response.data;
+      },
+
+      /**
+       * Delete session token
+       */
+      deleteSessionToken: async (tokenId: string): Promise<any> => {
+        const response = await this.axios.delete(`/auth/session/${tokenId}`);
+        return response.data;
+      },
+
+      /**
+       * Delete all session tokens
+       */
+      deleteAllSessionTokens: async (): Promise<any> => {
+        const response = await this.axios.delete('/auth/session/');
+        return response.data;
+      },
+
+      /**
+       * Validate session token
+       */
+      validateSessionToken: async (token: string): Promise<any> => {
+        const response = await this.axios.post('/auth/session/validate', {
+          token,
+        });
+        return response.data;
+      },
+
+      /**
+       * Authenticate with session token
+       */
+      authenticateWithSessionToken: async (token: string): Promise<any> => {
+        const response = await this.axios.post('/auth/session/authenticate', {
+          token,
+        });
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * WebSocket operations
+   */
+  get websocket() {
+    return {
+      /**
+       * Connect to scan progress updates WebSocket
+       */
+      connectToScan: (
+        scanId: string,
+        onMessage: (message: ScanUpdateMessage) => void,
+        onError?: (error: Event) => void,
+        onClose?: (event: Event) => void
+      ): Promise<string> => {
+        return this.connectWebSocket(
+          `ws/scan/${scanId}`,
+          'scan',
+          scanId,
+          onMessage,
+          onError,
+          onClose
+        );
+      },
+
+      /**
+       * Connect to notifications WebSocket
+       */
+      connectToNotifications: (
+        onMessage: (message: NotificationMessage) => void,
+        onError?: (error: Event) => void,
+        onClose?: (event: Event) => void
+      ): Promise<string> => {
+        return this.connectWebSocket(
+          'ws/notifications',
+          'notifications',
+          'notifications',
+          onMessage,
+          onError,
+          onClose
+        );
+      },
+
+      /**
+       * Connect to general broadcasts WebSocket
+       */
+      connectToGeneral: (
+        onMessage: (message: GeneralMessage) => void,
+        onError?: (error: Event) => void,
+        onClose?: (event: Event) => void
+      ): Promise<string> => {
+        return this.connectWebSocket(
+          'ws/general',
+          'general',
+          'general',
+          onMessage,
+          onError,
+          onClose
+        );
+      },
+
+      /**
+       * Disconnect from a WebSocket connection
+       */
+      disconnect: (connectionId: string): void => {
+        const connection = this.websocketConnections.get(connectionId);
+        if (connection) {
+          this.cleanupConnection(connection);
+          this.websocketConnections.delete(connectionId);
+        }
+      },
+
+      /**
+       * Disconnect from all WebSocket connections
+       */
+      disconnectAll: (): void => {
+        for (const connection of this.websocketConnections.values()) {
+          this.cleanupConnection(connection);
+        }
+        this.websocketConnections.clear();
+      },
+
+      /**
+       * Send a message to a WebSocket connection
+       */
+      sendMessage: (connectionId: string, message: any): boolean => {
+        const connection = this.websocketConnections.get(connectionId);
+        if (connection?.isConnected) {
+          try {
+            connection.websocket.send(JSON.stringify(message));
+            return true;
+          } catch (error) {
+            console.error('Failed to send WebSocket message:', error);
+            return false;
+          }
+        }
+        return false;
+      },
+    };
+  }
+
+  /**
+   * Internal WebSocket connection method
+   */
+  private async connectWebSocket<T>(
+    endpoint: string,
+    type: string,
+    connectionKey: string,
+    onMessage: (message: T) => void,
+    onError?: (error: Event) => void,
+    onClose?: (event: Event) => void
+  ): Promise<string> {
+    const connectionId = `${type}_${connectionKey}_${Date.now()}`;
+
+    // Build WebSocket URL with authentication
+    const wsUrl = new URL(this.config.baseURL);
+    wsUrl.protocol = wsUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+    wsUrl.pathname = `/${endpoint}`;
+
+    // Add authentication token as query parameter
+    const authToken = this.config.jwtToken || this.config.sessionToken || this.config.apiKey;
+    if (authToken) {
+      wsUrl.searchParams.set('token', authToken);
+    }
+
+    // Generate client ID
+    const clientId = `client_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    wsUrl.searchParams.set('client_id', clientId);
+
+    const websocket = new WebSocket(wsUrl.toString());
+
+    const connection: WebSocketConnection = {
+      websocket,
+      clientId,
+      reconnectAttempts: 0,
+      isConnected: false,
+    };
+
+    websocket.onopen = () => {
+      connection.isConnected = true;
+      connection.reconnectAttempts = 0;
+
+      // Start heartbeat
+      this.startHeartbeat(connection);
+
+      console.log(`WebSocket connected to ${endpoint}`);
+    };
+
+    websocket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        onMessage(message);
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error);
+      }
+    };
+
+    websocket.onerror = (error) => {
+      console.error(`WebSocket error for ${endpoint}:`, error);
+      if (onError) {
+        onError(error);
+      }
+    };
+
+    websocket.onclose = (event) => {
+      connection.isConnected = false;
+      this.stopHeartbeat(connection);
+
+      console.log(`WebSocket closed for ${endpoint}:`, event.code, event.reason);
+
+      if (onClose) {
+        onClose(event);
+      }
+
+      // Attempt reconnection if not a normal closure
+      if (event.code !== 1000 && connection.reconnectAttempts < this.wsConfig.maxReconnectAttempts) {
+        this.scheduleReconnect(connection, endpoint, type, connectionKey, onMessage, onError, onClose);
+      }
+    };
+
+    this.websocketConnections.set(connectionId, connection);
+    return connectionId;
+  }
+
+  /**
+   * Start heartbeat for a WebSocket connection
+   */
+  private startHeartbeat(connection: WebSocketConnection): void {
+    connection.heartbeatTimer = setInterval(() => {
+      if (connection.isConnected) {
+        try {
+          connection.websocket.send(JSON.stringify({ type: 'ping' }));
+        } catch (error) {
+          console.error('Heartbeat failed:', error);
+          this.cleanupConnection(connection);
+        }
+      }
+    }, this.wsConfig.heartbeatInterval);
+  }
+
+  /**
+   * Stop heartbeat for a WebSocket connection
+   */
+  private stopHeartbeat(connection: WebSocketConnection): void {
+    if (connection.heartbeatTimer) {
+      clearInterval(connection.heartbeatTimer);
+      connection.heartbeatTimer = undefined;
+    }
+  }
+
+  /**
+   * Schedule reconnection for a WebSocket connection
+   */
+  private scheduleReconnect<T>(
+    connection: WebSocketConnection,
+    endpoint: string,
+    type: string,
+    connectionKey: string,
+    onMessage: (message: T) => void,
+    onError?: (error: Event) => void,
+    onClose?: (event: Event) => void
+  ): void {
+    connection.reconnectAttempts++;
+
+    connection.reconnectTimer = setTimeout(async () => {
+      console.log(`Attempting to reconnect WebSocket (${connection.reconnectAttempts}/${this.wsConfig.maxReconnectAttempts})`);
+
+      try {
+        await this.connectWebSocket(
+          endpoint,
+          type,
+          connectionKey,
+          onMessage,
+          onError,
+          onClose
+        );
+      } catch (error) {
+        console.error('Reconnection failed:', error);
+      }
+    }, this.wsConfig.reconnectInterval * connection.reconnectAttempts);
+  }
+
+  /**
+   * Clean up a WebSocket connection
+   */
+  private cleanupConnection(connection: WebSocketConnection): void {
+    this.stopHeartbeat(connection);
+
+    if (connection.reconnectTimer) {
+      clearTimeout(connection.reconnectTimer);
+      connection.reconnectTimer = undefined;
+    }
+
+    if (connection.websocket.readyState === WebSocket.OPEN) {
+      connection.websocket.close(1000, 'Client disconnecting');
+    }
+
+    connection.isConnected = false;
   }
 }
 

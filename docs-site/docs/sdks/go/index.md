@@ -125,6 +125,33 @@ updatedUser, err := client.UpdateUser(ctx, user.ID, updates)
 if err != nil {
     log.Fatal(err)
 }
+
+// API Key Management
+apiKeys, err := client.ListAPIKeys(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Update API key
+updatedKey, err := client.UpdateAPIKey(ctx, apiKeyID, map[string]interface{}{
+    "name":        "Updated API Key Name",
+    "description": "Updated description",
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+// Rotate API key (generates new secret)
+rotatedKey, err := client.RotateAPIKey(ctx, apiKeyID)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Delete API key
+err = client.DeleteAPIKey(ctx, apiKeyID)
+if err != nil {
+    log.Fatal(err)
+}
 ```
 
 ### Organization Management
@@ -219,6 +246,16 @@ report, err := client.GenerateReport(ctx, &tavo.ReportConfig{
 if err != nil {
     log.Fatal(err)
 }
+
+// Get report summary statistics
+summary, err := client.GetReportSummary(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Total scans: %d\n", summary.TotalScans)
+fmt.Printf("Total vulnerabilities: %d\n", summary.TotalVulnerabilities)
+fmt.Printf("Critical issues: %d\n", summary.CriticalIssues)
 ```
 
 ## Error Handling
@@ -570,7 +607,3 @@ func main() {
 - **Concurrent Operations**: Use goroutines for parallel scanning
 - **Streaming**: Use streaming APIs for large datasets
 - **Timeouts**: Set reasonable timeouts to prevent hanging operations
-
-## API Reference
-
-For complete API documentation, see the [Go SDK API Reference](../api/go.md).

@@ -118,6 +118,22 @@ var updates = new Dictionary<string, object>
 };
 
 var updatedUser = await client.UpdateUserAsync(user.Id, updates);
+
+// API Key Management
+var apiKeys = await client.ListApiKeysAsync();
+
+// Update API key
+var updatedKey = await client.UpdateApiKeyAsync(apiKeyId, new Dictionary<string, object>
+{
+    ["name"] = "Updated API Key Name",
+    ["description"] = "Updated description"
+});
+
+// Rotate API key (generates new secret)
+var rotatedKey = await client.RotateApiKeyAsync(apiKeyId);
+
+// Delete API key
+await client.DeleteApiKeyAsync(apiKeyId);
 ```
 
 ### Organization Management
@@ -188,6 +204,13 @@ var report = await client.GenerateReportAsync(new ReportConfig
         End = "2024-01-31"
     }
 });
+
+// Get report summary statistics
+var summary = await client.GetReportSummaryAsync();
+
+Console.WriteLine($"Total scans: {summary.TotalScans}");
+Console.WriteLine($"Total vulnerabilities: {summary.TotalVulnerabilities}");
+Console.WriteLine($"Critical issues: {summary.CriticalIssues}");
 ```
 
 ## Error Handling
@@ -611,7 +634,3 @@ public class SecurityScanTests
 - **Concurrent Operations**: Use Task.WhenAll for parallel scanning
 - **Streaming**: Use streaming APIs for large datasets
 - **Memory Management**: Dispose clients properly to free resources
-
-## API Reference
-
-For complete API documentation, see the [.NET SDK API Reference](../api/dotnet.md).

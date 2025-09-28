@@ -13,22 +13,38 @@
 //!     let client = TavoClient::new("your-api-key")?;
 //!
 //!     // Scan code for vulnerabilities
-//!     let result = client.scan_code(r#"
-//!         fn process_input(input: &str) {
-//!             let query = format!("SELECT * FROM users WHERE id = '{}'", input);
-//!             // Potential SQL injection vulnerability
-//!         }
-//!     "#, "rust").await?;
+//!     let result = client.scans().start_scan("fn main() {}", "rust").await?;
 //!
 //!     println!("Found {} issues", result.total_issues);
 //!     Ok(())
 //! }
 //! ```
 
+pub mod auth;
+pub mod users;
+pub mod organizations;
+pub mod scans;
+pub mod jobs;
+pub mod webhooks;
+pub mod ai_analysis;
+pub mod billing;
+pub mod reports;
+
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use serde_json;
 use std::collections::HashMap;
 use thiserror::Error;
+
+pub use auth::*;
+pub use users::*;
+pub use organizations::*;
+pub use scans::*;
+pub use jobs::*;
+pub use webhooks::*;
+pub use ai_analysis::*;
+pub use billing::*;
+pub use reports::*;
 
 /// Errors that can occur when using the Tavo AI SDK
 #[derive(Error, Debug)]
@@ -140,36 +156,12 @@ impl TavoClient {
         request
     }
 
-    /// Scan code for security vulnerabilities
-    ///
-    /// # Arguments
-    ///
-    /// * `code` - The source code to scan
-    /// * `language` - Programming language (optional, defaults to "rust")
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// use tavo_ai::TavoClient;
-    ///
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = TavoClient::new("your-api-key")?;
-    ///     let result = client.scan_code("fn main() {}", "rust").await?;
-    ///     println!("Scan completed: {}", result.success);
-    ///     Ok(())
-    /// }
-    /// ```
-    pub async fn scan_code(&self, code: &str, language: &str) -> Result<ScanResult> {
-        let request = ScanRequest {
-            code: code.to_string(),
-            language: language.to_string(),
-        };
+    // Helper methods for making HTTP requests
 
-        let url = format!("{}/api/v1/scan", self.base_url);
-        let response = self
-            .authenticated_request(reqwest::Method::POST, &url)
-            .json(&request)
+    /// Make a GET request and deserialize JSON response
+    async fn get<T: for<'de> Deserialize<'de>>(&self, endpoint: &str) -> Result<T> {
+        let url = format!("{}/api/v1{}", self.base_url, endpoint);
+        let response = self.authenticated_request(reqwest::Method::GET, &url)
             .send()
             .await?;
 
@@ -178,40 +170,24 @@ impl TavoClient {
             return Err(TavoError::Api { message: error_msg });
         }
 
-        let result: ScanResult = response.json().await?;
+        let result = response.json().await?;
         Ok(result)
     }
 
-    /// Analyze AI model for security risks
-    ///
-    /// # Arguments
-    ///
-    /// * `model_config` - Model configuration as a JSON value
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use tavo_ai::TavoClient;
-    /// # use serde_json::json;
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = TavoClient::new("your-api-key")?;
-    /// let config = json!({
-    ///     "model_type": "transformer",
-    ///     "parameters": {
-    ///         "layers": 12,
-    ///         "heads": 8
-    ///     }
-    /// });
-    /// let result = client.analyze_model(config).await?;
-    /// println!("Model is safe: {}", result.safe);
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub async fn analyze_model(&self, model_config: serde_json::Value) -> Result<ModelAnalysisResult> {
-        let url = format!("{}/api/v1/analyze/model", self.base_url);
-        let response = self
-            .authenticated_request(reqwest::Method::POST, &url)
-            .json(&model_config)
+    /// Make a GET request with query parameters
+    async fn get_with_params<T: for<'de> Deserialize<'de>>(&self, endpoint: &str, params: &HashMap<String, serde_json::Value>) -> Result<T> {
+        let mut url = format!("{}/api/v1{}", self.base_url, endpoint);
+        if !params.is_empty() {
+            url.push('?');
+            for (key, value) in params {
+                if url.chars().last() != Some('?') {
+                    url.push('&');
+                }
+                url.push_str(&format!("{}={}", key, value));
+            }
+        }
+
+        let response = self.authenticated_request(reqwest::Method::GET, &url)
             .send()
             .await?;
 
@@ -220,8 +196,136 @@ impl TavoClient {
             return Err(TavoError::Api { message: error_msg });
         }
 
-        let result: ModelAnalysisResult = response.json().await?;
+        let result = response.json().await?;
         Ok(result)
+    }
+
+    /// Make a POST request
+    async fn post<T: for<'de> Deserialize<'de>>(&self, endpoint: &str, data: &HashMap<String, serde_json::Value>) -> Result<T> {
+        let url = format!("{}/api/v1{}", self.base_url, endpoint);
+        let response = self.authenticated_request(reqwest::Method::POST, &url)
+            .json(data)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_msg = response.text().await.unwrap_or_default();
+            return Err(TavoError::Api { message: error_msg });
+        }
+
+        let result = response.json().await?;
+        Ok(result)
+    }
+
+    /// Make a PUT request
+    async fn put<T: for<'de> Deserialize<'de>>(&self, endpoint: &str, data: &HashMap<String, serde_json::Value>) -> Result<T> {
+        let url = format!("{}/api/v1{}", self.base_url, endpoint);
+        let response = self.authenticated_request(reqwest::Method::PUT, &url)
+            .json(data)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_msg = response.text().await.unwrap_or_default();
+            return Err(TavoError::Api { message: error_msg });
+        }
+
+        let result = response.json().await?;
+        Ok(result)
+    }
+
+    /// Make a DELETE request
+    async fn delete(&self, endpoint: &str) -> Result<()> {
+        let url = format!("{}/api/v1{}", self.base_url, endpoint);
+        let response = self.authenticated_request(reqwest::Method::DELETE, &url)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_msg = response.text().await.unwrap_or_default();
+            return Err(TavoError::Api { message: error_msg });
+        }
+
+        Ok(())
+    }
+
+    /// Get raw text response
+    async fn get_text(&self, endpoint: &str) -> Result<String> {
+        let url = format!("{}/api/v1{}", self.base_url, endpoint);
+        let response = self.authenticated_request(reqwest::Method::GET, &url)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_msg = response.text().await.unwrap_or_default();
+            return Err(TavoError::Api { message: error_msg });
+        }
+
+        let result = response.text().await?;
+        Ok(result)
+    }
+
+    /// Get raw bytes response
+    async fn get_bytes(&self, endpoint: &str) -> Result<Vec<u8>> {
+        let url = format!("{}/api/v1{}", self.base_url, endpoint);
+        let response = self.authenticated_request(reqwest::Method::GET, &url)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_msg = response.text().await.unwrap_or_default();
+            return Err(TavoError::Api { message: error_msg });
+        }
+
+        let result = response.bytes().await?;
+        Ok(result.to_vec())
+    }
+
+    // Operation accessors
+
+    /// Get authentication operations
+    pub fn auth(&self) -> AuthOperations {
+        AuthOperations::new(self)
+    }
+
+    /// Get user operations
+    pub fn users(&self) -> UserOperations {
+        UserOperations::new(self)
+    }
+
+    /// Get organization operations
+    pub fn organizations(&self) -> OrganizationOperations {
+        OrganizationOperations::new(self)
+    }
+
+    /// Get scan operations
+    pub fn scans(&self) -> ScanOperations {
+        ScanOperations::new(self)
+    }
+
+    /// Get job operations
+    pub fn jobs(&self) -> JobOperations {
+        JobOperations::new(self)
+    }
+
+    /// Get webhook operations
+    pub fn webhooks(&self) -> WebhookOperations {
+        WebhookOperations::new(self)
+    }
+
+    /// Get AI analysis operations
+    pub fn ai_analysis(&self) -> AIAnalysisOperations {
+        AIAnalysisOperations::new(self)
+    }
+
+    /// Get billing operations
+    pub fn billing(&self) -> BillingOperations {
+        BillingOperations::new(self)
+    }
+
+    /// Get report operations
+    pub fn reports(&self) -> ReportOperations {
+        ReportOperations::new(self)
     }
 }
 

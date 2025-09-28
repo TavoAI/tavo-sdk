@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Tavo AI SDK for .NET")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+215822a60732c0001baf65f4549c75568a687570")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+04a1d1347671bb8548df1dc840ab13fa7a867460")]
 [assembly: System.Reflection.AssemblyProductAttribute("TavoAI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TavoAI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

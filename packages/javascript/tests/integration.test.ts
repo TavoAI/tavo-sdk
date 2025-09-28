@@ -36,6 +36,18 @@ describe('TavoClient Integration', () => {
     expect(typeof reports.create).toBe('function');
     expect(typeof reports.get).toBe('function');
     expect(typeof reports.list).toBe('function');
+    expect(typeof reports.update).toBe('function');
+    expect(typeof reports.delete).toBe('function');
+    expect(typeof reports.download).toBe('function');
+  });
+
+  test('should have apiKeys operations matching api-server endpoints', () => {
+    const apiKeys = client.apiKeys;
+    expect(typeof apiKeys.list).toBe('function');
+    expect(typeof apiKeys.create).toBe('function');
+    expect(typeof apiKeys.update).toBe('function');
+    expect(typeof apiKeys.delete).toBe('function');
+    expect(typeof apiKeys.rotate).toBe('function');
   });
 
   test('should initialize with custom config for testing', () => {
