@@ -13,43 +13,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.21'
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
 
-    - name: Update version
-      run: |
-        cd packages/go
-        # Update version in go.mod if needed
-        # Go modules use git tags for versioning
+      - name: Update version
+        run: |
+          cd packages/go
+          # Update version in go.mod if needed
+          # Go modules use git tags for versioning
 
-    - name: Run tests
-      run: |
-        cd packages/go
-        go test ./...
+      - name: Run tests
+        run: |
+          cd packages/go
+          go test ./...
 
-    - name: Run go mod tidy
-      run: |
-        cd packages/go
-        go mod tidy
+      - name: Run go mod tidy
+        run: |
+          cd packages/go
+          go mod tidy
 
-    - name: Create Git tag
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git tag go-v${{ inputs.version }}
-        git push origin go-v${{ inputs.version }}
+      - name: Create Git tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag go-v${{ inputs.version }}
+          git push origin go-v${{ inputs.version }}
 
-    - name: Verify module
-      run: |
-        cd packages/go
-        go list -m -versions github.com/tavoai/go-sdk
+      - name: Verify module
+        run: |
+          cd packages/go
+          go list -m -versions github.com/TavoAI/tavo-go-sdk
 
-    - name: Notify success
-      run: |
-        echo "✅ Go SDK v${{ inputs.version }} published successfully!"
-        echo "📦 Available on pkg.go.dev: https://pkg.go.dev/github.com/tavoai/go-sdk@v${{ inputs.version }}"
+      - name: Notify success
+        run: |
+          echo "✅ Go SDK v${{ inputs.version }} published successfully!"
+          echo "📦 Available on pkg.go.dev: https://pkg.go.dev/github.com/TavoAI/tavo-go-sdk@v${{ inputs.version }}"

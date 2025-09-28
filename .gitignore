@@ -98,12 +98,13 @@ instance/
 # -------------------------------
 # Tavo Scanner Engines
 # -------------------------------
-packages/scanner/engines/
-packages/scanner/engines/*
+packages/*/engines/
+packages/*/engines/*
 packages/scanner/build/
 packages/scanner/dist/
 packages/scanner/*.spec
 .tavoai/
+
 
 # -------------------------------
 # JavaScript / Node / Frontend

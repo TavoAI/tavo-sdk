@@ -2,21 +2,21 @@ name: Release Management
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Release type'
+        description: "Release type"
         required: true
-        default: 'patch'
+        default: "patch"
         type: choice
         options:
-        - patch
-        - minor
-        - major
-        - prerelease
+          - patch
+          - minor
+          - major
+          - prerelease
       packages:
-        description: 'Packages to release (comma-separated, empty for all)'
+        description: "Packages to release (comma-separated, empty for all)"
         required: false
         type: string
 
@@ -29,61 +29,61 @@ jobs:
       packages: ${{ steps.packages.outputs.packages }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Determine packages to release
-      id: packages
-      run: |
-        if [ -n "${{ github.event.inputs.packages }}" ]; then
-          echo "packages=${{ github.event.inputs.packages }}" >> $GITHUB_OUTPUT
-        else
-          echo "packages=python,javascript,java,go,dotnet,rust" >> $GITHUB_OUTPUT
-        fi
+      - name: Determine packages to release
+        id: packages
+        run: |
+          if [ -n "${{ github.event.inputs.packages }}" ]; then
+            echo "packages=${{ github.event.inputs.packages }}" >> $GITHUB_OUTPUT
+          else
+            echo "packages=python,javascript,java,go,dotnet,rust" >> $GITHUB_OUTPUT
+          fi
 
-    - name: Determine version
-      id: version
-      run: |
-        # Get the latest tag
-        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-        LATEST_VERSION=${LATEST_TAG#v}
+      - name: Determine version
+        id: version
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          LATEST_VERSION=${LATEST_TAG#v}
 
-        # Determine release type
-        RELEASE_TYPE="${{ github.event.inputs.release_type }}"
-        if [ -z "$RELEASE_TYPE" ]; then
-          RELEASE_TYPE="patch"
-        fi
+          # Determine release type
+          RELEASE_TYPE="${{ github.event.inputs.release_type }}"
+          if [ -z "$RELEASE_TYPE" ]; then
+            RELEASE_TYPE="patch"
+          fi
 
-        # Calculate new version
-        IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_VERSION"
+          # Calculate new version
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_VERSION"
 
-        case $RELEASE_TYPE in
-          major)
-            NEW_VERSION="$((MAJOR + 1)).0.0"
-            ;;
-          minor)
-            NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
-            ;;
-          patch)
-            NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
-            ;;
-          prerelease)
-            NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))-alpha.$(date +%Y%m%d%H%M%S)"
-            ;;
-        esac
+          case $RELEASE_TYPE in
+            major)
+              NEW_VERSION="$((MAJOR + 1)).0.0"
+              ;;
+            minor)
+              NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+              ;;
+            patch)
+              NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+              ;;
+            prerelease)
+              NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))-alpha.$(date +%Y%m%d%H%M%S)"
+              ;;
+          esac
 
-        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-        echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
 
   create-release:
     name: Create Release
@@ -93,19 +93,15 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Create GitHub release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v${{ needs.determine-version.outputs.version }}
-        release_name: Release v${{ needs.determine-version.outputs.version }}
-        body: |
-          ## What's Changed
+      - name: Create GitHub release
+        id: create_release
+        run: |
+          gh release create v${{ needs.determine-version.outputs.version }} \
+            --title "Release v${{ needs.determine-version.outputs.version }}" \
+            --notes "## What's Changed
 
           Automated release v${{ needs.determine-version.outputs.version }}
 
@@ -115,9 +111,11 @@ jobs:
           ### Deployment
           - 📦 Published to all configured registries
           - 📚 Documentation updated
-          - 🏷️ Version tags created
-        draft: false
-        prerelease: ${{ contains(needs.determine-version.outputs.version, 'alpha') }}
+          - 🏷️ Version tags created" \
+            --draft=false \
+            --prerelease=${{ contains(needs.determine-version.outputs.version, 'alpha') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-python:
     name: Publish Python SDK
@@ -176,64 +174,82 @@ jobs:
   update-changelog:
     name: Update Changelog
     runs-on: ubuntu-latest
-    needs: [publish-python, publish-javascript, publish-java, publish-go, publish-dotnet, publish-rust]
+    needs:
+      [
+        determine-version,
+        publish-python,
+        publish-javascript,
+        publish-java,
+        publish-go,
+        publish-dotnet,
+        publish-rust,
+      ]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
 
-    - name: Generate changelog
-      run: |
-        # Generate changelog entry
-        echo "# Changelog" > CHANGELOG.md.tmp
-        echo "" >> CHANGELOG.md.tmp
-        echo "## [v${{ needs.determine-version.outputs.version }}] - $(date +%Y-%m-%d)" >> CHANGELOG.md.tmp
-        echo "" >> CHANGELOG.md.tmp
-        echo "### Added" >> CHANGELOG.md.tmp
-        echo "- Automated publishing pipelines for all SDKs" >> CHANGELOG.md.tmp
-        echo "" >> CHANGELOG.md.tmp
-        echo "### Changed" >> CHANGELOG.md.tmp
-        echo "- Improved CI/CD workflows" >> CHANGELOG.md.tmp
-        echo "" >> CHANGELOG.md.tmp
-        echo "### Fixed" >> CHANGELOG.md.tmp
-        echo "- Various bug fixes and improvements" >> CHANGELOG.md.tmp
-        echo "" >> CHANGELOG.md.tmp
+      - name: Generate changelog
+        run: |
+          # Generate changelog entry
+          echo "# Changelog" > CHANGELOG.md.tmp
+          echo "" >> CHANGELOG.md.tmp
+          echo "## [v${{ needs.determine-version.outputs.version }}] - $(date +%Y-%m-%d)" >> CHANGELOG.md.tmp
+          echo "" >> CHANGELOG.md.tmp
+          echo "### Added" >> CHANGELOG.md.tmp
+          echo "- Automated publishing pipelines for all SDKs" >> CHANGELOG.md.tmp
+          echo "" >> CHANGELOG.md.tmp
+          echo "### Changed" >> CHANGELOG.md.tmp
+          echo "- Improved CI/CD workflows" >> CHANGELOG.md.tmp
+          echo "" >> CHANGELOG.md.tmp
+          echo "### Fixed" >> CHANGELOG.md.tmp
+          echo "- Various bug fixes and improvements" >> CHANGELOG.md.tmp
+          echo "" >> CHANGELOG.md.tmp
 
-        # Prepend to existing changelog if it exists
-        if [ -f CHANGELOG.md ]; then
-          cat CHANGELOG.md >> CHANGELOG.md.tmp
-        fi
+          # Prepend to existing changelog if it exists
+          if [ -f CHANGELOG.md ]; then
+            cat CHANGELOG.md >> CHANGELOG.md.tmp
+          fi
 
-        mv CHANGELOG.md.tmp CHANGELOG.md
+          mv CHANGELOG.md.tmp CHANGELOG.md
 
-    - name: Commit changelog
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add CHANGELOG.md
-        git commit -m "docs: update changelog for v${{ needs.determine-version.outputs.version }}" || true
-        git push
+      - name: Commit changelog
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for v${{ needs.determine-version.outputs.version }}" || true
+          git push
 
   notify:
     name: Notify Release
     runs-on: ubuntu-latest
-    needs: [publish-python, publish-javascript, publish-java, publish-go, publish-dotnet, publish-rust, update-changelog]
+    needs:
+      [
+        publish-python,
+        publish-javascript,
+        publish-java,
+        publish-go,
+        publish-dotnet,
+        publish-rust,
+        update-changelog,
+      ]
     if: always()
 
     steps:
-    - name: Notify success
-      if: needs.publish-python.result == 'success' && needs.publish-javascript.result == 'success' && needs.publish-java.result == 'success' && needs.publish-go.result == 'success' && needs.publish-dotnet.result == 'success' && needs.publish-rust.result == 'success'
-      run: |
-        echo "🎉 All packages published successfully!"
-        echo "Version: v${{ needs.determine-version.outputs.version }}"
+      - name: Notify success
+        if: needs.publish-python.result == 'success' && needs.publish-javascript.result == 'success' && needs.publish-java.result == 'success' && needs.publish-go.result == 'success' && needs.publish-dotnet.result == 'success' && needs.publish-rust.result == 'success'
+        run: |
+          echo "🎉 All packages published successfully!"
+          echo "Version: v${{ needs.determine-version.outputs.version }}"
 
-    - name: Notify partial failure
-      if: needs.publish-python.result == 'failure' || needs.publish-javascript.result == 'failure' || needs.publish-java.result == 'failure' || needs.publish-go.result == 'failure' || needs.publish-dotnet.result == 'failure' || needs.publish-rust.result == 'failure'
-      run: |
-        echo "⚠️ Some packages failed to publish. Check the logs above."
-        echo "Version: v${{ needs.determine-version.outputs.version }}"
+      - name: Notify partial failure
+        if: needs.publish-python.result == 'failure' || needs.publish-javascript.result == 'failure' || needs.publish-java.result == 'failure' || needs.publish-go.result == 'failure' || needs.publish-dotnet.result == 'failure' || needs.publish-rust.result == 'failure'
+        run: |
+          echo "⚠️ Some packages failed to publish. Check the logs above."
+          echo "Version: v${{ needs.determine-version.outputs.version }}"
