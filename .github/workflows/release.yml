@@ -99,6 +99,12 @@ jobs:
       - name: Create GitHub release
         id: create_release
         run: |
+          if ${{ contains(needs.determine-version.outputs.version, 'alpha') }}; then
+            PRERELEASE_FLAG="--prerelease"
+          else
+            PRERELEASE_FLAG=""
+          fi
+          
           gh release create v${{ needs.determine-version.outputs.version }} \
             --title "Release v${{ needs.determine-version.outputs.version }}" \
             --notes "## What's Changed
@@ -113,7 +119,7 @@ jobs:
           - 📚 Documentation updated
           - 🏷️ Version tags created" \
             --draft=false \
-            --prerelease=${{ contains(needs.determine-version.outputs.version, 'alpha') }}
+            $PRERELEASE_FLAG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -231,6 +237,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       [
+        determine-version,
         publish-python,
         publish-javascript,
         publish-java,

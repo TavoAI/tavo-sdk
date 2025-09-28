@@ -70,4 +70,4 @@ jobs:
     - name: Notify success
       run: |
         echo "✅ Python SDK v${{ inputs.version }} published successfully!"
-        echo "📦 Available on PyPI: https://pypi.org/project/tavo-ai-sdk/${{ inputs.version }}/"
+        echo "📦 Available on PyPI: https://pypi.org/project/tavo-python-sdk/${{ inputs.version }}/"
