@@ -1,12 +1,10 @@
-/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.csproj.AssemblyReference.cache
-/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.GeneratedMSBuildEditorConfig.editorconfig
-/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.AssemblyInfoInputs.cache
-/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.AssemblyInfo.cs
-/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.csproj.CoreCompileInputs.cache
-/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.sourcelink.json
 /home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/bin/Debug/net8.0/TavoAI.deps.json
 /home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/bin/Debug/net8.0/TavoAI.dll
 /home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/bin/Debug/net8.0/TavoAI.pdb
+/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.csproj.AssemblyReference.cache
+/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.GeneratedMSBuildEditorConfig.editorconfig
+/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.csproj.CoreCompileInputs.cache
+/home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.sourcelink.json
 /home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.dll
 /home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/refint/TavoAI.dll
 /home/ccham/work/TavoAI/repos/tavo-api/packages/dotnet/obj/Debug/net8.0/TavoAI.pdb

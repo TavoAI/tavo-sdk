@@ -961,14 +961,6 @@ class BillingOperations:
         response = await self._client._request("GET", "/billing/billing")
         return response
 
-    async def upgrade_subscription(self, new_tier: str) -> Dict[str, Any]:
-        """Upgrade subscription tier."""
-        params = {"new_tier": new_tier}
-        response = await self._client._request(
-            "POST", "/billing/upgrade", params=params
-        )
-        return response
-
 
 class ReportOperations:
     """Operations for security reports"""

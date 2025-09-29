@@ -37,7 +37,7 @@ namespace TavoAI
 
             _httpClient = new HttpClient
             {
-                BaseAddress = new Uri(_config.BaseUrl)
+                BaseAddress = new Uri($"{_config.BaseUrl}/api/{_config.ApiVersion}")
             };
 
             // Set authentication headers
@@ -60,7 +60,11 @@ namespace TavoAI
         /// </summary>
         public async Task<Dictionary<string, object>> HealthCheckAsync()
         {
-            return await MakeRequestAsync<Dictionary<string, object>>("GET", "/health", null);
+            using var client = new HttpClient();
+            var response = await client.GetAsync($"{_config.BaseUrl}/");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<Dictionary<string, object>>(content);
         }
 
         /// <summary>

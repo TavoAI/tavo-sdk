@@ -101,7 +101,7 @@ jobs:
               cd $pkg && go build ./... && cd ../..
             elif [ -f "$pkg/TavoAI.csproj" ]; then
               echo "Building $pkg (.NET)"
-              cd $pkg && dotnet clean && dotnet build -q && cd ../..
+              cd $pkg && dotnet clean && rm -rf obj bin && dotnet restore && dotnet build -q && cd ../..
             elif [ -f "$pkg/Cargo.toml" ]; then
               echo "Building $pkg (rust)"
               cd $pkg && cargo clean && cargo build --quiet && cd ../..

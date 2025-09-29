@@ -31,8 +31,3 @@ func (b *BillingOperations) GetInvoices(params map[string]interface{}) (map[stri
 func (b *BillingOperations) GetSubscription() (map[string]interface{}, error) {
 	return b.client.makeRequest("GET", "/billing/subscription", nil)
 }
-
-// UpdateSubscription updates the subscription
-func (b *BillingOperations) UpdateSubscription(subscriptionData map[string]interface{}) (map[string]interface{}, error) {
-	return b.client.makeRequest("PUT", "/billing/subscription", subscriptionData)
-}

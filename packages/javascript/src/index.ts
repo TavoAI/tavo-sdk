@@ -743,16 +743,6 @@ export class TavoClient {
         const response = await this.axios.get('/billing/billing');
         return response.data;
       },
-
-      /**
-       * Upgrade subscription
-       */
-      upgradeSubscription: async (newTier: string): Promise<any> => {
-        const response = await this.axios.post('/billing/upgrade', null, {
-          params: { new_tier: newTier }
-        });
-        return response.data;
-      },
     };
   }
 

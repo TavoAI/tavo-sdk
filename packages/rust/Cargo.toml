@@ -21,3 +21,7 @@ url = "2.5"
 
 [dev-dependencies]
 tokio-test = "0.4"
+
+[[example]]
+name = "basic_scan"
+path = "examples/basic_scan.rs"

@@ -141,6 +141,22 @@ impl TavoClient {
         })
     }
 
+    /// Create a new TavoClient with custom base URL
+    pub fn with_base_url(api_key: impl Into<String>, base_url: impl Into<String>) -> Result<Self> {
+        let api_key = api_key.into();
+        if api_key.is_empty() {
+            return Err(TavoError::InvalidApiKey);
+        }
+
+        Ok(Self {
+            client: Client::new(),
+            api_key: Some(api_key),
+            jwt_token: None,
+            session_token: None,
+            base_url: base_url.into(),
+        })
+    }
+
     /// Create a request builder with appropriate authentication headers
     fn authenticated_request(&self, method: reqwest::Method, url: &str) -> reqwest::RequestBuilder {
         let mut request = self.client.request(method, url);
@@ -327,6 +343,22 @@ impl TavoClient {
     pub fn reports(&self) -> ReportOperations {
         ReportOperations::new(self)
     }
+
+    /// Health check - verify API connectivity
+    pub async fn health_check(&self) -> Result<HealthResponse> {
+        let url = format!("{}/", self.base_url);
+        let response = self.authenticated_request(reqwest::Method::GET, &url)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_msg = response.text().await.unwrap_or_default();
+            return Err(TavoError::Api { message: error_msg });
+        }
+
+        let result = response.json().await?;
+        Ok(result)
+    }
 }
 
 /// Request payload for code scanning
@@ -370,6 +402,14 @@ pub struct ModelAnalysisResult {
     pub safe: bool,
     pub risks: Vec<String>,
     pub recommendations: HashMap<String, serde_json::Value>,
+}
+
+/// Health check response
+#[derive(Deserialize, Debug, Clone)]
+pub struct HealthResponse {
+    pub message: String,
+    pub version: String,
+    pub status: String,
 }
 
 #[cfg(test)]

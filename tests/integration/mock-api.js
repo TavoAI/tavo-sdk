@@ -25,8 +25,12 @@ app.post('/api/v1/scan', (req, res) => {
     res.json(mockResult);
 });
 
-app.get('/api/v1/health', (req, res) => {
-    res.json({ status: 'healthy', version: '1.0.0' });
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Tavo.AI API Server',
+        version: '1.0.0',
+        status: 'healthy'
+    });
 });
 
 app.post('/api/v1/auth/test', (req, res) => {
