@@ -148,10 +148,9 @@ jobs:
           const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://localhost:3001' });
 
           // Test basic API connectivity
-          client._client.get('/api/v1/health')
+          client.healthCheck()
             .then(response => {
-              console.log('JavaScript SDK: API health check passed -', response.data);
-              return client.close();
+              console.log('JavaScript SDK: API health check passed -', response);
             })
             .catch(error => {
               console.log('JavaScript SDK: Health check failed -', error.message);
