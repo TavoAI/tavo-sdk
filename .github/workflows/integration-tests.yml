@@ -161,6 +161,7 @@ jobs:
 
           echo "Testing Java SDK..."
           cd ../java
+          mvn test-compile -q
           java -cp "$(mvn dependency:build-classpath -q -Dmdep.outputFile=/dev/stdout):target/classes:target/test-classes" net.tavoai.TavoClientTest
 
           echo "Testing Go SDK..."
