@@ -123,6 +123,7 @@ jobs:
           # Test each SDK against the mock API
           echo "Testing Python SDK..."
           cd ../../packages/python
+          pip install httpx pydantic python-dateutil typing-extensions
           PYTHONPATH=src python -c "
           import asyncio
           from tavo import TavoClient
