@@ -53,7 +53,7 @@ jobs:
         cd docs-site
         # Copy build directory and resolve any symlinks using rsync
         mkdir -p ../temp-docs-build
-        rsync -av --copy-links build/ ../temp-docs-build/
+        rsync -av --copy-links build/tavo-api/ ../temp-docs-build/
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
