@@ -4,6 +4,10 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+});
 
 // Mock API endpoints that SDKs expect
 app.post('/api/v1/scan', (req, res) => {
