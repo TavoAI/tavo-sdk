@@ -47,6 +47,46 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml', '**/setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Cache NuGet dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.fsproj', '**/*.vbproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -64,30 +104,42 @@ jobs:
       - name: Scan Python dependencies
         run: |
           cd packages/python
-          pip install safety
+          pip install --cache-dir ~/.cache/pip safety
           safety check --output json > security-report.json || true
           cat security-report.json
 
       - name: Scan JavaScript dependencies
         run: |
           cd packages/javascript
+          npm ci --cache ~/.npm --prefer-offline
           npm audit --audit-level high --json > security-report.json || true
           cat security-report.json
+
+      - name: Cache OWASP Dependency Check data
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp
+          key: ${{ runner.os }}-owasp-dc-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-owasp-dc-
 
       - name: Scan Java dependencies
         run: |
           cd packages/java
-          mvn org.owasp:dependency-check-maven:check -Dformat=JSON || true
+          mvn -Dmaven.repo.local=$HOME/.m2/repository org.owasp:dependency-check-maven:check -Dformat=JSON -DnvdValidForHours=24 || true
 
       - name: Scan .NET dependencies
         run: |
           cd packages/dotnet
+          dotnet restore --packages $HOME/.nuget/packages
           dotnet list package --vulnerable > vulnerable-packages.txt || true
           cat vulnerable-packages.txt
 
       - name: Scan Rust dependencies
         run: |
           cd packages/rust
+          export CARGO_HOME=$HOME/.cargo
+          cargo update
           cargo audit || true
 
       - name: Generate security report
