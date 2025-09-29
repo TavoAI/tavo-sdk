@@ -69,9 +69,10 @@ jobs:
         run: |
           # Build all packages for integration testing
           for pkg in packages/*; do
+            echo "Checking package: $pkg"
             if [ -f "$pkg/package.json" ]; then
-              echo "Building $pkg (npm)"
-              cd $pkg && npm ci && npm run build && cd ../..
+              echo "Building $pkg (yarn)"
+              cd $pkg && yarn install && yarn build && cd ../..
             elif [ -f "$pkg/pyproject.toml" ]; then
               echo "Building $pkg (python)"
               cd $pkg && python3 -m venv venv && source venv/bin/activate && pip install -e . && cd ../..
@@ -87,6 +88,8 @@ jobs:
             elif [ -f "$pkg/Cargo.toml" ]; then
               echo "Building $pkg (rust)"
               cd $pkg && cargo clean && cargo build --quiet && cd ../..
+            else
+              echo "Skipping $pkg (no build config found)"
             fi
           done
 
@@ -98,9 +101,9 @@ jobs:
           # Start mock API server for testing
           cd tests/integration
           echo "Node version: $(node --version)"
-          echo "NPM version: $(npm --version)"
-          npm ci
-          echo "Installed Express version: $(npm list express)"
+          echo "Yarn version: $(yarn --version)"
+          yarn install --frozen-lockfile
+          echo "Installed Express version: $(yarn list express)"
           echo "Starting mock API server..."
           PORT=3002 node mock-api.js > mock-api.log 2>&1 &
           MOCK_PID=$!
