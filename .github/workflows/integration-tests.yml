@@ -102,7 +102,7 @@ jobs:
           echo "Building .NET SDK..."
           cd packages/dotnet || (echo "Failed to cd to packages/dotnet" && exit 1)
           dotnet restore || (echo ".NET restore failed" && exit 1)
-          dotnet clean || (echo ".NET clean failed" && exit 1)
+          rm -rf obj bin || (echo "Failed to clean build directories" && exit 1)
           dotnet build --no-incremental -q || (echo ".NET build failed" && exit 1)
           cd ../.. || (echo "Failed to cd back from dotnet" && exit 1)
 
