@@ -66,17 +66,26 @@ jobs:
 
       - name: Build all SDKs
         run: |
+          # Install root dependencies first
+          echo "Installing root dependencies..."
+          yarn install --frozen-lockfile || (echo "Root yarn install failed" && exit 1)
+
           # Build all packages for integration testing
           for pkg in packages/*; do
             echo "Checking package: $pkg"
             if [ -f "$pkg/package.json" ]; then
               echo "Building $pkg (yarn)"
               cd $pkg || (echo "Failed to cd to $pkg" && exit 1)
-              echo "Installing dependencies for $pkg..."
-              yarn install || (echo "yarn install failed for $pkg" && exit 1)
               echo "Building $pkg..."
               yarn build || (echo "yarn build failed for $pkg" && exit 1)
-              echo "Build completed for $pkg"
+              echo "Verifying build output for $pkg..."
+              if [ -f "dist/index.js" ]; then
+                echo "Build completed successfully for $pkg - dist/index.js exists"
+              else
+                echo "Build failed for $pkg - dist/index.js not found"
+                ls -la dist/ || echo "dist directory not found"
+                exit 1
+              fi
               cd ../.. || (echo "Failed to cd back" && exit 1)
             elif [ -f "$pkg/pyproject.toml" ]; then
               echo "Building $pkg (python)"
