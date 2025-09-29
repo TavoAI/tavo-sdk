@@ -54,7 +54,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "8.0.405"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -99,10 +99,10 @@ jobs:
               cd $pkg && go build ./... && cd ../..
             elif [ -f "$pkg/TavoAI.csproj" ]; then
               echo "Building $pkg (.NET)"
-              cd $pkg && dotnet build -q && cd ../..
+              cd $pkg && dotnet clean && dotnet build -q && cd ../..
             elif [ -f "$pkg/Cargo.toml" ]; then
               echo "Building $pkg (rust)"
-              cd $pkg && cargo build --quiet && cd ../..
+              cd $pkg && cargo clean && cargo build --quiet && cd ../..
             fi
           done
 
