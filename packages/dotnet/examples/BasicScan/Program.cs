@@ -14,7 +14,7 @@ namespace BasicScan
                 var config = new TavoConfig
                 {
                     ApiKey = "test-key",
-                    BaseUrl = "http://localhost:3001"
+                    BaseUrl = "http://127.0.0.1:3001"
                 };
 
                 // Create client

@@ -116,11 +116,21 @@ jobs:
           # Start mock API server for testing
           cd tests/integration
           npm install
-          PORT=3001 npm run start-mock-api &
+          nohup PORT=3001 npm run start-mock-api > mock-api.log 2>&1 &
           MOCK_PID=$!
 
           # Wait for mock API to start
-          sleep 10
+          sleep 15
+
+          # Check if mock API is responding
+          for i in {1..10}; do
+            if curl -s --max-time 5 http://127.0.0.1:3001/ > /dev/null; then
+              echo "Mock API is ready"
+              break
+            fi
+            echo "Waiting for mock API... ($i/10)"
+            sleep 2
+          done
 
           # Test each SDK against the mock API
           echo "Testing Python SDK..."
@@ -132,7 +142,7 @@ jobs:
           from tavo import TavoClient
 
           async def test():
-              client = TavoClient('test-key', base_url='http://localhost:3001')
+              client = TavoClient('test-key', base_url='http://127.0.0.1:3001')
               # Test basic API connectivity
               try:
                   response = await client.health_check()
@@ -147,7 +157,7 @@ jobs:
           npm run build
           node -e "
           const { TavoClient } = require('./dist');
-          const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://localhost:3001' });
+          const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://127.0.0.1:3001' });
 
           // Test basic API connectivity
           client.healthCheck()
@@ -178,7 +188,8 @@ jobs:
           cargo run --example basic_scan
 
           # Kill mock API
-          kill $MOCK_PID
+          kill $MOCK_PID 2>/dev/null || true
+          cat tests/integration/mock-api.log || true
 
       - name: Run cross-language data consistency tests
         run: |
