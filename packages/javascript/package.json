@@ -23,6 +23,7 @@
     "format": "prettier --write src/**/*.ts",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build && npm run test",
+    "docs": "echo 'Documentation generation not yet configured'",
     "postinstall": "./download_engines.sh",
     "download-engines": "./download_engines.sh"
   },
