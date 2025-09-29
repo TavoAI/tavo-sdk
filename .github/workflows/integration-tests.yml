@@ -1,5 +1,7 @@
 name: Integration Tests
 
+# Test cross-language SDK compatibility
+
 on:
   push:
     branches: [main, develop]
