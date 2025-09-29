@@ -85,19 +85,30 @@ jobs:
 
           # Build other SDKs manually (non-yarn workspaces)
           echo "Building Python SDK..."
-          cd packages/python && python3 -m venv venv && source venv/bin/activate && pip install -e . && cd ../..
+          cd packages/python || (echo "Failed to cd to packages/python" && exit 1)
+          python3 -m venv venv && source venv/bin/activate && pip install -e . || (echo "Python build failed" && exit 1)
+          cd ../.. || (echo "Failed to cd back from python" && exit 1)
 
           echo "Building Java SDK..."
-          cd packages/java && mvn compile test-compile -q && cd ../..
+          cd packages/java || (echo "Failed to cd to packages/java" && exit 1)
+          mvn compile test-compile -q || (echo "Java build failed" && exit 1)
+          cd ../.. || (echo "Failed to cd back from java" && exit 1)
 
           echo "Building Go SDK..."
-          cd packages/go && go build ./... && cd ../..
+          cd packages/go || (echo "Failed to cd to packages/go" && exit 1)
+          go build ./... || (echo "Go build failed" && exit 1)
+          cd ../.. || (echo "Failed to cd back from go" && exit 1)
 
           echo "Building .NET SDK..."
-          cd packages/dotnet && dotnet clean && dotnet build -q && cd ../..
+          cd packages/dotnet || (echo "Failed to cd to packages/dotnet" && exit 1)
+          dotnet restore || (echo ".NET restore failed" && exit 1)
+          dotnet build -q || (echo ".NET build failed" && exit 1)
+          cd ../.. || (echo "Failed to cd back from dotnet" && exit 1)
 
           echo "Building Rust SDK..."
-          cd packages/rust && cargo clean && cargo build --quiet && cd ../..
+          cd packages/rust || (echo "Failed to cd to packages/rust" && exit 1)
+          cargo build --quiet || (echo "Rust build failed" && exit 1)
+          cd ../.. || (echo "Failed to cd back from rust" && exit 1)
 
       - name: Run API compatibility tests
         run: |
