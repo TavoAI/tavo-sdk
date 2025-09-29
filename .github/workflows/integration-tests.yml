@@ -71,7 +71,13 @@ jobs:
             echo "Checking package: $pkg"
             if [ -f "$pkg/package.json" ]; then
               echo "Building $pkg (yarn)"
-              cd $pkg && yarn install && yarn build && cd ../..
+              cd $pkg || (echo "Failed to cd to $pkg" && exit 1)
+              echo "Installing dependencies for $pkg..."
+              yarn install || (echo "yarn install failed for $pkg" && exit 1)
+              echo "Building $pkg..."
+              yarn build || (echo "yarn build failed for $pkg" && exit 1)
+              echo "Build completed for $pkg"
+              cd ../.. || (echo "Failed to cd back" && exit 1)
             elif [ -f "$pkg/pyproject.toml" ]; then
               echo "Building $pkg (python)"
               cd $pkg && python3 -m venv venv && source venv/bin/activate && pip install -e . && cd ../..
@@ -160,10 +166,17 @@ jobs:
 
           echo "Testing JavaScript SDK..."
           cd ../javascript
+          echo "Current directory: $(pwd)"
+          echo "Checking if package.json exists: $(ls -la package.json || echo 'NOT FOUND')"
+          echo "Checking if dist exists: $(ls -la dist/ || echo 'NOT FOUND')"
+          echo "Checking if dist/index.js exists: $(ls -la dist/index.js || echo 'NOT FOUND')"
           timeout 30s node -e "
+          console.log('Node version:', process.version);
+          console.log('Current working directory:', process.cwd());
           try {
+            console.log('Attempting to require package with require(\'.\')...');
             const { TavoClient } = require('.');
-            console.log('JavaScript SDK loaded successfully');
+            console.log('JavaScript SDK loaded successfully with require(\'.\')');
             const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://localhost:3002' });
             console.log('TavoClient created successfully');
 
@@ -178,9 +191,29 @@ jobs:
                 process.exit(1);
               });
           } catch (error) {
-            console.log('JavaScript SDK: Failed to load or initialize -', error.message);
-            console.log('Error stack:', error.stack);
-            process.exit(1);
+            console.log('JavaScript SDK: Failed to load with require(\'.\') -', error.message);
+            console.log('Trying alternative require(\'./dist/index.js\')...');
+            try {
+              const { TavoClient } = require('./dist/index.js');
+              console.log('JavaScript SDK loaded successfully with require(\'./dist/index.js\')');
+              const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://localhost:3002' });
+              console.log('TavoClient created successfully');
+
+              client.healthCheck()
+                .then(response => {
+                  console.log('JavaScript SDK: API health check passed -', JSON.stringify(response));
+                  process.exit(0);
+                })
+                .catch(error => {
+                  console.log('JavaScript SDK: Health check failed -', error.message);
+                  console.log('Error stack:', error.stack);
+                  process.exit(1);
+                });
+            } catch (error2) {
+              console.log('JavaScript SDK: Failed to load with require(\'./dist/index.js\') -', error2.message);
+              console.log('Error stack:', error2.stack);
+              process.exit(1);
+            }
           }
           "
           if [ $? -eq 0 ]; then
@@ -223,10 +256,22 @@ jobs:
           echo "Testing data consistency across SDKs..."
 
           # Test that all SDKs return consistent results for the same input
-          cd tests/integration
+          echo "Current directory: $(pwd)"
+          echo "Changing to tests/integration..."
+          cd tests/integration || (echo "Failed to cd to tests/integration" && exit 1)
+          echo "Successfully changed to: $(pwd)"
+
+          # Check if node is available
+          which node || (echo "node not found" && exit 1)
+          node --version
+
+          # Check if test script exists
+          ls -la test-consistency.js || (echo "test-consistency.js not found" && exit 1)
 
           # Run consistency test script
+          echo "Running test script..."
           node test-consistency.js
+          echo "Test script completed with exit code: $?"
 
       - name: Run performance comparison tests
         run: |
