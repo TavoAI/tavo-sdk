@@ -119,7 +119,7 @@ jobs:
           echo "NPM version: $(npm --version)"
           npm ci
           echo "Installed Express version: $(npm list express)"
-          PORT=3002 nohup node mock-api.js > mock-api.log 2>&1 &
+          PORT=3002 node mock-api.js > mock-api.log 2>&1 &
           MOCK_PID=$!
           echo "Mock API started with PID: $MOCK_PID"
           # Give the process a moment to start
@@ -130,9 +130,6 @@ jobs:
             cat mock-api.log || true
             exit 1
           fi
-
-          # Wait for mock API to start
-          sleep 15
 
           # Check if mock API is responding
           for i in {1..15}; do
@@ -156,7 +153,7 @@ jobs:
           cd ../../packages/python
           pip install httpx pydantic python-dateutil typing-extensions websockets
           pip install -e .
-          python -c "
+          python3 -c "
           import asyncio
           from tavo import TavoClient
 
@@ -170,7 +167,10 @@ jobs:
                   print(f'Python SDK: Health check failed - {e}')
 
           asyncio.run(test())
-          "          echo "Testing JavaScript SDK..."
+          "
+          echo "Python SDK test completed"
+
+          echo "Testing JavaScript SDK..."
           cd ../javascript
           npm install
           npm run build
@@ -187,29 +187,36 @@ jobs:
               console.log('JavaScript SDK: Health check failed -', error.message);
             });
           "
+          echo "JavaScript SDK test completed"
 
           echo "Testing Java SDK..."
           cd ../java
           mvn test-compile -q
+          echo "Java compilation completed"
           java -cp "$(mvn dependency:build-classpath -q -Dmdep.outputFile=/dev/stdout):target/classes:target/test-classes" net.tavoai.TavoClientTest
+          echo "Java SDK test completed"
 
           echo "Testing Go SDK..."
           cd ../go
           go mod tidy
           go run examples/basic/main.go
+          echo "Go SDK test completed"
 
           echo "Testing .NET SDK..."
           cd ../dotnet
           dotnet run --project examples/BasicScan/BasicScan.csproj
+          echo ".NET SDK test completed"
 
           echo "Testing Rust SDK..."
           cd ../rust
           cargo run --example basic_scan
+          echo "Rust SDK test completed"
 
-          # Kill mock API
+          # Kill mock API and show logs
+          cd ../../tests/integration
           kill $MOCK_PID 2>/dev/null || true
           sleep 1
-          cat tests/integration/mock-api.log || true
+          cat mock-api.log || true
 
       - name: Run cross-language data consistency tests
         run: |

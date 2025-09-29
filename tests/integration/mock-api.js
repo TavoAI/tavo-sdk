@@ -18,6 +18,21 @@ app.get('/', (req, res) => {
     });
 });
 
+// Additional health check endpoints for different SDKs
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString()
+    });
+});
+
+app.get('/api/v1/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        message: 'API is healthy'
+    });
+});
+
 app.post('/api/v1/auth/test', (req, res) => {
     const authHeader = req.headers['x-api-key'] || req.headers['authorization'];
 
@@ -33,10 +48,10 @@ app.get('/ws', (req, res) => {
     res.json({ message: 'WebSocket endpoint available' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '127.0.0.1', () => {
     console.log(`Mock API server running on port ${PORT} (PID: ${process.pid})`);
     console.log(`Health check: http://127.0.0.1:${PORT}/`);
-    console.log(`Server listening on 0.0.0.0:${PORT}`);
+    console.log(`Server listening on 127.0.0.1:${PORT}`);
 }).on('error', (err) => {
     console.error('Mock API failed to start:', err);
     console.error('Error details:', err.message);
