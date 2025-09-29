@@ -1,0 +1,12 @@
+{
+  "name": "tavo-api-integration-tests",
+  "version": "1.0.0",
+  "description": "Mock API server for SDK integration tests",
+  "main": "mock-api.js",
+  "scripts": {
+    "start-mock-api": "node mock-api.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}
