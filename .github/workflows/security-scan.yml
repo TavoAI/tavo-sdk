@@ -2,12 +2,12 @@ name: Security Scan
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   schedule:
     # Run weekly on Sundays at 3 AM UTC
-    - cron: '0 3 * * 0'
+    - cron: "0 3 * * 0"
 
 jobs:
   security-scan:
@@ -20,175 +20,175 @@ jobs:
       pull-requests: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: 17
-        distribution: 'temurin'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: "temurin"
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
 
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
 
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
 
-    - name: Scan Python dependencies
-      run: |
-        cd packages/python
-        pip install safety
-        safety check --output json > security-report.json || true
-        cat security-report.json
+      - name: Scan Python dependencies
+        run: |
+          cd packages/python
+          pip install safety
+          safety check --output json > security-report.json || true
+          cat security-report.json
 
-    - name: Scan JavaScript dependencies
-      run: |
-        cd packages/javascript
-        npm audit --audit-level high --json > security-report.json || true
-        cat security-report.json
+      - name: Scan JavaScript dependencies
+        run: |
+          cd packages/javascript
+          npm audit --audit-level high --json > security-report.json || true
+          cat security-report.json
 
-    - name: Scan Java dependencies
-      run: |
-        cd packages/java
-        mvn org.owasp:dependency-check-maven:check -Dformat=JSON || true
+      - name: Scan Java dependencies
+        run: |
+          cd packages/java
+          mvn org.owasp:dependency-check-maven:check -Dformat=JSON || true
 
-    - name: Scan .NET dependencies
-      run: |
-        cd packages/dotnet
-        dotnet list package --vulnerable > vulnerable-packages.txt || true
-        cat vulnerable-packages.txt
+      - name: Scan .NET dependencies
+        run: |
+          cd packages/dotnet
+          dotnet list package --vulnerable > vulnerable-packages.txt || true
+          cat vulnerable-packages.txt
 
-    - name: Scan Rust dependencies
-      run: |
-        cd packages/rust
-        cargo audit || true
+      - name: Scan Rust dependencies
+        run: |
+          cd packages/rust
+          cargo audit || true
 
-    - name: Run CodeQL Analysis
-      uses: github/codeql-action/init@v2
-      with:
-        languages: javascript, python, java, csharp, rust, go
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, python, java, csharp, rust, go
 
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
 
-    - name: Generate security report
-      run: |
-        echo "# 🔒 Security Scan Report" > security-report.md
-        echo "" >> security-report.md
-        echo "Generated on: $(date)" >> security-report.md
-        echo "" >> security-report.md
-
-        echo "## 📊 Scan Results" >> security-report.md
-        echo "" >> security-report.md
-
-        # Check if any security issues were found
-        SECURITY_ISSUES=0
-
-        if [ -f "packages/python/security-report.json" ]; then
-          PYTHON_ISSUES=$(jq '.issues | length' packages/python/security-report.json 2>/dev/null || echo "0")
-          echo "- Python: $PYTHON_ISSUES vulnerabilities found" >> security-report.md
-          [ "$PYTHON_ISSUES" -gt 0 ] && SECURITY_ISSUES=1
-        fi
-
-        if [ -f "packages/javascript/security-report.json" ]; then
-          JS_ISSUES=$(jq '.metadata.vulnerabilities.total' packages/javascript/security-report.json 2>/dev/null || echo "0")
-          echo "- JavaScript: $JS_ISSUES vulnerabilities found" >> security-report.md
-          [ "$JS_ISSUES" -gt 0 ] && SECURITY_ISSUES=1
-        fi
-
-        if [ -f "packages/dotnet/vulnerable-packages.txt" ] && [ -s "packages/dotnet/vulnerable-packages.txt" ]; then
-          echo "- .NET: Vulnerabilities found (see details below)" >> security-report.md
-          SECURITY_ISSUES=1
-        else
-          echo "- .NET: No vulnerabilities found" >> security-report.md
-        fi
-
-        echo "" >> security-report.md
-        echo "## 📋 Details" >> security-report.md
-        echo "" >> security-report.md
-
-        if [ -f "packages/dotnet/vulnerable-packages.txt" ]; then
-          echo "### .NET Vulnerable Packages" >> security-report.md
-          echo "\`\`\`" >> security-report.md
-          cat packages/dotnet/vulnerable-packages.txt >> security-report.md
-          echo "\`\`\`" >> security-report.md
+      - name: Generate security report
+        run: |
+          echo "# 🔒 Security Scan Report" > security-report.md
           echo "" >> security-report.md
-        fi
+          echo "Generated on: $(date)" >> security-report.md
+          echo "" >> security-report.md
 
-        echo "## ✅ Status" >> security-report.md
-        if [ $SECURITY_ISSUES -eq 0 ]; then
-          echo "All security scans passed! 🎉" >> security-report.md
-        else
-          echo "Security issues detected. Please review the findings above. ⚠️" >> security-report.md
-        fi
+          echo "## 📊 Scan Results" >> security-report.md
+          echo "" >> security-report.md
 
-    - name: Upload security report
-      uses: actions/upload-artifact@v4
-      with:
-        name: security-report
-        path: security-report.md
+          # Check if any security issues were found
+          SECURITY_ISSUES=0
 
-    - name: Comment on PR
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const report = fs.readFileSync('security-report.md', 'utf8');
-
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: report
-          });
-
-    - name: Fail on high severity issues
-      if: always()
-      run: |
-        # Check for critical/high severity issues and fail the build if found
-        if [ -f "packages/python/security-report.json" ]; then
-          CRITICAL_ISSUES=$(jq '[.issues[] | select(.severity == "critical" or .severity == "high")] | length' packages/python/security-report.json 2>/dev/null || echo "0")
-          if [ "$CRITICAL_ISSUES" -gt 0 ]; then
-            echo "❌ Critical Python security issues found: $CRITICAL_ISSUES"
-            exit 1
+          if [ -f "packages/python/security-report.json" ]; then
+            PYTHON_ISSUES=$(jq '.issues | length' packages/python/security-report.json 2>/dev/null || echo "0")
+            echo "- Python: $PYTHON_ISSUES vulnerabilities found" >> security-report.md
+            [ "$PYTHON_ISSUES" -gt 0 ] && SECURITY_ISSUES=1
           fi
-        fi
 
-        if [ -f "packages/javascript/security-report.json" ]; then
-          CRITICAL_ISSUES=$(jq '.vulnerabilities | map(select(.severity == "critical" or .severity == "high")) | length' packages/javascript/security-report.json 2>/dev/null || echo "0")
-          if [ "$CRITICAL_ISSUES" -gt 0 ]; then
-            echo "❌ Critical JavaScript security issues found: $CRITICAL_ISSUES"
-            exit 1
+          if [ -f "packages/javascript/security-report.json" ]; then
+            JS_ISSUES=$(jq '.metadata.vulnerabilities.total' packages/javascript/security-report.json 2>/dev/null || echo "0")
+            echo "- JavaScript: $JS_ISSUES vulnerabilities found" >> security-report.md
+            [ "$JS_ISSUES" -gt 0 ] && SECURITY_ISSUES=1
           fi
-        fi
+
+          if [ -f "packages/dotnet/vulnerable-packages.txt" ] && [ -s "packages/dotnet/vulnerable-packages.txt" ]; then
+            echo "- .NET: Vulnerabilities found (see details below)" >> security-report.md
+            SECURITY_ISSUES=1
+          else
+            echo "- .NET: No vulnerabilities found" >> security-report.md
+          fi
+
+          echo "" >> security-report.md
+          echo "## 📋 Details" >> security-report.md
+          echo "" >> security-report.md
+
+          if [ -f "packages/dotnet/vulnerable-packages.txt" ]; then
+            echo "### .NET Vulnerable Packages" >> security-report.md
+            echo "\`\`\`" >> security-report.md
+            cat packages/dotnet/vulnerable-packages.txt >> security-report.md
+            echo "\`\`\`" >> security-report.md
+            echo "" >> security-report.md
+          fi
+
+          echo "## ✅ Status" >> security-report.md
+          if [ $SECURITY_ISSUES -eq 0 ]; then
+            echo "All security scans passed! 🎉" >> security-report.md
+          else
+            echo "Security issues detected. Please review the findings above. ⚠️" >> security-report.md
+          fi
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security-report.md
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('security-report.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+      - name: Fail on high severity issues
+        if: always()
+        run: |
+          # Check for critical/high severity issues and fail the build if found
+          if [ -f "packages/python/security-report.json" ]; then
+            CRITICAL_ISSUES=$(jq '[.issues[] | select(.severity == "critical" or .severity == "high")] | length' packages/python/security-report.json 2>/dev/null || echo "0")
+            if [ "$CRITICAL_ISSUES" -gt 0 ]; then
+              echo "❌ Critical Python security issues found: $CRITICAL_ISSUES"
+              exit 1
+            fi
+          fi
+
+          if [ -f "packages/javascript/security-report.json" ]; then
+            CRITICAL_ISSUES=$(jq '.vulnerabilities | map(select(.severity == "critical" or .severity == "high")) | length' packages/javascript/security-report.json 2>/dev/null || echo "0")
+            if [ "$CRITICAL_ISSUES" -gt 0 ]; then
+              echo "❌ Critical JavaScript security issues found: $CRITICAL_ISSUES"
+              exit 1
+            fi
+          fi
