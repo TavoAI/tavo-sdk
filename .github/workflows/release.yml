@@ -1,8 +1,6 @@
 name: Release Management
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       release_type:
@@ -19,6 +17,10 @@ on:
         description: "Packages to release (comma-separated, empty for all)"
         required: false
         type: string
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   determine-version:
@@ -99,12 +101,12 @@ jobs:
       - name: Create GitHub release
         id: create_release
         run: |
-          if ${{ contains(needs.determine-version.outputs.version, 'alpha') }}; then
+          if [[ "${{ needs.determine-version.outputs.version }}" == *alpha* ]]; then
             PRERELEASE_FLAG="--prerelease"
           else
             PRERELEASE_FLAG=""
           fi
-          
+
           gh release create v${{ needs.determine-version.outputs.version }} \
             --title "Release v${{ needs.determine-version.outputs.version }}" \
             --notes "## What's Changed
@@ -250,7 +252,7 @@ jobs:
 
     steps:
       - name: Notify success
-        if: needs.publish-python.result == 'success' && needs.publish-javascript.result == 'success' && needs.publish-java.result == 'success' && needs.publish-go.result == 'success' && needs.publish-dotnet.result == 'success' && needs.publish-rust.result == 'success'
+        if: (needs.publish-python.result == 'success' || needs.publish-python.result == 'skipped') && (needs.publish-javascript.result == 'success' || needs.publish-javascript.result == 'skipped') && (needs.publish-java.result == 'success' || needs.publish-java.result == 'skipped') && (needs.publish-go.result == 'success' || needs.publish-go.result == 'skipped') && (needs.publish-dotnet.result == 'success' || needs.publish-dotnet.result == 'skipped') && (needs.publish-rust.result == 'success' || needs.publish-rust.result == 'skipped')
         run: |
           echo "🎉 All packages published successfully!"
           echo "Version: v${{ needs.determine-version.outputs.version }}"

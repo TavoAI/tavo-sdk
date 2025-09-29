@@ -76,12 +76,17 @@ jobs:
           cd packages/rust
           # Check if Cargo.lock exists and if there are updates available
           if [ -f "Cargo.lock" ]; then
-            # Simple check: see if cargo update would change anything
-            cargo update --dry-run > update_check.txt 2>&1 || true
-            if grep -q "Updating" update_check.txt; then
-              echo "updated=true" >> $GITHUB_OUTPUT
+            # Check if cargo outdated is available, otherwise use cargo update check
+            if command -v cargo-outdated >/dev/null 2>&1; then
+              cargo outdated --exit-code 1 >/dev/null 2>&1 && echo "updated=true" >> $GITHUB_OUTPUT || echo "updated=false" >> $GITHUB_OUTPUT
             else
-              echo "updated=false" >> $GITHUB_OUTPUT
+              # Fallback: check if cargo update would change anything
+              cargo update --dry-run > update_check.txt 2>&1 || true
+              if grep -q "Updating" update_check.txt; then
+                echo "updated=true" >> $GITHUB_OUTPUT
+              else
+                echo "updated=false" >> $GITHUB_OUTPUT
+              fi
             fi
           else
             echo "updated=false" >> $GITHUB_OUTPUT
