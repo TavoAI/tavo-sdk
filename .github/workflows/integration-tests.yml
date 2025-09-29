@@ -159,7 +159,7 @@ jobs:
 
           echo "Testing Java SDK..."
           cd ../java
-          java -cp "$(mvn dependency:build-classpath -q -Dmdep.outputFile=/dev/stdout):target/classes" net.tavoai.sdk.TavoClientTest
+          java -cp "$(mvn dependency:build-classpath -q -Dmdep.outputFile=/dev/stdout):target/classes:target/test-classes" net.tavoai.TavoClientTest
 
           echo "Testing Go SDK..."
           cd ../go
