@@ -124,7 +124,8 @@ jobs:
           echo "Testing Python SDK..."
           cd ../../packages/python
           pip install httpx pydantic python-dateutil typing-extensions
-          PYTHONPATH=src python -c "
+          pip install -e .
+          python -c "
           import asyncio
           from tavo import TavoClient
 
