@@ -54,11 +54,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.npm
-            ~/.cargo/registry
-          key: ${{ runner.os }}-deps-${{ hashFiles('**/package-lock.json', '**/Cargo.lock') }}
+            ~/.yarn/cache
+            ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock', '**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-deps-
+            ${{ runner.os }}-yarn-
 
       - name: Install integration test dependencies
         run: |

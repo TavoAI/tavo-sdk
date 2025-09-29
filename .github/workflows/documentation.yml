@@ -35,17 +35,17 @@ jobs:
       - name: Install dependencies
         run: |
           cd docs-site
-          npm ci
+          yarn install --frozen-lockfile
 
       - name: Build documentation
         run: |
           cd docs-site
-          npm run build
+          yarn build
 
       - name: Check links
         run: |
           cd docs-site
-          npm run lint
+          yarn lint
           npx linkinator build --recurse --silent --retry --timeout 5000 || true
 
       - name: Upload build artifacts
@@ -117,7 +117,7 @@ jobs:
       - name: Generate JavaScript API docs
         run: |
           cd packages/javascript
-          npm run docs
+          yarn docs
 
       - name: Generate Java API docs
         run: |

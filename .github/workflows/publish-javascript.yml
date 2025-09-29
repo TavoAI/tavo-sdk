@@ -13,50 +13,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: 20
-        registry-url: 'https://registry.npmjs.org'
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
 
-    - name: Install dependencies
-      run: |
-        cd packages/javascript
-        npm ci
+      - name: Install dependencies
+        run: |
+          cd packages/javascript
+          yarn install --frozen-lockfile
 
-    - name: Update version
-      run: |
-        cd packages/javascript
-        npm version ${{ inputs.version }} --no-git-tag-version
+      - name: Update version
+        run: |
+          cd packages/javascript
+          npm version ${{ inputs.version }} --no-git-tag-version
 
-    - name: Build package
-      run: |
-        cd packages/javascript
-        npm run build
+      - name: Build package
+        run: |
+          cd packages/javascript
+          yarn build
 
-    - name: Run tests
-      run: |
-        cd packages/javascript
-        npm test
+      - name: Run tests
+        run: |
+          cd packages/javascript
+          yarn test
 
-    - name: Publish to npm
-      run: |
-        cd packages/javascript
-        npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm
+        run: |
+          cd packages/javascript
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-    - name: Create Git tag
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git tag js-v${{ inputs.version }}
-        git push origin js-v${{ inputs.version }}
+      - name: Create Git tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag js-v${{ inputs.version }}
+          git push origin js-v${{ inputs.version }}
 
-    - name: Notify success
-      run: |
-        echo "✅ JavaScript SDK v${{ inputs.version }} published successfully!"
-        echo "📦 Available on npm: https://www.npmjs.com/package/@tavoai/sdk/v/${{ inputs.version }}"
+      - name: Notify success
+        run: |
+          echo "✅ JavaScript SDK v${{ inputs.version }} published successfully!"
+          echo "📦 Available on npm: https://www.npmjs.com/package/@tavoai/sdk/v/${{ inputs.version }}"

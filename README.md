@@ -92,16 +92,16 @@ git clone https://github.com/TavoAI/tavo-api.git
 cd tavo-api
 
 # Install dependencies
-npm install
+yarn install
 
 # Bootstrap all packages
-npm run bootstrap
+yarn run bootstrap
 
 # Build all SDKs
-npm run build
+yarn run build
 
 # Run tests across all SDKs
-npm run test
+yarn run test
 ```
 
 ### Individual SDK Development
@@ -114,9 +114,9 @@ pytest
 
 # JavaScript SDK
 cd packages/javascript
-npm install
-npm run build
-npm test
+yarn install
+yarn build
+yarn test
 
 # Java SDK
 cd packages/java
@@ -139,7 +139,7 @@ SDKs are generated from the API server's OpenAPI specification:
 curl https://api.tavoai.net/api/v1/openapi.json > specs/v1.json
 
 # Generate SDKs
-npm run codegen
+yarn run codegen
 ```
 
 ### Code Generation Tools
@@ -188,13 +188,13 @@ with warnings.catch_warnings():
 
 ```bash
 # Run all SDK tests
-npm run test:all
+yarn run test:all
 
 # Run integration tests against staging API
-npm run test:integration
+yarn run test:integration
 
 # Run performance tests
-npm run test:performance
+yarn run test:performance
 ```
 
 ### Test Structure
@@ -213,10 +213,10 @@ For testing without hitting production APIs:
 
 ```bash
 # Start mock server
-npm run mock:start
+yarn run mock:start
 
 # Run tests against mock
-TEST_ENV=mock npm run test
+TEST_ENV=mock yarn run test
 ```
 
 ## 📦 Release Process
@@ -225,13 +225,13 @@ TEST_ENV=mock npm run test
 
 ```bash
 # Release all SDKs
-npm run release
+yarn run release
 
 # Release specific SDK
-npm run release:python
+yarn run release:python
 
 # Release with specific version
-npm run release -- --version 1.2.3
+yarn run release -- --version 1.2.3
 ```
 
 ### Release Checklist
@@ -246,7 +246,7 @@ npm run release -- --version 1.2.3
 ### Package Registries
 
 - **Python**: PyPI (`pip install tavo-python-sdk`)
-- **JavaScript**: npm (`npm install tavo-js-sdk`)
+- **JavaScript**: npm (`yarn add tavo-js-sdk`)
 - **Java**: Maven Central (`groupId: net.tavoai`)
 - **Go**: Go Modules (`github.com/tavoai/tavo-go-sdk`)
 
@@ -290,7 +290,7 @@ npm run release -- --version 1.2.3
 3. **Regenerate SDKs**
 
    ```bash
-   npm run codegen
+   yarn run codegen
    ```
 
 4. **Implement Changes**
@@ -301,7 +301,7 @@ npm run release -- --version 1.2.3
 5. **Test Changes**
 
    ```bash
-   npm run test:affected  # Test only changed packages
+   yarn run test:affected  # Test only changed packages
    ```
 
 6. **Create Pull Request**

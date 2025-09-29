@@ -48,7 +48,7 @@ jobs:
         id: javascript
         run: |
           cd packages/javascript
-          npm outdated --json > outdated.json || true
+          yarn outdated --json > outdated.json || true
           if [ -s outdated.json ] && [ "$(cat outdated.json)" != "{}" ]; then
             echo "updated=true" >> $GITHUB_OUTPUT
           else
@@ -148,8 +148,8 @@ jobs:
         if: needs.check-updates.outputs.javascript_updated == 'true'
         run: |
           cd packages/javascript
-          npm update
-          npm audit fix || true
+          yarn upgrade
+          yarn audit fix || true
 
       - name: Update Java dependencies
         if: needs.check-updates.outputs.java_updated == 'true'
@@ -183,8 +183,8 @@ jobs:
           # Test all packages after dependency updates
           for pkg in packages/*; do
             if [ -f "$pkg/package.json" ]; then
-              echo "Testing $pkg (npm)"
-              cd $pkg && npm test && cd ../..
+              echo "Testing $pkg (yarn)"
+              cd $pkg && yarn test && cd ../..
             elif [ -f "$pkg/pyproject.toml" ]; then
               echo "Testing $pkg (python)"
               cd $pkg && python -m pytest && cd ../..

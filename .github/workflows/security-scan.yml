@@ -55,13 +55,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Cache npm dependencies
+      - name: Cache yarn dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
+          path: ~/.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-npm-
+            ${{ runner.os }}-yarn-
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -103,8 +103,8 @@ jobs:
       - name: Scan JavaScript dependencies
         run: |
           cd packages/javascript
-          npm ci --cache ~/.npm --prefer-offline
-          npm audit --audit-level high --json > security-report.json || true
+          yarn install --frozen-lockfile
+          yarn audit --audit-level high --json > security-report.json || true
           cat security-report.json
 
       - name: Cache OWASP Dependency Check data
