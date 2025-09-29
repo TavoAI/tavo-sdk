@@ -21,7 +21,7 @@ func NewClient(config *Config) *Client {
 	}
 
 	httpClient := resty.New().
-		SetBaseURL(config.BaseURL + "/" + config.APIVersion).
+		SetBaseURL(config.BaseURL).
 		SetTimeout(config.Timeout).
 		SetRetryCount(config.MaxRetries).
 		SetRetryWaitTime(1 * time.Second).
@@ -118,7 +118,7 @@ func (c *Client) makeRequest(method, path string, body interface{}) (map[string]
 
 // HealthCheck performs a health check on the API
 func (c *Client) HealthCheck() (map[string]interface{}, error) {
-	return c.makeRequest("GET", "/health", nil)
+	return c.makeRequest("GET", "/api/v1/health", nil)
 }
 
 // Auth returns the authentication operations
