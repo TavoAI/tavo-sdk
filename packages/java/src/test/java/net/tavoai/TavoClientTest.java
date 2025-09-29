@@ -14,7 +14,7 @@ public class TavoClientTest {
             // Create configuration for mock API
             TavoConfig config = TavoConfig.builder()
                 .apiKey("test-key")
-                .baseUrl("http://127.0.0.1:3001")
+                .baseUrl("http://127.0.0.1:3002")
                 .build();
 
             // Create client
