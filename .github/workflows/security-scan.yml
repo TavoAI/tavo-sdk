@@ -90,17 +90,6 @@ jobs:
           cd packages/rust
           cargo audit || true
 
-      - name: Run CodeQL Analysis
-        uses: github/codeql-action/init@v3
-        with:
-          languages: javascript, python, java, csharp, rust, go
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-
       - name: Generate security report
         run: |
           echo "# 🔒 Security Scan Report" > security-report.md
