@@ -145,7 +145,7 @@ jobs:
           npm run build
           node -e "
           const { TavoClient } = require('./dist');
-          const client = new TavoClient('test-key', { baseURL: 'http://localhost:3001' });
+          const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://localhost:3001' });
 
           // Test basic API connectivity
           client._client.get('/api/v1/health')
