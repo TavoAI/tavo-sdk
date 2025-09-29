@@ -93,7 +93,7 @@ jobs:
               cd $pkg && pip install -e . && cd ../..
             elif [ -f "$pkg/pom.xml" ]; then
               echo "Building $pkg (maven)"
-              cd $pkg && mvn compile -q && cd ../..
+              cd $pkg && mvn compile test-compile -q && cd ../..
             elif [ -f "$pkg/go.mod" ]; then
               echo "Building $pkg (go)"
               cd $pkg && go build ./... && cd ../..
