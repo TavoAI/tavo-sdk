@@ -54,7 +54,6 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.yarn/cache
             ~/.cache/yarn
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock', '**/Cargo.lock') }}
           restore-keys: |
@@ -142,13 +141,12 @@ jobs:
           # Test each SDK against the mock API
           echo "Testing Python SDK..."
           cd ../../packages/python
-          python3 -m venv venv && source venv/bin/activate && pip install -e .
-          python3 -c "
+          python3 -m venv venv && ./venv/bin/pip install -e . && ./venv/bin/python3 -c "
           import asyncio
           from tavo import TavoClient
 
           async def test():
-              client = TavoClient('test-key', base_url='http://localhost:3002')
+              client = TavoClient(api_key='test-key', base_url='http://localhost:3002')
               # Test basic API connectivity
               try:
                   response = await client.health_check()
