@@ -55,6 +55,21 @@ jobs:
         path: docs-site/build/tavo-api/
         retention-days: 7
 
+    - name: Setup Pages
+      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      uses: actions/configure-pages@v5
+
+    - name: Upload Pages artifact
+      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: docs-site/build/tavo-api/
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      uses: actions/deploy-pages@v4
+
   api-docs:
     name: Generate API Documentation
     runs-on: ubuntu-latest
