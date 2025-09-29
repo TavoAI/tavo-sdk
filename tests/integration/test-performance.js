@@ -5,7 +5,7 @@
  * Measures and compares performance across different SDKs
  */
 
-console.log("⚡ Running performance comparison tests...");
+console.log("Running performance comparison tests...");
 
 try {
     // Placeholder for actual performance tests
@@ -14,8 +14,8 @@ try {
     // 2. Measure memory usage
     // 3. Generate performance reports
 
-    console.log("✅ Performance tests completed");
-    console.log("📊 Performance metrics collected:");
+    console.log("Performance tests completed");
+    console.log("Performance metrics collected:");
     console.log("   - Response times measured");
     console.log("   - Memory usage profiled");
     console.log("   - Throughput calculated");
@@ -23,6 +23,6 @@ try {
 
     process.exit(0);
 } catch (error) {
-    console.error("❌ Performance test failed:", error.message);
+    console.error("Performance test failed:", error.message);
     process.exit(1);
 }
