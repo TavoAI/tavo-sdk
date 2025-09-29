@@ -40,8 +40,13 @@ export class RuleManager {
     }
 
     private ensureCacheDir(): void {
-        if (!fs.existsSync(this.cacheDir)) {
-            fs.mkdirSync(this.cacheDir, { recursive: true });
+        try {
+            if (!fs.existsSync(this.cacheDir)) {
+                fs.mkdirSync(this.cacheDir, { recursive: true });
+            }
+        } catch (error) {
+            // Silently ignore directory creation errors in restricted environments
+            console.warn('Failed to create cache directory:', error instanceof Error ? error.message : String(error));
         }
     }
 

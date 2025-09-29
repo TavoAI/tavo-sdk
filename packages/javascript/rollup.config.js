@@ -25,7 +25,7 @@ const config = [
         tsconfig: './tsconfig.json',
       }),
     ],
-    external: ['axios'],
+    external: ['axios', 'js-yaml'],
   },
 ];
 

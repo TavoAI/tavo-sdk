@@ -160,20 +160,35 @@ jobs:
 
           echo "Testing JavaScript SDK..."
           cd ../javascript
-          node -e "
-          const { TavoClient } = require('.');
-          const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://localhost:3002' });
+          timeout 30s node -e "
+          try {
+            const { TavoClient } = require('.');
+            console.log('JavaScript SDK loaded successfully');
+            const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://localhost:3002' });
+            console.log('TavoClient created successfully');
 
-          // Test basic API connectivity
-          client.healthCheck()
-            .then(response => {
-              console.log('JavaScript SDK: API health check passed -', response);
-            })
-            .catch(error => {
-              console.log('JavaScript SDK: Health check failed -', error.message);
-            });
+            client.healthCheck()
+              .then(response => {
+                console.log('JavaScript SDK: API health check passed -', JSON.stringify(response));
+                process.exit(0);
+              })
+              .catch(error => {
+                console.log('JavaScript SDK: Health check failed -', error.message);
+                console.log('Error stack:', error.stack);
+                process.exit(1);
+              });
+          } catch (error) {
+            console.log('JavaScript SDK: Failed to load or initialize -', error.message);
+            console.log('Error stack:', error.stack);
+            process.exit(1);
+          }
           "
-          echo "JavaScript SDK test completed"
+          if [ $? -eq 0 ]; then
+            echo "JavaScript SDK test completed successfully"
+          else
+            echo "JavaScript SDK test failed"
+            exit 1
+          fi
 
           echo "Testing Java SDK..."
           cd ../java
