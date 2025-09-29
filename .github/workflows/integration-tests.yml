@@ -123,6 +123,7 @@ jobs:
           # Test each SDK against the mock API
           echo "Testing Python SDK..."
           cd ../../packages/python
+          pip install -e .
           python -c "
           import asyncio
           from tavo import TavoClient
@@ -142,6 +143,8 @@ jobs:
 
           echo "Testing JavaScript SDK..."
           cd ../javascript
+          npm install
+          npm run build
           node -e "
           const { TavoClient } = require('./dist');
           const client = new TavoClient('test-key', { baseURL: 'http://localhost:3001' });
