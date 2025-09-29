@@ -79,14 +79,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: Cache Cargo dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -134,13 +126,6 @@ jobs:
           dotnet restore --packages $HOME/.nuget/packages
           dotnet list package --vulnerable > vulnerable-packages.txt || true
           cat vulnerable-packages.txt
-
-      - name: Scan Rust dependencies
-        run: |
-          cd packages/rust
-          export CARGO_HOME=$HOME/.cargo
-          cargo update
-          cargo audit || true
 
       - name: Generate security report
         run: |
