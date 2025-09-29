@@ -48,10 +48,10 @@ app.get('/ws', (req, res) => {
     res.json({ message: 'WebSocket endpoint available' });
 });
 
-app.listen(PORT, '127.0.0.1', () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Mock API server running on port ${PORT} (PID: ${process.pid})`);
-    console.log(`Health check: http://127.0.0.1:${PORT}/`);
-    console.log(`Server listening on 127.0.0.1:${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/`);
+    console.log(`Server listening on 0.0.0.0:${PORT}`);
 }).on('error', (err) => {
     console.error('Mock API failed to start:', err);
     console.error('Error details:', err.message);

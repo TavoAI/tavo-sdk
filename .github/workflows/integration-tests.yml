@@ -79,9 +79,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-          # Install test databases
-          docker run -d --name postgres -e POSTGRES_PASSWORD=test -e POSTGRES_DB=test -p 5432:5432 postgres:15-alpine
-          docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=test -e MYSQL_DATABASE=test -p 3306:3306 mysql:8.0
+          # Note: Database containers removed to simplify CI
+          # Add back if needed for specific integration tests
 
       - name: Build all SDKs
         run: |
@@ -92,7 +91,7 @@ jobs:
               cd $pkg && npm ci && npm run build && cd ../..
             elif [ -f "$pkg/pyproject.toml" ]; then
               echo "Building $pkg (python)"
-              cd $pkg && pip install -e . && cd ../..
+              cd $pkg && python3 -m venv venv && source venv/bin/activate && pip install -e . && cd ../..
             elif [ -f "$pkg/pom.xml" ]; then
               echo "Building $pkg (maven)"
               cd $pkg && mvn compile test-compile -q && cd ../..
@@ -119,14 +118,20 @@ jobs:
           echo "NPM version: $(npm --version)"
           npm ci
           echo "Installed Express version: $(npm list express)"
+          echo "Starting mock API server..."
           PORT=3002 node mock-api.js > mock-api.log 2>&1 &
           MOCK_PID=$!
           echo "Mock API started with PID: $MOCK_PID"
-          # Give the process a moment to start
-          sleep 2
-          # Check if process is still running
-          if ! kill -0 $MOCK_PID 2>/dev/null; then
-            echo "Mock API process failed to start"
+
+          # Wait for mock API to be ready
+          echo "Waiting for mock API to start..."
+          sleep 5
+
+          # Quick health check
+          if curl -s --max-time 5 http://localhost:3002/ > /dev/null 2>&1; then
+            echo "Mock API is responding"
+          else
+            echo "Mock API health check failed"
             cat mock-api.log || true
             exit 1
           fi
@@ -151,14 +156,13 @@ jobs:
           # Test each SDK against the mock API
           echo "Testing Python SDK..."
           cd ../../packages/python
-          pip install httpx pydantic python-dateutil typing-extensions websockets
-          pip install -e .
+          source venv/bin/activate
           python3 -c "
           import asyncio
           from tavo import TavoClient
 
           async def test():
-              client = TavoClient('test-key', base_url='http://127.0.0.1:3002')
+              client = TavoClient('test-key', base_url='http://localhost:3002')
               # Test basic API connectivity
               try:
                   response = await client.health_check()
@@ -172,11 +176,11 @@ jobs:
 
           echo "Testing JavaScript SDK..."
           cd ../javascript
-          npm install
+          npm ci
           npm run build
           node -e "
           const { TavoClient } = require('./dist');
-          const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://127.0.0.1:3002' });
+          const client = new TavoClient({ apiKey: 'test-key', baseURL: 'http://localhost:3002' });
 
           // Test basic API connectivity
           client.healthCheck()

@@ -11,7 +11,7 @@ func main() {
 	// Create configuration for mock API
 	config := tavo.NewConfig().
 		WithAPIKey("test-key").
-		WithBaseURL("http://127.0.0.1:3002")
+		WithBaseURL("http://localhost:3002")
 
 	// Create client
 	client := tavo.NewClient(config)
