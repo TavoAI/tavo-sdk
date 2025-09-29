@@ -126,7 +126,7 @@ jobs:
       - name: Scan Java dependencies
         run: |
           cd packages/java
-          mvn -Dmaven.repo.local=$HOME/.m2/repository org.owasp:dependency-check-maven:check -Dformat=JSON -DnvdValidForHours=24 || true
+          mvn -Dmaven.repo.local=$HOME/.m2/repository org.owasp:dependency-check-maven:check -Dformat=JSON -DnvdValidForHours=24 -Dossindex.enabled=false || true
 
       - name: Scan .NET dependencies
         run: |
