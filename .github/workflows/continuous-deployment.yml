@@ -7,6 +7,10 @@ on:
     # Run daily at 2 AM UTC
     - cron: "0 2 * * *"
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   check-updates:
     name: Check for Updates
