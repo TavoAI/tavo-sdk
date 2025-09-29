@@ -166,6 +166,7 @@ jobs:
 
           echo "Testing Go SDK..."
           cd ../go
+          go mod tidy
           go run examples/basic/main.go
 
           echo "Testing .NET SDK..."
