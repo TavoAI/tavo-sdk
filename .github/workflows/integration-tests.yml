@@ -66,46 +66,38 @@ jobs:
 
       - name: Build all SDKs
         run: |
-          # Install root dependencies first
+          # Install root dependencies first (includes all workspaces)
           echo "Installing root dependencies..."
           yarn install --frozen-lockfile || (echo "Root yarn install failed" && exit 1)
 
-          # Build all packages for integration testing
-          for pkg in packages/*; do
-            echo "Checking package: $pkg"
-            if [ -f "$pkg/package.json" ]; then
-              echo "Building $pkg (yarn)"
-              cd $pkg || (echo "Failed to cd to $pkg" && exit 1)
-              echo "Building $pkg..."
-              yarn build || (echo "yarn build failed for $pkg" && exit 1)
-              echo "Verifying build output for $pkg..."
-              if [ -f "dist/index.js" ]; then
-                echo "Build completed successfully for $pkg - dist/index.js exists"
-              else
-                echo "Build failed for $pkg - dist/index.js not found"
-                ls -la dist/ || echo "dist directory not found"
-                exit 1
-              fi
-              cd ../.. || (echo "Failed to cd back" && exit 1)
-            elif [ -f "$pkg/pyproject.toml" ]; then
-              echo "Building $pkg (python)"
-              cd $pkg && python3 -m venv venv && source venv/bin/activate && pip install -e . && cd ../..
-            elif [ -f "$pkg/pom.xml" ]; then
-              echo "Building $pkg (maven)"
-              cd $pkg && mvn compile test-compile -q && cd ../..
-            elif [ -f "$pkg/go.mod" ]; then
-              echo "Building $pkg (go)"
-              cd $pkg && go build ./... && cd ../..
-            elif [ -f "$pkg/TavoAI.csproj" ]; then
-              echo "Building $pkg (.NET)"
-              cd $pkg && dotnet clean && dotnet build -q && cd ../..
-            elif [ -f "$pkg/Cargo.toml" ]; then
-              echo "Building $pkg (rust)"
-              cd $pkg && cargo clean && cargo build --quiet && cd ../..
-            else
-              echo "Skipping $pkg (no build config found)"
-            fi
-          done
+          # Build JavaScript SDK using workspace command
+          echo "Building JavaScript SDK..."
+          yarn workspace tavo-js-sdk run build || (echo "JavaScript build failed" && exit 1)
+
+          # Verify JavaScript build output
+          if [ -f "packages/javascript/dist/index.js" ]; then
+            echo "JavaScript SDK build completed successfully"
+          else
+            echo "JavaScript SDK build failed - dist/index.js not found"
+            ls -la packages/javascript/dist/ || echo "dist directory not found"
+            exit 1
+          fi
+
+          # Build other SDKs manually (non-yarn workspaces)
+          echo "Building Python SDK..."
+          cd packages/python && python3 -m venv venv && source venv/bin/activate && pip install -e . && cd ../..
+
+          echo "Building Java SDK..."
+          cd packages/java && mvn compile test-compile -q && cd ../..
+
+          echo "Building Go SDK..."
+          cd packages/go && go build ./... && cd ../..
+
+          echo "Building .NET SDK..."
+          cd packages/dotnet && dotnet clean && dotnet build -q && cd ../..
+
+          echo "Building Rust SDK..."
+          cd packages/rust && cargo clean && cargo build --quiet && cd ../..
 
       - name: Run API compatibility tests
         run: |
