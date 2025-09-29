@@ -331,7 +331,8 @@ export class SecurityScanner {
 
         // Fall back to system PATH
         try {
-            execAsync('which tavo-scanner');
+            const { execSync } = require('child_process');
+            execSync('which tavo-scanner', { stdio: 'ignore' });
             return 'tavo-scanner';
         } catch {
             return null;
