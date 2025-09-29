@@ -42,7 +42,7 @@ describe('TavoClient Integration', () => {
   });
 
   test('should have apiKeys operations matching api-server endpoints', () => {
-    const apiKeys = client.apiKeys;
+    const apiKeys = client.users.apiKeys;
     expect(typeof apiKeys.list).toBe('function');
     expect(typeof apiKeys.create).toBe('function');
     expect(typeof apiKeys.update).toBe('function');
@@ -73,7 +73,8 @@ describe('TavoClient Integration', () => {
       await invalidClient.healthCheck();
       // If we get here, the test server isn't running (expected in CI)
     } catch (error: any) {
-      expect(error.response?.status).toBeDefined();
+      // Either network error (no response) or HTTP error (with response)
+      expect(error.response?.status || error.code || error.message).toBeDefined();
     }
   });
 

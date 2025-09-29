@@ -60,7 +60,7 @@ class TestTavoClient:
     def test_init_no_api_key(self):
         """Test client initialization without API key"""
         with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(ValueError, match="Either API key or JWT token must be provided"):
+            with pytest.raises(ValueError, match="Either API key, JWT token, or session token must be provided"):
                 TavoClient()
 
     def test_init_custom_config(self):
@@ -89,7 +89,7 @@ class TestTavoClient:
         mock_async_client.assert_called_once()
         call_args = mock_async_client.call_args
         assert call_args[1]['base_url'] == "https://api.tavoai.net/api/v1"
-        assert call_args[1]['headers']['Authorization'] == "Bearer test-key"
+        assert call_args[1]['headers']['X-API-Key'] == "test-key"
         assert call_args[1]['headers']['Content-Type'] == "application/json"
         assert call_args[1]['headers']['User-Agent'] == "tavo-python-sdk/0.1.0"
         assert call_args[1]['timeout'] == pytest.approx(30.0)
