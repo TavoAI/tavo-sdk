@@ -6,29 +6,29 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'tavo-python-sdk'
-copyright_text = '2024, Tavo AI'
-author = 'Tavo AI'
-release = '0.1.0'
+project = "tavo-python-sdk"
+copyright_text = "2024, Tavo AI"
+author = "Tavo AI"
+release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
 ]
 
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_theme = "sphinx_rtd_theme"
+html_static_path = ["_static"]
 
 # -- Extension configuration --------------------------------------------------
 
@@ -48,10 +48,10 @@ napoleon_type_aliases = None
 
 # Autodoc settings
 autodoc_default_options = {
-    'members': True,
-    'undoc-members': True,
-    'show-inheritance': True,
-    'member-order': 'bysource',
+    "members": True,
+    "undoc-members": True,
+    "show-inheritance": True,
+    "member-order": "bysource",
 }
 
-autoclass_content = 'both'
+autoclass_content = "both"

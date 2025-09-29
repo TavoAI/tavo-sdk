@@ -133,16 +133,13 @@ jobs:
               client = TavoClient('test-key', base_url='http://localhost:3001')
               # Test basic API connectivity
               try:
-                  response = await client._request('GET', '/api/v1/health')
+                  response = await client.health_check()
                   print(f'Python SDK: API health check passed - {response}')
               except Exception as e:
                   print(f'Python SDK: Health check failed - {e}')
-              await client.close()
 
           asyncio.run(test())
-          "
-
-          echo "Testing JavaScript SDK..."
+          "          echo "Testing JavaScript SDK..."
           cd ../javascript
           npm install
           npm run build

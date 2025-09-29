@@ -2,9 +2,9 @@ name: Documentation
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   docs:
@@ -21,195 +21,195 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v5
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
-    - name: Install dependencies
-      run: |
-        cd docs-site
-        npm ci
+      - name: Install dependencies
+        run: |
+          cd docs-site
+          npm ci
 
-    - name: Build documentation
-      run: |
-        cd docs-site
-        npm run build
+      - name: Build documentation
+        run: |
+          cd docs-site
+          npm run build
 
-    - name: Check links
-      run: |
-        cd docs-site
-        npm run lint
-        npx linkinator build --recurse --silent --retry --timeout 5000 || true
+      - name: Check links
+        run: |
+          cd docs-site
+          npm run lint
+          npx linkinator build --recurse --silent --retry --timeout 5000 || true
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: docs-build
-        path: docs-site/build/tavo-api/
-        retention-days: 7
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-build
+          path: docs-site/build/tavo-api/
+          retention-days: 7
 
-    - name: Setup Pages
-      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-      uses: actions/configure-pages@v5
+      - name: Setup Pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
 
-    - name: Upload Pages artifact
-      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: docs-site/build/tavo-api/
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs-site/build/tavo-api/
 
-    - name: Deploy to GitHub Pages
-      id: deployment
-      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/deploy-pages@v4
 
   api-docs:
     name: Generate API Documentation
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: 17
-        distribution: 'temurin'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: "temurin"
 
-    - name: Setup Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.21'
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
 
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Generate Python API docs
-      run: |
-        cd packages/python
-        pip install sphinx sphinx-rtd-theme
-        sphinx-apidoc -f -o docs src/tavo
-        sphinx-build docs docs/_build/html
+      - name: Generate Python API docs
+        run: |
+          cd packages/python
+          pip install sphinx sphinx-rtd-theme
+          sphinx-apidoc -f -o docs src/tavo
+          sphinx-build docs docs/_build/html
 
-    - name: Generate JavaScript API docs
-      run: |
-        cd packages/javascript
-        npm run docs
+      - name: Generate JavaScript API docs
+        run: |
+          cd packages/javascript
+          npm run docs
 
-    - name: Generate Java API docs
-      run: |
-        cd packages/java
-        mvn javadoc:javadoc
+      - name: Generate Java API docs
+        run: |
+          cd packages/java
+          mvn javadoc:javadoc
 
-    - name: Generate Go API docs
-      run: |
-        cd packages/go
-        go mod tidy
-        go build ./...
+      - name: Generate Go API docs
+        run: |
+          cd packages/go
+          go mod tidy
+          go build ./...
 
-    - name: Generate .NET API docs
-      run: |
-        cd packages/dotnet
-        dotnet build --configuration Release
+      - name: Generate .NET API docs
+        run: |
+          cd packages/dotnet
+          dotnet build --configuration Release
 
-    - name: Generate Rust API docs
-      run: |
-        cd packages/rust
-        cargo doc --no-deps --document-private-items
+      - name: Generate Rust API docs
+        run: |
+          cd packages/rust
+          cargo doc --no-deps --document-private-items
 
-    - name: Upload API documentation
-      uses: actions/upload-artifact@v4
-      with:
-        name: api-docs
-        path: |
-          packages/python/docs/_build/
-          packages/java/target/site/apidocs/
-          packages/rust/target/doc/
-        retention-days: 30
+      - name: Upload API documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: |
+            packages/python/docs/_build/
+            packages/java/target/site/apidocs/
+            packages/rust/target/doc/
+          retention-days: 30
 
   validate-examples:
     name: Validate Code Examples
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: 17
-        distribution: 'temurin'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: "temurin"
 
-    - name: Setup Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.21'
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
 
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Validate Python examples
-      run: |
-        if [ -f docs-site/docs/examples/python/index.md ]; then echo "Python examples file exists"; else echo "Python examples file missing"; exit 1; fi
+      - name: Validate Python examples
+        run: |
+          if [ -f docs-site/docs/examples/python/index.md ]; then echo "Python examples file exists"; else echo "Python examples file missing"; exit 1; fi
 
-    - name: Validate JavaScript examples
-      run: |
-        if [ -f docs-site/docs/examples/javascript/index.md ]; then echo "JavaScript examples file exists"; else echo "JavaScript examples file missing"; exit 1; fi
+      - name: Validate JavaScript examples
+        run: |
+          if [ -f docs-site/docs/examples/javascript/index.md ]; then echo "JavaScript examples file exists"; else echo "JavaScript examples file missing"; exit 1; fi
 
-    - name: Validate Java examples
-      run: |
-        if [ -f docs-site/docs/examples/java/index.md ]; then echo "Java examples file exists"; else echo "Java examples file missing"; exit 1; fi
+      - name: Validate Java examples
+        run: |
+          if [ -f docs-site/docs/examples/java/index.md ]; then echo "Java examples file exists"; else echo "Java examples file missing"; exit 1; fi
 
-    - name: Validate Go examples
-      run: |
-        if [ -f docs-site/docs/examples/go/index.md ]; then echo "Go examples file exists"; else echo "Go examples file missing"; exit 1; fi
+      - name: Validate Go examples
+        run: |
+          if [ -f docs-site/docs/examples/go/index.md ]; then echo "Go examples file exists"; else echo "Go examples file missing"; exit 1; fi
 
-    - name: Validate .NET examples
-      run: |
-        if [ -f docs-site/docs/examples/dotnet.md ]; then echo ".NET examples file exists"; else echo ".NET examples file missing"; exit 1; fi
+      - name: Validate .NET examples
+        run: |
+          if [ -f docs-site/docs/examples/dotnet.md ]; then echo ".NET examples file exists"; else echo ".NET examples file missing"; exit 1; fi
 
-    - name: Validate Rust examples
-      run: |
-        if [ -f docs-site/docs/examples/rust.md ]; then echo "Rust examples file exists"; else echo "Rust examples file missing"; exit 1; fi
+      - name: Validate Rust examples
+        run: |
+          if [ -f docs-site/docs/examples/rust.md ]; then echo "Rust examples file exists"; else echo "Rust examples file missing"; exit 1; fi
 
   update-docs-index:
     name: Update Documentation Index
@@ -217,18 +217,18 @@ jobs:
     needs: [docs, api-docs, validate-examples]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Update README with latest docs
-      run: |
-        # Update main README with documentation links
-        sed -i 's|https://tavoai.github.io/tavo-api/.*|https://tavoai.github.io/tavo-api/'"$(date +%Y%m%d)"'|' README.md
+      - name: Update README with latest docs
+        run: |
+          # Update main README with documentation links
+          sed -i 's|https://tavoai.github.io/tavo-api/.*|https://tavoai.github.io/tavo-api/'"$(date +%Y%m%d)"'|' README.md
 
-    - name: Commit documentation updates
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add README.md
-        git commit -m "docs: update documentation links" || true
-        git push
+      - name: Commit documentation updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "docs: update documentation links" || true
+          git push
