@@ -1,0 +1,3 @@
+[submodule "packages/go"]
+	path = packages/go
+	url = https://github.com/TavoAI/tavo-go-sdk.git
