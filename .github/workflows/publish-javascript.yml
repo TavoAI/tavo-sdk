@@ -30,7 +30,10 @@ jobs:
       - name: Update version
         run: |
           cd packages/javascript
-          npm version ${{ inputs.version }} --no-git-tag-version
+          # Strip 'v' prefix if present and update version in package.json
+          VERSION="${{ inputs.version }}"
+          VERSION=${VERSION#v}  # Remove 'v' prefix if present
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build package
         run: |
