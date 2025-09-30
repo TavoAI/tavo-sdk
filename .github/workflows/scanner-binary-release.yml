@@ -98,6 +98,7 @@ jobs:
           pyinstaller --onefile --hidden-import yaml --add-data "engines;engines" --name tavo-scanner --clean tavo_scanner.py
           echo "Build completed, checking dist directory..."
           ls -la dist/ || echo "dist directory not found"
+        shell: bash
 
       - name: Set binary name
         id: binary-name
