@@ -7,6 +7,7 @@ on:
       - "packages/scanner/**"
       - "tavo-rules/bundles/llm-security/**"
       - "build_binary.sh"
+      - ".github/workflows/scanner-binary-release.yml"
   workflow_dispatch:
     inputs:
       version:
@@ -62,21 +63,21 @@ jobs:
             choco install unzip || echo "choco install failed, trying alternative..."
           fi
 
-            - name: Download engines
-              run: |
-                  cd packages/scanner
-                  echo "Current directory: $(pwd)"
-                  echo "Running download_engines.js..."
-                  node download_engines.js
-                  echo "Checking engines directory after download..."
-                  ls -la engines/ || echo "engines directory not found"
-                  if [ -d "engines" ]; then
-                    echo "Contents of engines directory:"
-                    ls -la engines/
-                  else
-                    echo "ERROR: engines directory does not exist after download"
-                    exit 1
-                  fi
+      - name: Download engines
+        run: |
+          cd packages/scanner
+          echo "Current directory: $(pwd)"
+          echo "Running download_engines.js..."
+          node download_engines.js
+          echo "Checking engines directory after download..."
+          ls -la engines/ || echo "engines directory not found"
+          if [ -d "engines" ]; then
+            echo "Contents of engines directory:"
+            ls -la engines/
+          else
+            echo "ERROR: engines directory does not exist after download"
+            exit 1
+          fi
 
       - name: Build binary (Linux/macOS)
         if: runner.os != 'Windows'
