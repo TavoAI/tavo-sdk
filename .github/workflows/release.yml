@@ -120,28 +120,16 @@ jobs:
             PRERELEASE_FLAG=""
           fi
 
-          # Check if release already exists
+          # Check if release already exists and delete it if it does
           if gh release view v${{ needs.determine-version.outputs.version }} >/dev/null 2>&1; then
-            echo "Release v${{ needs.determine-version.outputs.version }} already exists. Updating..."
-            gh release edit v${{ needs.determine-version.outputs.version }} \
-              --title "Release v${{ needs.determine-version.outputs.version }}" \
-              --notes "## What's Changed
+            echo "Release v${{ needs.determine-version.outputs.version }} already exists. Deleting and recreating..."
+            gh release delete v${{ needs.determine-version.outputs.version }} --yes
+          fi
 
-          Automated release v${{ needs.determine-version.outputs.version }} (updated)
-
-          ### Packages Released
-          ${{ needs.determine-version.outputs.packages }}
-
-          ### Deployment
-          - 📦 Published to all configured registries
-          - 📚 Documentation updated
-          - 🏷️ Version tags created" \
-              $PRERELEASE_FLAG
-          else
-            echo "Creating new release v${{ needs.determine-version.outputs.version }}..."
-            gh release create v${{ needs.determine-version.outputs.version }} \
-              --title "Release v${{ needs.determine-version.outputs.version }}" \
-              --notes "## What's Changed
+          echo "Creating release v${{ needs.determine-version.outputs.version }}..."
+          gh release create v${{ needs.determine-version.outputs.version }} \
+            --title "Release v${{ needs.determine-version.outputs.version }}" \
+            --notes "## What's Changed
 
           Automated release v${{ needs.determine-version.outputs.version }}
 
@@ -152,9 +140,8 @@ jobs:
           - 📦 Published to all configured registries
           - 📚 Documentation updated
           - 🏷️ Version tags created" \
-              --draft=false \
-              $PRERELEASE_FLAG
-          fi
+            --draft=false \
+            $PRERELEASE_FLAG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
