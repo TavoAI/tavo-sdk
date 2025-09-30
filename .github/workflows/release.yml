@@ -50,7 +50,7 @@ jobs:
           if [ -n "${{ github.event.inputs.packages }}" ]; then
             echo "packages=${{ github.event.inputs.packages }}" >> $GITHUB_OUTPUT
           else
-            echo "packages=python,javascript,java,go,dotnet,rust" >> $GITHUB_OUTPUT
+            echo "packages=python,javascript,java,dotnet,rust" >> $GITHUB_OUTPUT
           fi
 
       - name: Determine version
@@ -152,15 +152,6 @@ jobs:
       version: ${{ needs.determine-version.outputs.version }}
     secrets: inherit
 
-  publish-go:
-    name: Publish Go SDK
-    needs: [determine-version, create-release]
-    if: contains(needs.determine-version.outputs.packages, 'go')
-    uses: ./.github/workflows/publish-go.yml
-    with:
-      version: ${{ needs.determine-version.outputs.version }}
-    secrets: inherit
-
   publish-dotnet:
     name: Publish .NET SDK
     needs: [determine-version, create-release]
@@ -188,7 +179,6 @@ jobs:
         publish-python,
         publish-javascript,
         publish-java,
-        publish-go,
         publish-dotnet,
         publish-rust,
       ]
@@ -243,7 +233,6 @@ jobs:
         publish-python,
         publish-javascript,
         publish-java,
-        publish-go,
         publish-dotnet,
         publish-rust,
         update-changelog,
@@ -252,13 +241,13 @@ jobs:
 
     steps:
       - name: Notify success
-        if: (needs.publish-python.result == 'success' || needs.publish-python.result == 'skipped') && (needs.publish-javascript.result == 'success' || needs.publish-javascript.result == 'skipped') && (needs.publish-java.result == 'success' || needs.publish-java.result == 'skipped') && (needs.publish-go.result == 'success' || needs.publish-go.result == 'skipped') && (needs.publish-dotnet.result == 'success' || needs.publish-dotnet.result == 'skipped') && (needs.publish-rust.result == 'success' || needs.publish-rust.result == 'skipped')
+        if: (needs.publish-python.result == 'success' || needs.publish-python.result == 'skipped') && (needs.publish-javascript.result == 'success' || needs.publish-javascript.result == 'skipped') && (needs.publish-java.result == 'success' || needs.publish-java.result == 'skipped') && (needs.publish-dotnet.result == 'success' || needs.publish-dotnet.result == 'skipped') && (needs.publish-rust.result == 'success' || needs.publish-rust.result == 'skipped')
         run: |
           echo "🎉 All packages published successfully!"
           echo "Version: v${{ needs.determine-version.outputs.version }}"
 
       - name: Notify partial failure
-        if: needs.publish-python.result == 'failure' || needs.publish-javascript.result == 'failure' || needs.publish-java.result == 'failure' || needs.publish-go.result == 'failure' || needs.publish-dotnet.result == 'failure' || needs.publish-rust.result == 'failure'
+        if: needs.publish-python.result == 'failure' || needs.publish-javascript.result == 'failure' || needs.publish-java.result == 'failure' || needs.publish-dotnet.result == 'failure' || needs.publish-rust.result == 'failure'
         run: |
           echo "⚠️ Some packages failed to publish. Check the logs above."
           echo "Version: v${{ needs.determine-version.outputs.version }}"
