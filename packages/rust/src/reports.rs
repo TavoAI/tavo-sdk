@@ -1,6 +1,6 @@
 //! Report operations
 
-use crate::{TavoClient, TavoError, Result};
+use crate::{Result, TavoClient, TavoError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -27,7 +27,10 @@ impl<'a> ReportOperations<'a> {
     }
 
     /// List all reports
-    pub async fn list(&self, params: Option<HashMap<String, serde_json::Value>>) -> Result<Vec<Report>> {
+    pub async fn list(
+        &self,
+        params: Option<HashMap<String, serde_json::Value>>,
+    ) -> Result<Vec<Report>> {
         match params {
             Some(p) => self.client.get_with_params("/reports", &p).await,
             None => self.client.get("/reports").await,

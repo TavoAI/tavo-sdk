@@ -1,6 +1,6 @@
 //! Scan operations
 
-use crate::{TavoClient, TavoError, Result, ScanResult};
+use crate::{Result, ScanResult, TavoClient, TavoError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -28,8 +28,14 @@ impl<'a> ScanOperations<'a> {
     /// * `language` - Programming language (optional, defaults to "rust")
     pub async fn start_scan(&self, code: &str, language: &str) -> Result<ScanResult> {
         let mut scan_config = HashMap::new();
-        scan_config.insert("code".to_string(), serde_json::Value::String(code.to_string()));
-        scan_config.insert("language".to_string(), serde_json::Value::String(language.to_string()));
+        scan_config.insert(
+            "code".to_string(),
+            serde_json::Value::String(code.to_string()),
+        );
+        scan_config.insert(
+            "language".to_string(),
+            serde_json::Value::String(language.to_string()),
+        );
 
         self.client.post("/scans/code", &scan_config).await
     }
@@ -42,8 +48,14 @@ impl<'a> ScanOperations<'a> {
     /// * `language` - Programming language (optional, defaults to "rust")
     pub async fn scan_code(&self, code: &str, language: &str) -> Result<ScanResult> {
         let mut scan_config = HashMap::new();
-        scan_config.insert("code".to_string(), serde_json::Value::String(code.to_string()));
-        scan_config.insert("language".to_string(), serde_json::Value::String(language.to_string()));
+        scan_config.insert(
+            "code".to_string(),
+            serde_json::Value::String(code.to_string()),
+        );
+        scan_config.insert(
+            "language".to_string(),
+            serde_json::Value::String(language.to_string()),
+        );
 
         self.client.post("/scans/code", &scan_config).await
     }
@@ -55,7 +67,10 @@ impl<'a> ScanOperations<'a> {
     }
 
     /// List scans
-    pub async fn list(&self, params: Option<HashMap<String, serde_json::Value>>) -> Result<Vec<Scan>> {
+    pub async fn list(
+        &self,
+        params: Option<HashMap<String, serde_json::Value>>,
+    ) -> Result<Vec<Scan>> {
         match params {
             Some(p) => self.client.get_with_params("/scans", &p).await,
             None => self.client.get("/scans").await,

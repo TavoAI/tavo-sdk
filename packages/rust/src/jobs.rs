@@ -1,6 +1,6 @@
 //! Job operations
 
-use crate::{TavoClient, TavoError, Result};
+use crate::{Result, TavoClient, TavoError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -27,7 +27,10 @@ impl<'a> JobOperations<'a> {
     }
 
     /// List jobs
-    pub async fn list(&self, params: Option<HashMap<String, serde_json::Value>>) -> Result<Vec<Job>> {
+    pub async fn list(
+        &self,
+        params: Option<HashMap<String, serde_json::Value>>,
+    ) -> Result<Vec<Job>> {
         match params {
             Some(p) => self.client.get_with_params("/jobs", &p).await,
             None => self.client.get("/jobs").await,

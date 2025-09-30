@@ -1,6 +1,6 @@
 //! Billing operations
 
-use crate::{TavoClient, TavoError, Result};
+use crate::{Result, TavoClient, TavoError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -36,15 +36,21 @@ impl<'a> BillingOperations<'a> {
 
     /// Update billing plan
     pub async fn update_plan(&self, plan_id: &str) -> Result<BillingPlan> {
-        let data = HashMap::from([
-            ("plan_id".to_string(), serde_json::Value::String(plan_id.to_string())),
-        ]);
+        let data = HashMap::from([(
+            "plan_id".to_string(),
+            serde_json::Value::String(plan_id.to_string()),
+        )]);
         self.client.put("/billing/plan", &data).await
     }
 
     /// Add payment method
-    pub async fn add_payment_method(&self, payment_data: HashMap<String, serde_json::Value>) -> Result<PaymentMethod> {
-        self.client.post("/billing/payment-methods", &payment_data).await
+    pub async fn add_payment_method(
+        &self,
+        payment_data: HashMap<String, serde_json::Value>,
+    ) -> Result<PaymentMethod> {
+        self.client
+            .post("/billing/payment-methods", &payment_data)
+            .await
     }
 
     /// List payment methods

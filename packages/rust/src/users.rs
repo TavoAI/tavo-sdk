@@ -1,6 +1,6 @@
 //! User management operations
 
-use crate::{TavoClient, TavoError, Result};
+use crate::{Result, TavoClient, TavoError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -21,7 +21,10 @@ impl<'a> UserOperations<'a> {
     }
 
     /// Update current user profile
-    pub async fn update_profile(&self, profile_data: HashMap<String, serde_json::Value>) -> Result<User> {
+    pub async fn update_profile(
+        &self,
+        profile_data: HashMap<String, serde_json::Value>,
+    ) -> Result<User> {
         self.client.put("/users/me", &profile_data).await
     }
 
@@ -31,9 +34,16 @@ impl<'a> UserOperations<'a> {
     }
 
     /// Create a new API key
-    pub async fn create_api_key(&self, name: &str, additional_data: Option<HashMap<String, serde_json::Value>>) -> Result<ApiKey> {
+    pub async fn create_api_key(
+        &self,
+        name: &str,
+        additional_data: Option<HashMap<String, serde_json::Value>>,
+    ) -> Result<ApiKey> {
         let mut data = HashMap::new();
-        data.insert("name".to_string(), serde_json::Value::String(name.to_string()));
+        data.insert(
+            "name".to_string(),
+            serde_json::Value::String(name.to_string()),
+        );
 
         if let Some(additional) = additional_data {
             for (k, v) in additional {
@@ -45,7 +55,11 @@ impl<'a> UserOperations<'a> {
     }
 
     /// Update an API key
-    pub async fn update_api_key(&self, api_key_id: &str, update_data: HashMap<String, serde_json::Value>) -> Result<ApiKey> {
+    pub async fn update_api_key(
+        &self,
+        api_key_id: &str,
+        update_data: HashMap<String, serde_json::Value>,
+    ) -> Result<ApiKey> {
         let url = format!("/users/me/api-keys/{}", api_key_id);
         self.client.put(&url, &update_data).await
     }
@@ -57,7 +71,11 @@ impl<'a> UserOperations<'a> {
     }
 
     /// Rotate an API key (generate new secret)
-    pub async fn rotate_api_key(&self, api_key_id: &str, additional_data: Option<HashMap<String, serde_json::Value>>) -> Result<ApiKey> {
+    pub async fn rotate_api_key(
+        &self,
+        api_key_id: &str,
+        additional_data: Option<HashMap<String, serde_json::Value>>,
+    ) -> Result<ApiKey> {
         let url = format!("/users/me/api-keys/{}/rotate", api_key_id);
         match additional_data {
             Some(data) => self.client.post(&url, &data).await,

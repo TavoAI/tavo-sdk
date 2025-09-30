@@ -1,6 +1,6 @@
 //! Webhook operations
 
-use crate::{TavoClient, TavoError, Result};
+use crate::{Result, TavoClient, TavoError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -16,7 +16,10 @@ impl<'a> WebhookOperations<'a> {
     }
 
     /// Create a webhook
-    pub async fn create(&self, webhook_config: HashMap<String, serde_json::Value>) -> Result<Webhook> {
+    pub async fn create(
+        &self,
+        webhook_config: HashMap<String, serde_json::Value>,
+    ) -> Result<Webhook> {
         self.client.post("/webhooks", &webhook_config).await
     }
 
@@ -32,7 +35,11 @@ impl<'a> WebhookOperations<'a> {
     }
 
     /// Update a webhook
-    pub async fn update(&self, webhook_id: &str, webhook_config: HashMap<String, serde_json::Value>) -> Result<Webhook> {
+    pub async fn update(
+        &self,
+        webhook_id: &str,
+        webhook_config: HashMap<String, serde_json::Value>,
+    ) -> Result<Webhook> {
         let url = format!("/webhooks/{}", webhook_id);
         self.client.put(&url, &webhook_config).await
     }

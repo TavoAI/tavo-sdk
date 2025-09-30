@@ -1,6 +1,6 @@
 //! AI Analysis operations
 
-use crate::{TavoClient, TavoError, Result};
+use crate::{Result, TavoClient, TavoError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -16,29 +16,53 @@ impl<'a> AIAnalysisOperations<'a> {
     }
 
     /// Analyze AI model for security risks
-    pub async fn analyze_model(&self, model_config: serde_json::Value) -> Result<ModelAnalysisResult> {
+    pub async fn analyze_model(
+        &self,
+        model_config: serde_json::Value,
+    ) -> Result<ModelAnalysisResult> {
         let mut data = HashMap::new();
         data.insert("model_config".to_string(), model_config);
         self.client.post("/ai/analysis/model", &data).await
     }
 
     /// Analyze code with AI
-    pub async fn analyze_code(&self, code: &str, language: &str, analysis_type: Option<&str>) -> Result<CodeAnalysisResult> {
+    pub async fn analyze_code(
+        &self,
+        code: &str,
+        language: &str,
+        analysis_type: Option<&str>,
+    ) -> Result<CodeAnalysisResult> {
         let mut data = HashMap::new();
-        data.insert("code".to_string(), serde_json::Value::String(code.to_string()));
-        data.insert("language".to_string(), serde_json::Value::String(language.to_string()));
+        data.insert(
+            "code".to_string(),
+            serde_json::Value::String(code.to_string()),
+        );
+        data.insert(
+            "language".to_string(),
+            serde_json::Value::String(language.to_string()),
+        );
 
         if let Some(analysis_type) = analysis_type {
-            data.insert("analysis_type".to_string(), serde_json::Value::String(analysis_type.to_string()));
+            data.insert(
+                "analysis_type".to_string(),
+                serde_json::Value::String(analysis_type.to_string()),
+            );
         }
 
         self.client.post("/ai/analysis/code", &data).await
     }
 
     /// Get AI analysis history
-    pub async fn get_history(&self, params: Option<HashMap<String, serde_json::Value>>) -> Result<Vec<AIAnalysis>> {
+    pub async fn get_history(
+        &self,
+        params: Option<HashMap<String, serde_json::Value>>,
+    ) -> Result<Vec<AIAnalysis>> {
         match params {
-            Some(p) => self.client.get_with_params("/ai/analysis/history", &p).await,
+            Some(p) => {
+                self.client
+                    .get_with_params("/ai/analysis/history", &p)
+                    .await
+            }
             None => self.client.get("/ai/analysis/history").await,
         }
     }

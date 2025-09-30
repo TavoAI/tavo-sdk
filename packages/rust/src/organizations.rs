@@ -1,6 +1,6 @@
 //! Organization operations
 
-use crate::{TavoClient, TavoError, Result};
+use crate::{Result, TavoClient, TavoError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -27,12 +27,19 @@ impl<'a> OrganizationOperations<'a> {
     }
 
     /// Create a new organization
-    pub async fn create(&self, org_data: HashMap<String, serde_json::Value>) -> Result<Organization> {
+    pub async fn create(
+        &self,
+        org_data: HashMap<String, serde_json::Value>,
+    ) -> Result<Organization> {
         self.client.post("/organizations", &org_data).await
     }
 
     /// Update an organization
-    pub async fn update(&self, org_id: &str, org_data: HashMap<String, serde_json::Value>) -> Result<Organization> {
+    pub async fn update(
+        &self,
+        org_id: &str,
+        org_data: HashMap<String, serde_json::Value>,
+    ) -> Result<Organization> {
         let url = format!("/organizations/{}", org_id);
         self.client.put(&url, &org_data).await
     }
@@ -50,11 +57,22 @@ impl<'a> OrganizationOperations<'a> {
     }
 
     /// Add member to organization
-    pub async fn add_member(&self, org_id: &str, user_id: &str, role: &str) -> Result<OrganizationMember> {
+    pub async fn add_member(
+        &self,
+        org_id: &str,
+        user_id: &str,
+        role: &str,
+    ) -> Result<OrganizationMember> {
         let url = format!("/organizations/{}/members", org_id);
         let data = HashMap::from([
-            ("user_id".to_string(), serde_json::Value::String(user_id.to_string())),
-            ("role".to_string(), serde_json::Value::String(role.to_string())),
+            (
+                "user_id".to_string(),
+                serde_json::Value::String(user_id.to_string()),
+            ),
+            (
+                "role".to_string(),
+                serde_json::Value::String(role.to_string()),
+            ),
         ]);
         self.client.post(&url, &data).await
     }

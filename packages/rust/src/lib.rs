@@ -20,15 +20,15 @@
 //! }
 //! ```
 
-pub mod auth;
-pub mod users;
-pub mod organizations;
-pub mod scans;
-pub mod jobs;
-pub mod webhooks;
 pub mod ai_analysis;
+pub mod auth;
 pub mod billing;
+pub mod jobs;
+pub mod organizations;
 pub mod reports;
+pub mod scans;
+pub mod users;
+pub mod webhooks;
 
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -36,15 +36,15 @@ use serde_json;
 use std::collections::HashMap;
 use thiserror::Error;
 
-pub use auth::*;
-pub use users::*;
-pub use organizations::*;
-pub use scans::*;
-pub use jobs::*;
-pub use webhooks::*;
 pub use ai_analysis::*;
+pub use auth::*;
 pub use billing::*;
+pub use jobs::*;
+pub use organizations::*;
 pub use reports::*;
+pub use scans::*;
+pub use users::*;
+pub use webhooks::*;
 
 /// Errors that can occur when using the Tavo AI SDK
 #[derive(Error, Debug)]
@@ -177,7 +177,8 @@ impl TavoClient {
     /// Make a GET request and deserialize JSON response
     async fn get<T: for<'de> Deserialize<'de>>(&self, endpoint: &str) -> Result<T> {
         let url = format!("{}/api/v1{}", self.base_url, endpoint);
-        let response = self.authenticated_request(reqwest::Method::GET, &url)
+        let response = self
+            .authenticated_request(reqwest::Method::GET, &url)
             .send()
             .await?;
 
@@ -191,7 +192,11 @@ impl TavoClient {
     }
 
     /// Make a GET request with query parameters
-    async fn get_with_params<T: for<'de> Deserialize<'de>>(&self, endpoint: &str, params: &HashMap<String, serde_json::Value>) -> Result<T> {
+    async fn get_with_params<T: for<'de> Deserialize<'de>>(
+        &self,
+        endpoint: &str,
+        params: &HashMap<String, serde_json::Value>,
+    ) -> Result<T> {
         let mut url = format!("{}/api/v1{}", self.base_url, endpoint);
         if !params.is_empty() {
             url.push('?');
@@ -203,7 +208,8 @@ impl TavoClient {
             }
         }
 
-        let response = self.authenticated_request(reqwest::Method::GET, &url)
+        let response = self
+            .authenticated_request(reqwest::Method::GET, &url)
             .send()
             .await?;
 
@@ -217,9 +223,14 @@ impl TavoClient {
     }
 
     /// Make a POST request
-    async fn post<T: for<'de> Deserialize<'de>>(&self, endpoint: &str, data: &HashMap<String, serde_json::Value>) -> Result<T> {
+    async fn post<T: for<'de> Deserialize<'de>>(
+        &self,
+        endpoint: &str,
+        data: &HashMap<String, serde_json::Value>,
+    ) -> Result<T> {
         let url = format!("{}/api/v1{}", self.base_url, endpoint);
-        let response = self.authenticated_request(reqwest::Method::POST, &url)
+        let response = self
+            .authenticated_request(reqwest::Method::POST, &url)
             .json(data)
             .send()
             .await?;
@@ -234,9 +245,14 @@ impl TavoClient {
     }
 
     /// Make a PUT request
-    async fn put<T: for<'de> Deserialize<'de>>(&self, endpoint: &str, data: &HashMap<String, serde_json::Value>) -> Result<T> {
+    async fn put<T: for<'de> Deserialize<'de>>(
+        &self,
+        endpoint: &str,
+        data: &HashMap<String, serde_json::Value>,
+    ) -> Result<T> {
         let url = format!("{}/api/v1{}", self.base_url, endpoint);
-        let response = self.authenticated_request(reqwest::Method::PUT, &url)
+        let response = self
+            .authenticated_request(reqwest::Method::PUT, &url)
             .json(data)
             .send()
             .await?;
@@ -253,7 +269,8 @@ impl TavoClient {
     /// Make a DELETE request
     async fn delete(&self, endpoint: &str) -> Result<()> {
         let url = format!("{}/api/v1{}", self.base_url, endpoint);
-        let response = self.authenticated_request(reqwest::Method::DELETE, &url)
+        let response = self
+            .authenticated_request(reqwest::Method::DELETE, &url)
             .send()
             .await?;
 
@@ -268,7 +285,8 @@ impl TavoClient {
     /// Get raw text response
     async fn get_text(&self, endpoint: &str) -> Result<String> {
         let url = format!("{}/api/v1{}", self.base_url, endpoint);
-        let response = self.authenticated_request(reqwest::Method::GET, &url)
+        let response = self
+            .authenticated_request(reqwest::Method::GET, &url)
             .send()
             .await?;
 
@@ -284,7 +302,8 @@ impl TavoClient {
     /// Get raw bytes response
     async fn get_bytes(&self, endpoint: &str) -> Result<Vec<u8>> {
         let url = format!("{}/api/v1{}", self.base_url, endpoint);
-        let response = self.authenticated_request(reqwest::Method::GET, &url)
+        let response = self
+            .authenticated_request(reqwest::Method::GET, &url)
             .send()
             .await?;
 
@@ -347,7 +366,8 @@ impl TavoClient {
     /// Health check - verify API connectivity
     pub async fn health_check(&self) -> Result<HealthResponse> {
         let url = format!("{}/", self.base_url);
-        let response = self.authenticated_request(reqwest::Method::GET, &url)
+        let response = self
+            .authenticated_request(reqwest::Method::GET, &url)
             .send()
             .await?;
 
