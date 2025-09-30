@@ -1,178 +1,198 @@
 name: Scanner Binary Release
 
 on:
-    push:
-        branches: [main]
-        paths:
-            - "packages/scanner/**"
-            - "tavo-rules/bundles/llm-security/**"
-            - "build_binary.sh"
-    workflow_dispatch:
-        inputs:
-            version:
-                description: "Version tag (e.g., v1.0.0)"
-                required: true
-                type: string
-            prerelease:
-                description: "Mark as prerelease"
-                required: false
-                default: false
-                type: boolean
+  push:
+    branches: [main]
+    paths:
+      - "packages/scanner/**"
+      - "tavo-rules/bundles/llm-security/**"
+      - "build_binary.sh"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag (e.g., v1.0.0)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark as prerelease"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
-    build-binaries:
-        name: Build Binaries
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                include:
-                    - os: ubuntu-latest
-                      platform: linux
-                      arch: x64
-                    - os: windows-latest
-                      platform: windows
-                      arch: x64
-                    - os: macos-latest
-                      platform: macos
-                      arch: x64
-                    - os: macos-latest
-                      platform: macos
-                      arch: arm64
+  build-binaries:
+    name: Build Binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: windows-latest
+            platform: windows
+            arch: x64
+          - os: macos-latest
+            platform: macos
+            arch: x64
+          - os: macos-latest
+            platform: macos
+            arch: arm64
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-            - name: Setup Python
-              uses: actions/setup-python@v5
-              with:
-                  python-version: "3.11"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-            - name: Install dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install pyinstaller pyyaml
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pyyaml
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            echo "Installing unzip for Windows..."
+            choco install unzip || echo "choco install failed, trying alternative..."
+          fi
 
             - name: Download engines
               run: |
                   cd packages/scanner
-                  chmod +x download_engines.sh
-                  ./download_engines.sh
-
-            - name: Build binary (Linux/macOS)
-              if: runner.os != 'Windows'
-              run: |
-                  cd packages/scanner
-                  pyinstaller --onefile --hidden-import yaml --add-data "engines:engines" --name tavo-scanner tavo_scanner.py
-
-            - name: Build binary (Windows)
-              if: runner.os == 'Windows'
-              run: |
-                  cd packages/scanner
-                  pyinstaller --onefile --hidden-import yaml --add-data "engines;engines" --name tavo-scanner tavo_scanner.py
-
-            - name: Set binary name
-              id: binary-name
-              run: |
-                  if [ "${{ runner.os }}" == "Windows" ]; then
-                    echo "name=tavo-scanner.exe" >> $GITHUB_OUTPUT
+                  echo "Current directory: $(pwd)"
+                  echo "Running download_engines.js..."
+                  node download_engines.js
+                  echo "Checking engines directory after download..."
+                  ls -la engines/ || echo "engines directory not found"
+                  if [ -d "engines" ]; then
+                    echo "Contents of engines directory:"
+                    ls -la engines/
                   else
-                    echo "name=tavo-scanner" >> $GITHUB_OUTPUT
-                  fi
-              shell: bash
-
-            - name: Test binary
-              run: |
-                  cd packages/scanner/dist
-                  if [ "${{ runner.os }}" == "Windows" ]; then
-                    ./tavo-scanner.exe --help
-                  else
-                    chmod +x tavo-scanner
-                    ./tavo-scanner --help
+                    echo "ERROR: engines directory does not exist after download"
+                    exit 1
                   fi
 
-            - name: Upload binary artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: tavo-scanner-${{ matrix.platform }}-${{ matrix.arch }}
-                  path: packages/scanner/dist/${{ steps.binary-name.outputs.name }}
+      - name: Build binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd packages/scanner
+          echo "Building binary with PyInstaller..."
+          pyinstaller --onefile --hidden-import yaml --add-data "engines:engines" --name tavo-scanner --clean tavo_scanner.py
+          echo "Build completed, checking dist directory..."
+          ls -la dist/ || echo "dist directory not found"
 
-    create-release:
-        name: Create Release
-        needs: build-binaries
-        runs-on: ubuntu-latest
-        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, 'release'))
+      - name: Build binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd packages/scanner
+          echo "Building binary with PyInstaller..."
+          pyinstaller --onefile --hidden-import yaml --add-data "engines;engines" --name tavo-scanner --clean tavo_scanner.py
+          echo "Build completed, checking dist directory..."
+          ls -la dist/ || echo "dist directory not found"
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v5
+      - name: Set binary name
+        id: binary-name
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            echo "name=tavo-scanner.exe" >> $GITHUB_OUTPUT
+          else
+            echo "name=tavo-scanner" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
 
-            - name: Download all artifacts
-              uses: actions/download-artifact@v4
-              with:
-                  path: artifacts
+      - name: Test binary
+        run: |
+          cd packages/scanner/dist
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            ./tavo-scanner.exe --help
+          else
+            chmod +x tavo-scanner
+            ./tavo-scanner --help
+          fi
 
-            - name: Set version
-              id: version
-              run: |
-                  if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-                    VERSION="${{ github.event.inputs.version }}"
-                  else
-                    # Extract version from commit message or use date-based version
-                    VERSION="v$(date +%Y.%m.%d-%H%M)"
-                  fi
-                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tavo-scanner-${{ matrix.platform }}-${{ matrix.arch }}
+          path: packages/scanner/dist/${{ steps.binary-name.outputs.name }}
 
-            - name: Create release archives
-              run: |
-                  mkdir releases
-                  cd artifacts
+  create-release:
+    name: Create Release
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, 'release'))
 
-                  # Create release archives for each platform
-                  for dir in */; do
-                    platform="${dir%/}"
-                    cd "$platform"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-                    if [[ "$platform" == *"windows"* ]]; then
-                      zip -r "../../releases/tavo-scanner-${platform}.zip" .
-                    else
-                      tar -czf "../../releases/tavo-scanner-${platform}.tar.gz" .
-                    fi
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
-                    cd ..
-                  done
+      - name: Set version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # Extract version from commit message or use date-based version
+            VERSION="v$(date +%Y.%m.%d-%H%M)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-            - name: Create GitHub release
-              uses: softprops/action-gh-release@v2
-              with:
-                  tag_name: ${{ steps.version.outputs.version }}
-                  name: Tavo Scanner ${{ steps.version.outputs.version }}
-                  body: |
-                      ## Tavo AI Security Scanner ${{ steps.version.outputs.version }}
+      - name: Create release archives
+        run: |
+          mkdir releases
+          cd artifacts
 
-                      This release contains standalone binaries for the Tavo AI Security Scanner.
+          # Create release archives for each platform
+          for dir in */; do
+            platform="${dir%/}"
+            cd "$platform"
 
-                      ### Downloads
+            if [[ "$platform" == *"windows"* ]]; then
+              zip -r "../../releases/tavo-scanner-${platform}.zip" .
+            else
+              tar -czf "../../releases/tavo-scanner-${platform}.tar.gz" .
+            fi
 
-                      - **Linux (x64)**: `tavo-scanner-linux-x64.tar.gz`
-                      - **macOS (x64)**: `tavo-scanner-macos-x64.tar.gz`
-                      - **macOS (ARM64)**: `tavo-scanner-macos-arm64.tar.gz`
-                      - **Windows (x64)**: `tavo-scanner-windows-x64.zip`
+            cd ..
+          done
 
-                      ### Installation
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Tavo Scanner ${{ steps.version.outputs.version }}
+          body: |
+            ## Tavo AI Security Scanner ${{ steps.version.outputs.version }}
 
-                      1. Download the appropriate archive for your platform
-                      2. Extract the binary
-                      3. Make executable (Linux/macOS): `chmod +x tavo-scanner`
-                      4. Run: `./tavo-scanner --help`
+            This release contains standalone binaries for the Tavo AI Security Scanner.
 
-                      ### Features
+            ### Downloads
 
-                      - Comprehensive LLM security vulnerability detection
-                      - OWASP LLM Top 10 coverage
-                      - No external dependencies required
-                      - Cross-platform support
-                  files: releases/*.*
-                  prerelease: ${{ github.event.inputs.prerelease }}
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - **Linux (x64)**: `tavo-scanner-linux-x64.tar.gz`
+            - **macOS (x64)**: `tavo-scanner-macos-x64.tar.gz`
+            - **macOS (ARM64)**: `tavo-scanner-macos-arm64.tar.gz`
+            - **Windows (x64)**: `tavo-scanner-windows-x64.zip`
+
+            ### Installation
+
+            1. Download the appropriate archive for your platform
+            2. Extract the binary
+            3. Make executable (Linux/macOS): `chmod +x tavo-scanner`
+            4. Run: `./tavo-scanner --help`
+
+            ### Features
+
+            - Comprehensive LLM security vulnerability detection
+            - OWASP LLM Top 10 coverage
+            - No external dependencies required
+            - Cross-platform support
+          files: releases/*.*
+          prerelease: ${{ github.event.inputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

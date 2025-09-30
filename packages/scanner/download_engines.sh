@@ -9,6 +9,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENGINES_DIR="$SCRIPT_DIR/engines"
 CACHE_DIR="$HOME/.tavoai/engines"
 
+echo "Script directory: $SCRIPT_DIR"
+echo "Engines directory: $ENGINES_DIR"
+echo "Cache directory: $CACHE_DIR"
+
 # Create directories
 mkdir -p "$ENGINES_DIR"
 mkdir -p "$CACHE_DIR"
@@ -104,6 +108,29 @@ main() {
 
     echo "Engines downloaded to: $ENGINES_DIR"
     ls -la "$ENGINES_DIR"
+
+    # Verify downloads
+    if [[ $PLATFORM == "windows" ]]; then
+        if [ ! -f "$ENGINES_DIR/opa.exe" ]; then
+            echo "ERROR: opa.exe not found in engines directory"
+            exit 1
+        fi
+        if [ ! -f "$ENGINES_DIR/opengrep-core.exe" ]; then
+            echo "ERROR: opengrep-core.exe not found in engines directory"
+            exit 1
+        fi
+    else
+        if [ ! -f "$ENGINES_DIR/opa" ]; then
+            echo "ERROR: opa not found in engines directory"
+            exit 1
+        fi
+        if [ ! -f "$ENGINES_DIR/opengrep-core" ]; then
+            echo "ERROR: opengrep-core not found in engines directory"
+            exit 1
+        fi
+    fi
+
+    echo "All engines downloaded successfully"
 }
 
 main "$@"
