@@ -46,7 +46,7 @@
     "url": "https://github.com/TavoAI/tavo-api.git"
   },
   "author": "Tavo AI",
-  "license": "MIT",
+  "license": "Apache",
   "bugs": {
     "url": "https://github.com/TavoAI/tavo-api/issues"
   },

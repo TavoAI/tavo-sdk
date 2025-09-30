@@ -7,12 +7,12 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <PackageId>TavoAI</PackageId>
-    <Version>1.0.0</Version>
+    <Version>0.4.0</Version>
     <Authors>Tavo AI</Authors>
     <Description>Tavo AI SDK for .NET</Description>
     <PackageTags>tavo;ai;security;scanning</PackageTags>
     <RepositoryUrl>https://github.com/TavoAI/tavo-api</RepositoryUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
