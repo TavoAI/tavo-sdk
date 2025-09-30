@@ -62,6 +62,7 @@ jobs:
             echo "Installing unzip for Windows..."
             choco install unzip || echo "choco install failed, trying alternative..."
           fi
+        shell: bash
 
       - name: Download engines
         run: |
@@ -78,6 +79,7 @@ jobs:
             echo "ERROR: engines directory does not exist after download"
             exit 1
           fi
+        shell: bash
 
       - name: Build binary (Linux/macOS)
         if: runner.os != 'Windows'
@@ -116,6 +118,7 @@ jobs:
             chmod +x tavo-scanner
             ./tavo-scanner --help
           fi
+        shell: bash
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
