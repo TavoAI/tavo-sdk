@@ -13,6 +13,10 @@ on:
           - minor
           - major
           - prerelease
+      force_version:
+        description: "Force specific version (optional, overrides release_type)"
+        required: false
+        type: string
       packages:
         description: "Packages to release (comma-separated, empty for all)"
         required: false
@@ -56,36 +60,45 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          # Get the latest tag
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          LATEST_VERSION=${LATEST_TAG#v}
+          # Check if force version is specified
+          if [ -n "${{ github.event.inputs.force_version }}" ]; then
+            NEW_VERSION="${{ github.event.inputs.force_version }}"
+            echo "Forced version: $NEW_VERSION"
+          else
+            # Find the highest valid semantic version tag
+            LATEST_TAG=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" | sort -V | tail -1 || echo "v0.0.0")
+            LATEST_VERSION=${LATEST_TAG#v}
 
-          # Determine release type
-          RELEASE_TYPE="${{ github.event.inputs.release_type }}"
-          if [ -z "$RELEASE_TYPE" ]; then
-            RELEASE_TYPE="patch"
+            echo "Latest valid tag: $LATEST_TAG"
+            echo "Latest version: $LATEST_VERSION"
+
+            # Determine release type
+            RELEASE_TYPE="${{ github.event.inputs.release_type }}"
+            if [ -z "$RELEASE_TYPE" ]; then
+              RELEASE_TYPE="patch"
+            fi
+
+            # Calculate new version
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_VERSION"
+
+            case $RELEASE_TYPE in
+              major)
+                NEW_VERSION="$((MAJOR + 1)).0.0"
+                ;;
+              minor)
+                NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+                ;;
+              patch)
+                NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+                ;;
+              prerelease)
+                NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))-alpha.$(date +%Y%m%d%H%M%S)"
+                ;;
+            esac
           fi
 
-          # Calculate new version
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_VERSION"
-
-          case $RELEASE_TYPE in
-            major)
-              NEW_VERSION="$((MAJOR + 1)).0.0"
-              ;;
-            minor)
-              NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
-              ;;
-            patch)
-              NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
-              ;;
-            prerelease)
-              NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))-alpha.$(date +%Y%m%d%H%M%S)"
-              ;;
-          esac
-
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "New version: $NEW_VERSION"
+          echo "Final version: $NEW_VERSION"
 
   create-release:
     name: Create Release

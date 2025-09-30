@@ -24,8 +24,8 @@ jobs:
       - name: Update version
         run: |
           cd packages/rust
-          # Update version in Cargo.toml
-          sed -i "s/version = \".*\"/version = \"${{ inputs.version }}\"/" Cargo.toml
+          # Update version in Cargo.toml (only in [package] section)
+          sed -i '/^\[package\]/,/^\[/{s/^version = ".*"/version = "${{ inputs.version }}"/;}' Cargo.toml
 
       - name: Check formatting
         run: |
