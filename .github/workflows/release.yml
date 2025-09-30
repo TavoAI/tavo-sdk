@@ -120,9 +120,28 @@ jobs:
             PRERELEASE_FLAG=""
           fi
 
-          gh release create v${{ needs.determine-version.outputs.version }} \
-            --title "Release v${{ needs.determine-version.outputs.version }}" \
-            --notes "## What's Changed
+          # Check if release already exists
+          if gh release view v${{ needs.determine-version.outputs.version }} >/dev/null 2>&1; then
+            echo "Release v${{ needs.determine-version.outputs.version }} already exists. Updating..."
+            gh release edit v${{ needs.determine-version.outputs.version }} \
+              --title "Release v${{ needs.determine-version.outputs.version }}" \
+              --notes "## What's Changed
+
+          Automated release v${{ needs.determine-version.outputs.version }} (updated)
+
+          ### Packages Released
+          ${{ needs.determine-version.outputs.packages }}
+
+          ### Deployment
+          - 📦 Published to all configured registries
+          - 📚 Documentation updated
+          - 🏷️ Version tags created" \
+              $PRERELEASE_FLAG
+          else
+            echo "Creating new release v${{ needs.determine-version.outputs.version }}..."
+            gh release create v${{ needs.determine-version.outputs.version }} \
+              --title "Release v${{ needs.determine-version.outputs.version }}" \
+              --notes "## What's Changed
 
           Automated release v${{ needs.determine-version.outputs.version }}
 
@@ -133,8 +152,9 @@ jobs:
           - 📦 Published to all configured registries
           - 📚 Documentation updated
           - 🏷️ Version tags created" \
-            --draft=false \
-            $PRERELEASE_FLAG
+              --draft=false \
+              $PRERELEASE_FLAG
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
