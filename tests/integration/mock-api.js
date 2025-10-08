@@ -12,7 +12,7 @@ app.use((req, res, next) => {
 // Health check endpoint
 app.get('/', (req, res) => {
     res.json({
-        message: 'Tavo.AI API Server',
+        message: 'Tavo AI API Server',
         version: '1.0.0',
         status: 'healthy'
     });
