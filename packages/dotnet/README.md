@@ -98,7 +98,7 @@ Analyzes AI model configuration for security risks.
 
 ### API Key
 
-Get your API key from [gettavo.com](https://gettavo.com) and set it in your application:
+Get your API key from [tavoai.net](https://tavoai.net) and set it in your application:
 
 ```csharp
 // Option 1: Constructor parameter
