@@ -1,5 +1,5 @@
 {
-  "name": "tavoai-js-sdk",
+  "name": "@tavoai/sdk",
   "version": "0.4.0",
   "description": "JavaScript/TypeScript SDK for Tavo AI API",
   "main": "dist/index.js",
