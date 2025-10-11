@@ -1,9 +1,10 @@
 name: Publish JavaScript SDK
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       version:
+        description: "Version to publish"
         required: true
         type: string
 
@@ -11,6 +12,8 @@ jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -21,6 +24,7 @@ jobs:
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
+          token: ${{ secrets.NPM_TOKEN }}
 
       - name: Install dependencies
         run: |
@@ -45,19 +49,10 @@ jobs:
           cd packages/javascript
           yarn test
 
-      - name: Setup npm authentication
-        run: |
-          cd packages/javascript
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Publish to npm
         run: |
           cd packages/javascript
-          npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm publish --access public --provenance
 
       - name: Create Git tag
         run: |

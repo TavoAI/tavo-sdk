@@ -1,9 +1,10 @@
 name: Publish Rust SDK
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       version:
+        description: "Version to publish"
         required: true
         type: string
 
