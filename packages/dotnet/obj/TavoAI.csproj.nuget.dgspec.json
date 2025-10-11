@@ -5,7 +5,7 @@
   },
   "projects": {
     "/home/runner/work/tavo-api/tavo-api/packages/dotnet/TavoAI.csproj": {
-      "version": "1.0.0",
+      "version": "0.4.0",
       "restore": {
         "projectUniqueName": "/home/runner/work/tavo-api/tavo-api/packages/dotnet/TavoAI.csproj",
         "projectName": "TavoAI",
