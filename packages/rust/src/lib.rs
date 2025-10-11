@@ -318,47 +318,47 @@ impl TavoClient {
     // Operation accessors
 
     /// Get authentication operations
-    pub fn auth(&self) -> AuthOperations {
+    pub fn auth(&self) -> AuthOperations<'_> {
         AuthOperations::new(self)
     }
 
     /// Get user operations
-    pub fn users(&self) -> UserOperations {
+    pub fn users(&self) -> UserOperations<'_> {
         UserOperations::new(self)
     }
 
     /// Get organization operations
-    pub fn organizations(&self) -> OrganizationOperations {
+    pub fn organizations(&self) -> OrganizationOperations<'_> {
         OrganizationOperations::new(self)
     }
 
     /// Get scan operations
-    pub fn scans(&self) -> ScanOperations {
+    pub fn scans(&self) -> ScanOperations<'_> {
         ScanOperations::new(self)
     }
 
     /// Get job operations
-    pub fn jobs(&self) -> JobOperations {
+    pub fn jobs(&self) -> JobOperations<'_> {
         JobOperations::new(self)
     }
 
     /// Get webhook operations
-    pub fn webhooks(&self) -> WebhookOperations {
+    pub fn webhooks(&self) -> WebhookOperations<'_> {
         WebhookOperations::new(self)
     }
 
     /// Get AI analysis operations
-    pub fn ai_analysis(&self) -> AIAnalysisOperations {
+    pub fn ai_analysis(&self) -> AIAnalysisOperations<'_> {
         AIAnalysisOperations::new(self)
     }
 
     /// Get billing operations
-    pub fn billing(&self) -> BillingOperations {
+    pub fn billing(&self) -> BillingOperations<'_> {
         BillingOperations::new(self)
     }
 
     /// Get report operations
-    pub fn reports(&self) -> ReportOperations {
+    pub fn reports(&self) -> ReportOperations<'_> {
         ReportOperations::new(self)
     }
 
