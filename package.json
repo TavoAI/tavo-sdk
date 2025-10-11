@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "bootstrap": "yarn install",
-    "build": "yarn workspaces foreach run build",
+    "build": "yarn workspace @tavoai/sdk run build",
     "test": "yarn workspaces foreach run test",
     "test:all": "yarn test",
     "test:integration": "yarn workspaces foreach run test:integration",
@@ -16,7 +16,7 @@
     "codegen": "yarn workspace tools/codegen run codegen",
     "release": "yarn workspace tools/release run release",
     "release:python": "yarn workspace packages/python run release",
-    "release:javascript": "yarn workspace packages/javascript run release",
+    "release:javascript": "yarn workspace @tavoai/sdk run release",
     "release:java": "yarn workspace packages/java run release",
     "release:go": "yarn workspace packages/go run release",
     "lint": "yarn workspaces foreach run lint",

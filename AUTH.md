@@ -7,7 +7,7 @@ This document describes how to authenticate with Tavo AI APIs using the official
 ### JavaScript SDK
 
 ```javascript
-import { TavoClient } from 'tavo-js-sdk';
+import { TavoClient } from '@tavoai/sdk';
 
 // Using API Key (recommended)
 const client = new TavoClient({

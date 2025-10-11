@@ -12,7 +12,7 @@ consistent APIs, automatic versioning, and unified development workflows.
 tavo-api/
 ├── packages/
 │   ├── python/          # Python SDK (tavo-python-sdk)
-│   ├── javascript/      # JavaScript/TypeScript SDK (tavo-js-sdk)
+│   ├── javascript/      # JavaScript/TypeScript SDK (@tavoai/sdk)
 │   ├── java/           # Java SDK (tavo-java-sdk)
 │   └── go/             # Go SDK (tavo-go-sdk)
 ├── tools/
@@ -41,7 +41,7 @@ result = client.scans.create(repository_url="https://github.com/user/repo")
 
 ```javascript
 // JavaScript
-import { TavoClient } from 'tavo-js-sdk';
+import { TavoClient } from '@tavoai/sdk';
 
 const client = new TavoClient({ apiKey: 'your-api-key' });
 const result = await client.scans.create({
@@ -246,7 +246,7 @@ yarn run release -- --version 1.2.3
 ### Package Registries
 
 - **Python**: PyPI (`pip install tavo-python-sdk`)
-- **JavaScript**: npm (`yarn add tavo-js-sdk`)
+- **JavaScript**: npm (`yarn add @tavoai/sdk`)
 - **Java**: Maven Central (`groupId: net.tavoai`)
 - **Go**: Go Modules (`github.com/tavoai/tavo-go-sdk`)
 

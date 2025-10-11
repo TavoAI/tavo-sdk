@@ -75,7 +75,7 @@ jobs:
 
           # Build JavaScript SDK using workspace command
           echo "Building JavaScript SDK..."
-          yarn workspace tavo-js-sdk run build || (echo "JavaScript build failed" && exit 1)
+          yarn workspace @tavoai/sdk run build || (echo "JavaScript build failed" && exit 1)
 
           # Verify JavaScript build output
           if [ -f "packages/javascript/dist/index.js" ]; then
