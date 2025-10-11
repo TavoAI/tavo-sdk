@@ -1,6 +1,6 @@
 //! Scan operations
 
-use crate::{Result, TavoClient, ScanResult};
+use crate::{Result, ScanResult, TavoClient};
 use serde::Deserialize;
 use std::collections::HashMap;
 
