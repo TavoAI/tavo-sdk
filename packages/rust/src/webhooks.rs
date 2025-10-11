@@ -1,7 +1,7 @@
 //! Webhook operations
 
-use crate::{Result, TavoClient, TavoError};
-use serde::{Deserialize, Serialize};
+use crate::{Result, TavoClient};
+use serde::Deserialize;
 use std::collections::HashMap;
 
 /// Webhook operations for the Tavo AI API

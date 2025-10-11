@@ -31,8 +31,7 @@ pub mod users;
 pub mod webhooks;
 
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
-use serde_json;
+use serde::Deserialize;
 use std::collections::HashMap;
 use thiserror::Error;
 
@@ -201,7 +200,7 @@ impl TavoClient {
         if !params.is_empty() {
             url.push('?');
             for (key, value) in params {
-                if url.chars().last() != Some('?') {
+                if !url.ends_with('?') {
                     url.push('&');
                 }
                 url.push_str(&format!("{}={}", key, value));
@@ -379,13 +378,6 @@ impl TavoClient {
         let result = response.json().await?;
         Ok(result)
     }
-}
-
-/// Request payload for code scanning
-#[derive(Serialize)]
-struct ScanRequest {
-    code: String,
-    language: String,
 }
 
 /// Result of a security scan

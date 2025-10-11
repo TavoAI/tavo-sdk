@@ -1,7 +1,7 @@
 //! Scan operations
 
-use crate::{Result, ScanResult, TavoClient, TavoError};
-use serde::{Deserialize, Serialize};
+use crate::{Result, TavoClient, ScanResult};
+use serde::Deserialize;
 use std::collections::HashMap;
 
 /// Scan operations for the Tavo AI API
