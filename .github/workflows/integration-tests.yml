@@ -64,6 +64,9 @@ jobs:
           echo "No additional dependencies needed"
           # Add back if needed for specific integration tests
 
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+
       - name: Build all SDKs
         run: |
           # Install root dependencies first (includes all workspaces)

@@ -32,6 +32,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+
       - name: Check Python dependencies
         id: python
         run: |
