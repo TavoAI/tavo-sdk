@@ -51,8 +51,11 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
+    "@types/node": "^24.6.0",
     "axios": "^1.6.0",
-    "js-yaml": "^4.1.0"
+    "eslint": "^9.36.0",
+    "js-yaml": "^4.1.0",
+    "typescript": "^5.0.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.0",
