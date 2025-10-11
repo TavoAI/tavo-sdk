@@ -16,14 +16,14 @@ The Tavo AI SDK ecosystem includes automated pipelines for:
 
 ### Supported Package Registries
 
-| Language | Registry | Workflow |
-|----------|----------|----------|
-| Python | PyPI | `publish-python.yml` |
-| JavaScript/TypeScript | npm | `publish-javascript.yml` |
-| Java | Maven Central | `publish-java.yml` |
-| Go | Go Modules (pkg.go.dev) | `publish-go.yml` |
-| .NET | NuGet | `publish-dotnet.yml` |
-| Rust | Crates.io | `publish-rust.yml` |
+| Language              | Registry                | Workflow                 |
+| --------------------- | ----------------------- | ------------------------ |
+| Python                | PyPI                    | `publish-python.yml`     |
+| JavaScript/TypeScript | npm                     | `publish-javascript.yml` |
+| Java                  | Maven Central           | `publish-java.yml`       |
+| Go                    | Go Modules (pkg.go.dev) | `publish-go.yml`         |
+| .NET                  | NuGet                   | `publish-dotnet.yml`     |
+| Rust                  | Crates.io               | `publish-rust.yml`       |
 
 ### Release Process
 
@@ -70,7 +70,7 @@ Set these secrets in your GitHub repository settings:
 - `MAVEN_USERNAME`: Sonatype OSSRH username
 - `MAVEN_PASSWORD`: Sonatype OSSRH password
 - `MAVEN_GPG_PASSPHRASE`: GPG key passphrase
-- `GPG_PRIVATE_KEY`: Base64-encoded GPG private key
+- `GPG_PRIVATE_KEY`: Armored raw GPG private key
 
 #### NuGet
 
