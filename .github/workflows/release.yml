@@ -194,7 +194,7 @@ jobs:
     name: Publish Go SDK
     needs: [determine-version, create-release]
     if: contains(needs.determine-version.outputs.packages, 'go')
-    uses: ./.github/workflows/publish-go.yml
+    uses: TavoAI/tavo-go-sdk/.github/workflows/publish-go.yml@main
     with:
       version: ${{ needs.determine-version.outputs.version }}
     secrets: inherit
