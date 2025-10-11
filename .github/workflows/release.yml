@@ -219,9 +219,11 @@ jobs:
     steps:
       - name: Trigger Go SDK publishing
         run: |
-          gh workflow run publish-go.yml \
-            -f version=${{ needs.determine-version.outputs.version }} \
-            --repo TavoAI/tavo-go-sdk
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GO_SDK_ACCESS_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/TavoAI/tavo-go-sdk/dispatches \
+            -d '{"event_type": "publish", "client_payload": {"version": "${{ needs.determine-version.outputs.version }}"}}'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
