@@ -162,6 +162,9 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+
       - name: Update Python dependencies
         if: needs.check-updates.outputs.python_updated == 'true'
         run: |
