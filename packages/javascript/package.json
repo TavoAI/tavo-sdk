@@ -36,7 +36,7 @@
     "typescript",
     "javascript"
   ],
-  "author": "Tavo AI <dev@tavoai.net>",
+  "author": "Chris Hamilton <cchamilt@tavoai.net>",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
