@@ -29,18 +29,21 @@ jobs:
 
       - name: Update version
         run: |
-          cd packages/java
-          # Update version in pom.xml
-          sed -i "s/<version>.*<\/version>/<version>${{ inputs.version }}<\/version>/" pom.xml
+          cd packages/java || exit 1
+          # Update project version in pom.xml (only the main project version after tavo-java-sdk artifactId)
+          sed -i '/<artifactId>tavo-java-sdk<\/artifactId>/{
+              N
+              s/<artifactId>tavo-java-sdk<\/artifactId>\n    <version>[^<]*<\/version>/<artifactId>tavo-java-sdk<\/artifactId>\n    <version>${{ inputs.version }}<\/version>/
+          }' pom.xml
 
       - name: Build and test
         run: |
-          cd packages/java
+          cd packages/java || exit 1
           mvn clean verify
 
       - name: Publish to Maven Central
         run: |
-          cd packages/java
+          cd packages/java || exit 1
           mvn deploy -P release
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
