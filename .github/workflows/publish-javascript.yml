@@ -24,7 +24,6 @@ jobs:
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
-          token: ${{ secrets.NPM_TOKEN }}
 
       - name: Install dependencies
         run: |

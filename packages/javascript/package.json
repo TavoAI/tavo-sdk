@@ -1,6 +1,6 @@
 {
   "name": "@tavoai/sdk",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "JavaScript/TypeScript SDK for Tavo AI API",
   "keywords": [
     "tavo",
