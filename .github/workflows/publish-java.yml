@@ -123,7 +123,10 @@ jobs:
 
           if [ "$http_status" -eq 201 ]; then
             echo "✅ Bundle uploaded successfully!"
-            echo "📦 Deployment ID: $(echo "$response_body" | jq -r '.deploymentId // "unknown"')"
+            echo "📦 Response: $response_body"
+            # Try to extract deployment ID, fallback gracefully if not JSON
+            deployment_id=$(echo "$response_body" | jq -r '.deploymentId' 2>/dev/null || echo "unknown")
+            echo "📦 Deployment ID: $deployment_id"
           else
             echo "❌ Upload failed with status $http_status"
             echo "Response: $response_body"
