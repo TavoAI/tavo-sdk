@@ -37,10 +37,24 @@ jobs:
               s/<artifactId>sdk<\/artifactId>\n    <version>[^<]*<\/version>/<artifactId>sdk<\/artifactId>\n    <version>${{ inputs.version }}<\/version>/
           }' pom.xml
 
+      - name: Setup GPG
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          gpg --list-keys
+
       - name: Build and test
         run: |
           cd packages/java || exit 1
           mvn clean package -DskipTests
+
+      - name: Sign artifacts
+        run: |
+          cd packages/java || exit 1
+          # Sign all artifacts with GPG
+          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --detach-sign --armor target/sdk-${{ inputs.version }}.jar
+          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --detach-sign --armor target/sdk-${{ inputs.version }}-sources.jar
+          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --detach-sign --armor target/sdk-${{ inputs.version }}-javadoc.jar
+          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --detach-sign --armor pom.xml
 
       - name: Create bundle
         run: |
@@ -54,9 +68,13 @@ jobs:
 
           # Copy all artifacts to the correct Maven path
           cp pom.xml /tmp/bundle/net/tavoai/sdk/${{ inputs.version }}/sdk-${{ inputs.version }}.pom
+          cp pom.xml.asc /tmp/bundle/net/tavoai/sdk/${{ inputs.version }}/sdk-${{ inputs.version }}.pom.asc
           cp target/sdk-${{ inputs.version }}.jar /tmp/bundle/net/tavoai/sdk/${{ inputs.version }}/
+          cp target/sdk-${{ inputs.version }}.jar.asc /tmp/bundle/net/tavoai/sdk/${{ inputs.version }}/
           cp target/sdk-${{ inputs.version }}-sources.jar /tmp/bundle/net/tavoai/sdk/${{ inputs.version }}/
+          cp target/sdk-${{ inputs.version }}-sources.jar.asc /tmp/bundle/net/tavoai/sdk/${{ inputs.version }}/
           cp target/sdk-${{ inputs.version }}-javadoc.jar /tmp/bundle/net/tavoai/sdk/${{ inputs.version }}/
+          cp target/sdk-${{ inputs.version }}-javadoc.jar.asc /tmp/bundle/net/tavoai/sdk/${{ inputs.version }}/
 
           # Generate checksums for each file
           cd /tmp/bundle/net/tavoai/sdk/${{ inputs.version }} || exit 1
