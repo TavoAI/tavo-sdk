@@ -92,18 +92,14 @@ jobs:
 
           # Create plain zip bundle (not jar format)
           cd ${{ github.workspace }}/bundle-staging || exit 1
-          
+
           # Create zip without any directory structure
           # Use -j option to junk directory names and store files at root
           zip -j ../bundle.zip *
-          
+
           # Debug: Check zip contents
           echo "📦 Bundle contents:"
-          cd .. && unzip -l bundle.zip          # Debug: Check zip contents
-          echo "📦 Bundle contents:"
-          cd .. && unzip -l bundle.zip          # Debug: Check zip contents
-          echo "📦 Bundle contents:"
-          unzip -l ${{ github.workspace }}/bundle.zip
+          cd .. && unzip -l bundle.zip
 
       - name: Publish to Maven Central
         run: |
