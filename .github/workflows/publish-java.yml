@@ -30,21 +30,18 @@ jobs:
 
       - name: Setup GPG
         run: |
-          # Store the GPG key in a file first
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" > /tmp/gpg_key.asc
-          # Check if the file has content
-          if [ ! -s /tmp/gpg_key.asc ]; then
-            echo "ERROR: GPG_PRIVATE_KEY secret is empty or not set"
+          # Use environment variable to avoid shell interpretation issues
+          GPG_KEY="${GPG_PRIVATE_KEY}"
+          if [ -z "$GPG_KEY" ]; then
+            echo "ERROR: GPG_PRIVATE_KEY environment variable is empty"
             exit 1
           fi
-          echo "GPG key file size: $(wc -c < /tmp/gpg_key.asc) bytes"
-          # Import the key
-          gpg --batch --import /tmp/gpg_key.asc
-          # Clean up
-          rm /tmp/gpg_key.asc
+          echo "GPG key length: ${#GPG_KEY} characters"
+          echo "$GPG_KEY" | gpg --batch --import
           echo "default-key:$(gpg --list-keys --with-colons | grep '^pub' | head -1 | cut -d: -f5)" > ~/.gnupg/gpg.conf
         env:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
       - name: Create Maven settings-security.xml
         run: |
