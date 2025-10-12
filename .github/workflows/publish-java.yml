@@ -69,26 +69,33 @@ jobs:
           echo "📁 Files in bundle directory:"
           ls -la
 
-          # Copy files to workspace and create bundle
+          # Create bundle in a clean workspace subdirectory
           cd ${{ github.workspace }} || exit 1
+          mkdir -p bundle-staging
+          cd bundle-staging || exit 1
 
-          # Clean up any existing files first
-          rm -f *.xml *.jar *.md5 *.sha1
+          # Copy files individually to staging area
+          cp ../packages/java/pom.xml ./
+          cp ../packages/java/target/sdk-${{ inputs.version }}.jar ./
+          cp ../packages/java/target/sdk-${{ inputs.version }}-sources.jar ./
+          cp ../packages/java/target/sdk-${{ inputs.version }}-javadoc.jar ./
 
-          cp /tmp/bundle/* ./
+          # Generate checksums
+          for file in *.xml *.jar; do
+            md5sum "$file" | cut -d' ' -f1 > "$file.md5"
+            sha1sum "$file" | cut -d' ' -f1 > "$file.sha1"
+          done
 
-          # Debug: List files before zipping
-          echo "📁 Files in workspace before zipping:"
-          ls -la *.xml *.jar *.md5 *.sha1 2>/dev/null || echo "No matching files found"
+          # Debug: List all files in staging
+          echo "📁 Files in staging directory:"
+          ls -la
 
-          # Create the bundle with explicit file listing
-          zip bundle.zip pom.xml sdk-${{ inputs.version }}.jar sdk-${{ inputs.version }}-sources.jar sdk-${{ inputs.version }}-javadoc.jar *.md5 *.sha1
+          # Create bundle from staging directory contents
+          zip ../bundle.zip *
 
           # Debug: Check zip contents
           echo "📦 Bundle contents:"
-          unzip -l bundle.zip
-
-          # Debug: Check zip contents
+          cd .. && unzip -l bundle.zip          # Debug: Check zip contents
           echo "📦 Bundle contents:"
           unzip -l ${{ github.workspace }}/bundle.zip
 
