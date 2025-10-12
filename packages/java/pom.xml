@@ -6,7 +6,7 @@
 
     <groupId>net.tavoai</groupId>
     <artifactId>sdk</artifactId>
-    <version>0.4.3test6</version>
+    <version>0.4.3test7</version>
     <packaging>jar</packaging>
 
     <name>Tavo SDK</name>
