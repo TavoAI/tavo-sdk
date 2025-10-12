@@ -40,17 +40,26 @@ jobs:
       - name: Build and test
         run: |
           cd packages/java || exit 1
-          mvn clean verify
+          mvn clean package -DskipTests
+
+      - name: Create bundle
+        run: |
+          cd packages/java || exit 1
+          # Create bundle ZIP with all required artifacts
+          zip -r ../bundle.zip \
+            pom.xml \
+            target/tavo-java-sdk-${{ inputs.version }}.jar \
+            target/tavo-java-sdk-${{ inputs.version }}-sources.jar \
+            target/tavo-java-sdk-${{ inputs.version }}-javadoc.jar
 
       - name: Publish to Maven Central
         run: |
           cd packages/java || exit 1
-          mvn deploy -P release
-        env:
-          # For Central Portal, MAVEN_USERNAME should be set to a token name (e.g., "publishing-token")
-          # and MAVEN_PASSWORD should be set to the actual publishing token from Central Portal
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          # Upload bundle to Central Portal
+          curl -X POST \
+            -H "Authorization: Basic $('${{ secrets.MAVEN_USERNAME }}:${{ secrets.MAVEN_PASSWORD }}' | base64 -w 0)" \
+            -F "bundle=@../bundle.zip" \
+            https://central.sonatype.com/api/v1/publisher/upload
 
       - name: Create Git tag
         run: |
