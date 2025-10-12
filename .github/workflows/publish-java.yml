@@ -65,9 +65,17 @@ jobs:
             fi
           done
 
-          # Create the bundle (zip only files, not directories)
-          cd /tmp/bundle || exit 1
-          zip ${{ github.workspace }}/bundle.zip *
+          # Debug: List files before zipping
+          echo "📁 Files in bundle directory:"
+          ls -la
+
+          # Create the bundle from outside the directory to avoid directory entries
+          cd ${{ github.workspace }} || exit 1
+          zip bundle.zip /tmp/bundle/*
+
+          # Debug: Check zip contents
+          echo "📦 Bundle contents:"
+          unzip -l ${{ github.workspace }}/bundle.zip
 
       - name: Publish to Maven Central
         run: |
