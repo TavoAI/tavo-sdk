@@ -49,11 +49,6 @@ jobs:
           cd packages/javascript
           yarn test
 
-      - name: Create ID Token
-        uses: actions/create-id-token@v1
-        with:
-          audience: npm:registry.npmjs.org
-
       - name: Publish to npm
         run: |
           cd packages/javascript
