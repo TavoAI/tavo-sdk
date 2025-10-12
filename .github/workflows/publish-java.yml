@@ -31,10 +31,10 @@ jobs:
       - name: Update version
         run: |
           cd packages/java || exit 1
-          # Update project version in pom.xml (only the main project version after tavo-java-sdk artifactId)
-          sed -i '/<artifactId>tavo-java-sdk<\/artifactId>/{
+          # Update project version in pom.xml (only the main project version after sdk artifactId)
+          sed -i '/<artifactId>sdk<\/artifactId>/{
               N
-              s/<artifactId>tavo-java-sdk<\/artifactId>\n    <version>[^<]*<\/version>/<artifactId>tavo-java-sdk<\/artifactId>\n    <version>${{ inputs.version }}<\/version>/
+              s/<artifactId>sdk<\/artifactId>\n    <version>[^<]*<\/version>/<artifactId>sdk<\/artifactId>\n    <version>${{ inputs.version }}<\/version>/
           }' pom.xml
 
       - name: Build and test
@@ -55,18 +55,40 @@ jobs:
       - name: Publish to Maven Central
         run: |
           cd packages/java || exit 1
+
           # Upload bundle to Central Portal
-          curl -X POST \
-            -H "Authorization: Basic $('${{ secrets.MAVEN_USERNAME }}:${{ secrets.MAVEN_PASSWORD }}' | base64 -w 0)" \
+          echo "📤 Uploading bundle to Central Portal..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
+            -H "Authorization: Basic $(echo -n '${{ secrets.MAVEN_USERNAME }}:${{ secrets.MAVEN_PASSWORD }}' | base64 -w 0)" \
             -F "bundle=@../bundle.zip" \
-            https://central.sonatype.com/api/v1/publisher/upload
+            https://central.sonatype.com/api/v1/publisher/upload)
+
+          # Extract HTTP status and response body
+          http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
+          response_body=$(echo "$response" | sed '/HTTP_STATUS:/d')
+
+          if [ "$http_status" -eq 201 ]; then
+            echo "✅ Bundle uploaded successfully!"
+            echo "📦 Deployment ID: $(echo "$response_body" | jq -r '.deploymentId // "unknown"')"
+          else
+            echo "❌ Upload failed with status $http_status"
+            echo "Response: $response_body"
+            exit 1
+          fi
 
       - name: Create Git tag
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag java-v${{ inputs.version }}
-          git push origin java-v${{ inputs.version }}
+
+          # Check if tag already exists
+          if git tag -l | grep -q "^java-v${{ inputs.version }}$"; then
+            echo "⚠️  Tag java-v${{ inputs.version }} already exists, skipping tag creation"
+          else
+            git tag java-v${{ inputs.version }}
+            git push origin java-v${{ inputs.version }}
+            echo "✅ Created and pushed tag java-v${{ inputs.version }}"
+          fi
 
       - name: Notify success
         run: |
