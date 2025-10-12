@@ -52,12 +52,18 @@ jobs:
         if: ${{ !contains(inputs.version, 'alpha') && !contains(inputs.version, 'beta') }}
         uses: pypa/gh-action-pypi-publish@release/v1
 
-      - name: Create Git tag
+      - name: Create source archive
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag python-v${{ inputs.version }}
-          git push origin python-v${{ inputs.version }}
+          cd packages/python
+          # Create source code archive
+          tar -czf ../../tavo-python-sdk-v${{ inputs.version }}-source.tar.gz .
+
+      - name: Upload source archive to release
+        run: |
+          # Upload the source archive to the GitHub release
+          gh release upload v${{ inputs.version }} ../tavo-python-sdk-v${{ inputs.version }}-source.tar.gz --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Notify success
         run: |

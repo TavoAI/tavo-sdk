@@ -56,12 +56,18 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
-      - name: Create Git tag
+      - name: Create source archive
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag rust-v${{ inputs.version }}
-          git push origin rust-v${{ inputs.version }}
+          cd packages/rust
+          # Create source code archive
+          tar -czf ../../tavo-rust-sdk-v${{ inputs.version }}-source.tar.gz .
+
+      - name: Upload source archive to release
+        run: |
+          # Upload the source archive to the GitHub release
+          gh release upload v${{ inputs.version }} ../tavo-rust-sdk-v${{ inputs.version }}-source.tar.gz --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Notify success
         run: |

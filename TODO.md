@@ -1,5 +1,7 @@
 # TODO
 
+Rename tavo-sdk
+
 ## **Advanced Features**
 
 ### **Plugin System**

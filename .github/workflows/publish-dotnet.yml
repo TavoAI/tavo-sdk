@@ -49,20 +49,28 @@ jobs:
           dotnet pack --configuration Release --output nupkg
 
       - name: Publish to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
           cd packages/dotnet
-          if [ -n "${{ secrets.NUGET_API_KEY }}" ]; then
-            dotnet nuget push "nupkg/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          if [ -n "$NUGET_API_KEY" ]; then
+            dotnet nuget push "nupkg/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
           else
             echo "NUGET_API_KEY secret not set, skipping NuGet publish"
           fi
 
-      - name: Create Git tag
+      - name: Create source archive
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag dotnet-v${{ inputs.version }}
-          git push origin dotnet-v${{ inputs.version }}
+          cd packages/dotnet
+          # Create source code archive
+          tar -czf ../../tavo-dotnet-sdk-v${{ inputs.version }}-source.tar.gz .
+
+      - name: Upload source archive to release
+        run: |
+          # Upload the source archive to the GitHub release
+          gh release upload v${{ inputs.version }} ../tavo-dotnet-sdk-v${{ inputs.version }}-source.tar.gz --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Notify success
         run: |

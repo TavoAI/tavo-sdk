@@ -54,12 +54,18 @@ jobs:
           cd packages/javascript
           npm publish --access public
 
-      - name: Create Git tag
+      - name: Create source archive
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag js-v${{ inputs.version }}
-          git push origin js-v${{ inputs.version }}
+          cd packages/javascript
+          # Create source code archive
+          tar -czf ../../tavo-javascript-sdk-v${{ inputs.version }}-source.tar.gz .
+
+      - name: Upload source archive to release
+        run: |
+          # Upload the source archive to the GitHub release
+          gh release upload v${{ inputs.version }} ../tavo-javascript-sdk-v${{ inputs.version }}-source.tar.gz --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Notify success
         run: |

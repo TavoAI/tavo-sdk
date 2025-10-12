@@ -133,19 +133,18 @@ jobs:
             exit 1
           fi
 
-      - name: Create Git tag
+      - name: Create source archive
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          cd packages/java
+          # Create source code archive
+          tar -czf ../../tavo-java-sdk-v${{ inputs.version }}-source.tar.gz .
 
-          # Check if tag already exists
-          if git tag -l | grep -q "^java-v${{ inputs.version }}$"; then
-            echo "⚠️  Tag java-v${{ inputs.version }} already exists, skipping tag creation"
-          else
-            git tag java-v${{ inputs.version }}
-            git push origin java-v${{ inputs.version }}
-            echo "✅ Created and pushed tag java-v${{ inputs.version }}"
-          fi
+      - name: Upload source archive to release
+        run: |
+          # Upload the source archive to the GitHub release
+          gh release upload v${{ inputs.version }} ../tavo-java-sdk-v${{ inputs.version }}-source.tar.gz --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Notify success
         run: |
