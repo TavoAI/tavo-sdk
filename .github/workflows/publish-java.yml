@@ -30,6 +30,12 @@ jobs:
 
       - name: Setup GPG
         run: |
+          # Debug: Check if secret is available
+          if [ -z "${{ secrets.GPG_PRIVATE_KEY }}" ]; then
+            echo "ERROR: GPG_PRIVATE_KEY secret is empty or not set"
+            exit 1
+          fi
+          echo "GPG key length: $(echo "${{ secrets.GPG_PRIVATE_KEY }}" | wc -c) characters"
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
           echo "default-key:$(gpg --list-keys --with-colons | grep '^pub' | head -1 | cut -d: -f5)" > ~/.gnupg/gpg.conf
         env:
