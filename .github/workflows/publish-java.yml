@@ -47,13 +47,25 @@ jobs:
           cd packages/java || exit 1
           # Create bundle ZIP with all required artifacts at root level
           # Central Portal requires all files to be at the root of the bundle
+          # and checksum files (.md5, .sha1) for each artifact
           mkdir -p /tmp/bundle
+          
+          # Copy all artifacts
           cp pom.xml /tmp/bundle/
           cp target/sdk-${{ inputs.version }}.jar /tmp/bundle/
           cp target/sdk-${{ inputs.version }}-sources.jar /tmp/bundle/
           cp target/sdk-${{ inputs.version }}-javadoc.jar /tmp/bundle/
-
+          
+          # Generate checksums for each file
           cd /tmp/bundle || exit 1
+          for file in *; do
+            if [ -f "$file" ]; then
+              md5sum "$file" | cut -d' ' -f1 > "$file.md5"
+              sha1sum "$file" | cut -d' ' -f1 > "$file.sha1"
+            fi
+          done
+          
+          # Create the bundle
           zip -r ${{ github.workspace }}/bundle.zip .
 
       - name: Publish to Maven Central
