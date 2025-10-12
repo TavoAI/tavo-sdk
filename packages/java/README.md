@@ -11,7 +11,7 @@ Add the following dependency to your `pom.xml`:
 ```xml
 <dependency>
     <groupId>net.tavoai</groupId>
-    <artifactId>tavo-java-sdk</artifactId>
+    <artifactId>sdk</artifactId>
     <version>0.1.0</version>
 </dependency>
 ```
@@ -21,7 +21,7 @@ Add the following dependency to your `pom.xml`:
 Add the following to your `build.gradle`:
 
 ```gradle
-implementation 'net.tavoai:tavo-java-sdk:0.1.0'
+implementation 'net.tavoai:sdk:0.1.0'
 ```
 
 ## Quick Start

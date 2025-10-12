@@ -48,9 +48,9 @@ jobs:
           # Create bundle ZIP with all required artifacts
           zip -r ../bundle.zip \
             pom.xml \
-            target/tavo-java-sdk-${{ inputs.version }}.jar \
-            target/tavo-java-sdk-${{ inputs.version }}-sources.jar \
-            target/tavo-java-sdk-${{ inputs.version }}-javadoc.jar
+            target/sdk-${{ inputs.version }}.jar \
+            target/sdk-${{ inputs.version }}-sources.jar \
+            target/sdk-${{ inputs.version }}-javadoc.jar
 
       - name: Publish to Maven Central
         run: |
@@ -71,4 +71,4 @@ jobs:
       - name: Notify success
         run: |
           echo "✅ Java SDK v${{ inputs.version }} published successfully!"
-          echo "📦 Available on Maven Central: https://search.maven.org/artifact/net.tavoai/tavo-java-sdk/${{ inputs.version }}/jar"
+          echo "📦 Available on Maven Central: https://search.maven.org/artifact/net.tavoai/sdk/${{ inputs.version }}/jar"

@@ -9,7 +9,7 @@ This directory contains comprehensive examples for using the Tavo AI Java SDK.
 ```xml
 <dependency>
     <groupId>net.tavoai</groupId>
-    <artifactId>tavo-java-sdk</artifactId>
+    <artifactId>sdk</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```
@@ -17,7 +17,7 @@ This directory contains comprehensive examples for using the Tavo AI Java SDK.
 ### Gradle
 
 ```gradle
-implementation 'net.tavoai:tavo-java-sdk:1.0.0'
+implementation 'net.tavoai:sdk:1.0.0'
 ```
 
 ## Basic Usage

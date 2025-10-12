@@ -13,7 +13,7 @@ Add the Tavo AI dependency to your `pom.xml`:
 ```xml
 <dependency>
     <groupId>net.tavoai</groupId>
-    <artifactId>tavo-java-sdk</artifactId>
+    <artifactId>sdk</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```
@@ -21,7 +21,7 @@ Add the Tavo AI dependency to your `pom.xml`:
 Or for Gradle:
 
 ```gradle
-implementation 'net.tavoai:tavo-java-sdk:1.0.0'
+implementation 'net.tavoai:sdk:1.0.0'
 ```
 
 ## Configuration
@@ -673,18 +673,18 @@ public class WebController {
     <title>Tavo AI Security Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800">
+<body class="min-h-screen bg-gray-100">
+    <div class="container px-4 py-8 mx-auto">
+        <h1 class="mb-8 text-4xl font-bold text-center text-gray-800">
             Tavo AI Security Scanner
         </h1>
 
         <!-- Code Scanner -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-2xl font-semibold mb-4">Code Security Scan</h2>
+        <div class="p-6 mb-8 bg-white rounded-lg shadow-md">
+            <h2 class="mb-4 text-2xl font-semibold">Code Security Scan</h2>
 
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="block mb-2 text-sm font-medium text-gray-700">
                     Programming Language
                 </label>
                 <select id="language" class="w-full p-2 border border-gray-300 rounded-md">
@@ -696,13 +696,13 @@ public class WebController {
             </div>
 
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="block mb-2 text-sm font-medium text-gray-700">
                     Code to Scan
                 </label>
                 <textarea
                     id="code"
                     rows="10"
-                    class="w-full p-2 border border-gray-300 rounded-md font-mono text-sm"
+                    class="w-full p-2 font-mono text-sm border border-gray-300 rounded-md"
                     placeholder="Paste your code here..."
                 ></textarea>
             </div>
@@ -710,13 +710,13 @@ public class WebController {
             <div class="flex space-x-4">
                 <button
                     id="scanCodeBtn"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    class="px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
                 >
                     Scan Code
                 </button>
                 <button
                     id="scanCodeAsyncBtn"
-                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    class="px-4 py-2 font-bold text-white bg-green-500 rounded hover:bg-green-700"
                 >
                     Scan Code (Async)
                 </button>
@@ -724,8 +724,8 @@ public class WebController {
         </div>
 
         <!-- URL Scanner -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-2xl font-semibold mb-4">URL Security Scan</h2>
+        <div class="p-6 mb-8 bg-white rounded-lg shadow-md">
+            <h2 class="mb-4 text-2xl font-semibold">URL Security Scan</h2>
 
             <div class="mb-4">
                 <input
@@ -739,13 +739,13 @@ public class WebController {
             <div class="flex space-x-4">
                 <button
                     id="scanUrlBtn"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    class="px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
                 >
                     Scan URL
                 </button>
                 <button
                     id="scanUrlAsyncBtn"
-                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    class="px-4 py-2 font-bold text-white bg-green-500 rounded hover:bg-green-700"
                 >
                     Scan URL (Async)
                 </button>
@@ -753,8 +753,8 @@ public class WebController {
         </div>
 
         <!-- Results -->
-        <div id="results" class="bg-white rounded-lg shadow-md p-6 hidden">
-            <h2 class="text-2xl font-semibold mb-4">Scan Results</h2>
+        <div id="results" class="hidden p-6 bg-white rounded-lg shadow-md">
+            <h2 class="mb-4 text-2xl font-semibold">Scan Results</h2>
             <div id="resultsContent"></div>
         </div>
     </div>
@@ -911,7 +911,7 @@ public class WebController {
                     ${data.summary ? `
                     <div class="mb-4">
                         <h4 class="font-semibold">Summary:</h4>
-                        <ul class="list-disc list-inside text-sm">
+                        <ul class="text-sm list-disc list-inside">
                             <li>Files scanned: ${data.summary.filesScanned || 0}</li>
                             <li>Vulnerabilities found: ${data.summary.vulnerabilitiesFound || 0}</li>
                             <li>Scan duration: ${data.summary.duration || 'N/A'}</li>
@@ -920,7 +920,7 @@ public class WebController {
                     ` : ''}
                     <button
                         onclick="viewDetailedResults('${data.id}')"
-                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                        class="px-4 py-2 font-bold text-white bg-green-500 rounded hover:bg-green-700"
                     >
                         View Detailed Results
                     </button>

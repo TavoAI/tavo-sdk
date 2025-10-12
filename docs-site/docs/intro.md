@@ -42,7 +42,7 @@ npm install @tavoai/sdk
 # Java
 <dependency>
     <groupId>net.tavoai</groupId>
-    <artifactId>tavo-java-sdk</artifactId>
+    <artifactId>sdk</artifactId>
     <version>0.1.0</version>
 </dependency>
 

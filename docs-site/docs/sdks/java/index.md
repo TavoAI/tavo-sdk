@@ -9,7 +9,7 @@ The Tavo AI Java SDK provides a robust, enterprise-ready interface for integrati
 ```xml
 <dependency>
     <groupId>net.tavoai</groupId>
-    <artifactId>tavo-java-sdk</artifactId>
+    <artifactId>sdk</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```
@@ -17,7 +17,7 @@ The Tavo AI Java SDK provides a robust, enterprise-ready interface for integrati
 ### Gradle
 
 ```gradle
-implementation 'net.tavoai:tavo-java-sdk:1.0.0'
+implementation 'net.tavoai:sdk:1.0.0'
 ```
 
 ## Quick Start

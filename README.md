@@ -13,7 +13,7 @@ tavo-api/
 ├── packages/
 │   ├── python/          # Python SDK (tavo-python-sdk)
 │   ├── javascript/      # JavaScript/TypeScript SDK (@tavoai/sdk)
-│   ├── java/           # Java SDK (tavo-java-sdk)
+│   ├── java/           # Java SDK (sdk)
 │   └── go/             # Go SDK (tavo-go-sdk)
 ├── tools/
 │   ├── codegen/        # API client code generation
