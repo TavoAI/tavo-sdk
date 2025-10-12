@@ -199,17 +199,12 @@ jobs:
 
   publish-rust:
     name: Publish Rust SDK
-    runs-on: ubuntu-latest
     needs: [determine-version, create-release]
     if: contains(needs.determine-version.outputs.packages, 'rust')
-    steps:
-      - name: Trigger Rust SDK publishing
-        run: |
-          gh workflow run publish-rust.yml \
-            -f version=${{ needs.determine-version.outputs.version }} \
-            --repo ${{ github.repository }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/publish-rust.yml
+    with:
+      version: ${{ needs.determine-version.outputs.version }}
+    secrets: inherit
 
   publish-go:
     name: Publish Go SDK
