@@ -1,16 +1,40 @@
 {
   "name": "@tavoai/sdk",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "JavaScript/TypeScript SDK for Tavo AI API",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "keywords": [
+    "tavo",
+    "ai",
+    "security",
+    "api",
+    "sdk",
+    "typescript",
+    "javascript"
+  ],
+  "homepage": "https://docs.tavoai.net/javascript/",
+  "bugs": {
+    "url": "https://github.com/TavoAI/tavo-api/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TavoAI/tavo-api.git",
+    "directory": "packages/javascript"
+  },
+  "license": "Apache-2.0",
+  "author": "Chris Hamilton <cchamilt@tavoai.net>",
+  "type": "commonjs",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "directories": {
+    "example": "examples",
+    "test": "tests"
   },
   "scripts": {
     "build": "rollup -c",
@@ -26,29 +50,6 @@
     "docs": "echo 'Documentation generation not yet configured'",
     "postinstall": "./download_engines.sh",
     "download-engines": "./download_engines.sh"
-  },
-  "keywords": [
-    "tavo",
-    "ai",
-    "security",
-    "api",
-    "sdk",
-    "typescript",
-    "javascript"
-  ],
-  "author": "Chris Hamilton <cchamilt@tavoai.net>",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/TavoAI/tavo-api.git",
-    "directory": "packages/javascript"
-  },
-  "bugs": {
-    "url": "https://github.com/TavoAI/tavo-api/issues"
-  },
-  "homepage": "https://docs.tavoai.net/javascript/",
-  "engines": {
-    "node": ">=16.0.0"
   },
   "dependencies": {
     "@types/node": "^24.6.0",
@@ -74,6 +75,10 @@
     "tslib": "^2.6.0",
     "typescript": "^5.0.0"
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "module": "dist/index.mjs",
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
