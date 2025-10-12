@@ -69,9 +69,24 @@ jobs:
           echo "📁 Files in bundle directory:"
           ls -la
 
-          # Create the bundle from outside the directory to avoid directory entries
+          # Copy files to workspace and create bundle
           cd ${{ github.workspace }} || exit 1
-          zip bundle.zip /tmp/bundle/*
+
+          # Clean up any existing files first
+          rm -f *.xml *.jar *.md5 *.sha1
+
+          cp /tmp/bundle/* ./
+
+          # Debug: List files before zipping
+          echo "📁 Files in workspace before zipping:"
+          ls -la *.xml *.jar *.md5 *.sha1 2>/dev/null || echo "No matching files found"
+
+          # Create the bundle with explicit file listing
+          zip bundle.zip pom.xml sdk-${{ inputs.version }}.jar sdk-${{ inputs.version }}-sources.jar sdk-${{ inputs.version }}-javadoc.jar *.md5 *.sha1
+
+          # Debug: Check zip contents
+          echo "📦 Bundle contents:"
+          unzip -l bundle.zip
 
           # Debug: Check zip contents
           echo "📦 Bundle contents:"
