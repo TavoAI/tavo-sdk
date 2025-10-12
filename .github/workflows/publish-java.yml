@@ -90,21 +90,16 @@ jobs:
           echo "📁 Files in staging directory:"
           ls -la
 
-          # Create bundle using jar command (more reliable for Maven bundles)
+          # Create plain zip bundle (not jar format)
           cd ${{ github.workspace }}/bundle-staging || exit 1
-
-          # Use jar to create the bundle (jar cf creates proper Maven bundle format)
-          jar cf ../bundle.jar *
-
-          # Convert jar to zip for Central Portal (they expect zip format)
-          cd .. || exit 1
-          cp bundle.jar bundle.zip
-
+          
+          # Create zip without any directory structure
+          # Use -j option to junk directory names and store files at root
+          zip -j ../bundle.zip *
+          
           # Debug: Check zip contents
           echo "📦 Bundle contents:"
-          unzip -l bundle.zip
-
-          # Debug: Check zip contents
+          cd .. && unzip -l bundle.zip          # Debug: Check zip contents
           echo "📦 Bundle contents:"
           cd .. && unzip -l bundle.zip          # Debug: Check zip contents
           echo "📦 Bundle contents:"
