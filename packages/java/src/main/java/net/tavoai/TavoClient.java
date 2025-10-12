@@ -21,21 +21,25 @@ public class TavoClient implements AutoCloseable {
     private final Gson gson;
 
     /**
-     * Create a new TavoClient with API key authentication
+     * Create a new TavoClient with API key authentication.
+     * @param apiKey the API key for authentication
      */
     public TavoClient(String apiKey) {
         this(TavoConfig.builder().apiKey(apiKey).build());
     }
 
     /**
-     * Create a new TavoClient with JWT token authentication
+     * Create a new TavoClient with API key and JWT token authentication.
+     * @param apiKey the API key for authentication
+     * @param jwtToken the JWT token for authentication
      */
     public TavoClient(String apiKey, String jwtToken) {
         this(TavoConfig.builder().apiKey(apiKey).jwtToken(jwtToken).build());
     }
 
     /**
-     * Create a new TavoClient with custom configuration
+     * Create a new TavoClient with custom configuration.
+     * @param config the TavoConfig containing client configuration
      */
     public TavoClient(TavoConfig config) {
         this.config = config;
@@ -226,70 +230,81 @@ public class TavoClient implements AutoCloseable {
     }
 
     /**
-     * Health check endpoint
+     * Perform a health check on the API.
+     * @return a map containing the health check response
+     * @throws TavoException if the health check fails
      */
     public Map<String, Object> healthCheck() throws TavoException {
         return request("GET", "/health", null);
     }
 
     /**
-     * Access authentication operations
+     * Access authentication operations.
+     * @return an AuthOperations instance
      */
     public AuthOperations auth() {
         return new AuthOperations(this);
     }
 
     /**
-     * Access user management operations
+     * Access user management operations.
+     * @return a UserOperations instance
      */
     public UserOperations users() {
         return new UserOperations(this);
     }
 
     /**
-     * Access organization operations
+     * Access organization operations.
+     * @return an OrganizationOperations instance
      */
     public OrganizationOperations organizations() {
         return new OrganizationOperations(this);
     }
 
     /**
-     * Access job operations
+     * Access job operations.
+     * @return a JobOperations instance
      */
     public JobOperations jobs() {
         return new JobOperations(this);
     }
 
     /**
-     * Access scan operations
+     * Access scan operations.
+     * @return a ScanOperations instance
      */
     public ScanOperations scans() {
         return new ScanOperations(this);
     }
 
     /**
-     * Access webhook operations
+     * Access webhook operations.
+     * @return a WebhookOperations instance
      */
     public WebhookOperations webhooks() {
         return new WebhookOperations(this);
     }
 
     /**
-     * Access AI analysis operations
+     * Access AI analysis operations.
+     * @return an AIAnalysisOperations instance
      */
     public AIAnalysisOperations ai() {
         return new AIAnalysisOperations(this);
     }
 
     /**
-     * Access billing operations
+     * Access billing operations.
+     * @return a BillingOperations instance
      */
     public BillingOperations billing() {
         return new BillingOperations(this);
     }
 
     /**
-     * Access report operations
+     * Access report operations.
+     * @return a ReportOperations instance
      */
     public ReportOperations reports() {
         return new ReportOperations(this);

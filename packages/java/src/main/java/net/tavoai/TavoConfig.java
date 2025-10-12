@@ -28,7 +28,8 @@ public class TavoConfig {
     }
 
     /**
-     * Constructor with API key authentication
+     * Constructor with API key authentication.
+     * @param apiKey the API key for authentication
      */
     public TavoConfig(String apiKey) {
         this();
@@ -36,7 +37,9 @@ public class TavoConfig {
     }
 
     /**
-     * Constructor with JWT token authentication
+     * Constructor with API key and JWT token authentication.
+     * @param apiKey the API key for authentication
+     * @param jwtToken the JWT token for authentication
      */
     public TavoConfig(String apiKey, String jwtToken) {
         this();
@@ -45,7 +48,10 @@ public class TavoConfig {
     }
 
     /**
-     * Constructor with session token authentication
+     * Constructor with API key, JWT token, and session token authentication.
+     * @param apiKey the API key for authentication
+     * @param jwtToken the JWT token for authentication
+     * @param sessionToken the session token for authentication
      */
     public TavoConfig(String apiKey, String jwtToken, String sessionToken) {
         this();
@@ -55,7 +61,14 @@ public class TavoConfig {
     }
 
     /**
-     * Full constructor
+     * Full constructor with all configuration options.
+     * @param apiKey the API key for authentication
+     * @param jwtToken the JWT token for authentication
+     * @param sessionToken the session token for authentication
+     * @param baseUrl the base URL for the API
+     * @param apiVersion the API version to use
+     * @param timeout the request timeout in seconds
+     * @param maxRetries the maximum number of retries for failed requests
      */
     public TavoConfig(String apiKey, String jwtToken, String sessionToken, String baseUrl, String apiVersion, int timeout, int maxRetries) {
         this.apiKey = apiKey;
@@ -140,7 +153,8 @@ public class TavoConfig {
     }
 
     /**
-     * Create config from environment variables
+     * Create config from environment variables.
+     * @return a TavoConfig instance configured from environment variables
      */
     public static TavoConfig fromEnvironment() {
         String apiKey = System.getenv("TAVO_API_KEY");
@@ -156,12 +170,16 @@ public class TavoConfig {
     }
 
     /**
-     * Builder pattern for fluent configuration
+     * Builder pattern for fluent configuration.
+     * @return a new Builder instance
      */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Builder class for fluent TavoConfig construction.
+     */
     public static class Builder {
         private String apiKey;
         private String jwtToken;
