@@ -45,12 +45,16 @@ jobs:
       - name: Create bundle
         run: |
           cd packages/java || exit 1
-          # Create bundle ZIP with all required artifacts
-          zip -r ../bundle.zip \
-            pom.xml \
-            target/sdk-${{ inputs.version }}.jar \
-            target/sdk-${{ inputs.version }}-sources.jar \
-            target/sdk-${{ inputs.version }}-javadoc.jar
+          # Create bundle ZIP with all required artifacts at root level
+          # Central Portal requires all files to be at the root of the bundle
+          mkdir -p /tmp/bundle
+          cp pom.xml /tmp/bundle/
+          cp target/sdk-${{ inputs.version }}.jar /tmp/bundle/
+          cp target/sdk-${{ inputs.version }}-sources.jar /tmp/bundle/
+          cp target/sdk-${{ inputs.version }}-javadoc.jar /tmp/bundle/
+
+          cd /tmp/bundle || exit 1
+          zip -r ${{ github.workspace }}/bundle.zip .
 
       - name: Publish to Maven Central
         run: |
