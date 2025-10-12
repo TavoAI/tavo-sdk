@@ -11,6 +11,9 @@ jobs:
   publish:
     name: Publish to PyPI
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -24,7 +27,7 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build twine
+          pip install build
 
       - name: Update version
         run: |
@@ -39,28 +42,15 @@ jobs:
           cd packages/python
           python -m build
 
-      - name: Check package
-        run: |
-          cd packages/python
-          twine check dist/*
-
       - name: Publish to TestPyPI
         if: contains(inputs.version, 'alpha') || contains(inputs.version, 'beta')
-        run: |
-          cd packages/python
-          twine upload --repository testpypi dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
 
       - name: Publish to PyPI
         if: ${{ !contains(inputs.version, 'alpha') && !contains(inputs.version, 'beta') }}
-        run: |
-          cd packages/python
-          twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Create Git tag
         run: |
@@ -72,4 +62,4 @@ jobs:
       - name: Notify success
         run: |
           echo "✅ Python SDK v${{ inputs.version }} published successfully!"
-          echo "📦 Available on PyPI: https://pypi.org/project/tavo-python-sdk/${{ inputs.version }}/"
+          echo "📦 Available on PyPI: https://pypi.org/project/tavo-sdk/${{ inputs.version }}/"
