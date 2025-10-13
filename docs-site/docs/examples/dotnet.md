@@ -783,7 +783,7 @@ namespace TavoAI.SDK.IntegrationTests
 
             // Start Tavo API container for integration tests
             _tavoContainer = new ContainerBuilder()
-                .WithImage("tavoai/tavo-api:latest")
+                .WithImage("tavoai/tavo-sdk:latest")
                 .WithPortBinding(8080, true)
                 .WithEnvironment("TAVO_API_KEY", apiKey)
                 .Build();

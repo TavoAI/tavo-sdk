@@ -7,7 +7,7 @@ echo "🔨 Building Tavo Scanner Binary..."
 
 # Check if we're in the right directory
 if [ ! -f "packages/scanner/tavo_scanner.py" ]; then
-    echo "❌ Error: Must be run from tavo-api root directory"
+    echo "❌ Error: Must be run from tavo-sdk root directory"
     exit 1
 fi
 

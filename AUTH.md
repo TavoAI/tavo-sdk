@@ -189,5 +189,5 @@ See the `tests/integration.test.*` files in each SDK package for comprehensive t
 
 - **SDK Documentation**: https://docs.tavoai.net
 - **API Reference**: https://api.tavoai.net/docs
-- **GitHub Issues**: https://github.com/TavoAI/tavo-api/issues
+- **GitHub Issues**: https://github.com/TavoAI/tavo-sdk/issues
 - **Support**: support@tavoai.net

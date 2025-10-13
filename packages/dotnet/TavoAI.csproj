@@ -11,7 +11,7 @@
     <Authors>Tavo AI</Authors>
     <Description>Tavo AI SDK for .NET</Description>
     <PackageTags>tavo;ai;security;scanning</PackageTags>
-    <RepositoryUrl>https://github.com/TavoAI/tavo-api</RepositoryUrl>
+    <RepositoryUrl>https://github.com/TavoAI/tavo-sdk</RepositoryUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
 

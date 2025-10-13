@@ -3118,11 +3118,11 @@
   "project": {
     "version": "0.4.0",
     "restore": {
-      "projectUniqueName": "/home/runner/work/tavo-api/tavo-api/packages/dotnet/TavoAI.csproj",
+      "projectUniqueName": "/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/TavoAI.csproj",
       "projectName": "TavoAI",
-      "projectPath": "/home/runner/work/tavo-api/tavo-api/packages/dotnet/TavoAI.csproj",
+      "projectPath": "/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/TavoAI.csproj",
       "packagesPath": "/home/runner/.nuget/packages/",
-      "outputPath": "/home/runner/work/tavo-api/tavo-api/packages/dotnet/obj/",
+      "outputPath": "/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/runner/.nuget/NuGet/NuGet.Config"

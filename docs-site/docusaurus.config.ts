@@ -1,6 +1,6 @@
-import {themes as prismThemes} from 'prism-react-renderer';
-import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import type { Config } from '@docusaurus/types';
+import { themes as prismThemes } from 'prism-react-renderer';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -17,11 +17,11 @@ const config: Config = {
   // Set the production url of your site here
   url: 'https://tavoai.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
-  baseUrl: '/tavo-api/',
+  baseUrl: '/tavo-sdk/',
 
   // GitHub pages deployment config.
   organizationName: 'TavoAI', // Your GitHub org/user name.
-  projectName: 'tavo-api', // Your repo name.
+  projectName: 'tavo-sdk', // Your repo name.
 
   onBrokenLinks: 'throw',
 
@@ -42,7 +42,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/TavoAI/tavo-api/tree/main/docs-site/',
+            'https://github.com/TavoAI/tavo-sdk/tree/main/docs-site/',
         },
         blog: {
           showReadingTime: true,
@@ -113,7 +113,7 @@ const config: Config = {
             },
             {
               label: 'Documentation',
-              href: 'https://github.com/TavoAI/tavo-api',
+              href: 'https://github.com/TavoAI/tavo-sdk',
             },
           ],
         },

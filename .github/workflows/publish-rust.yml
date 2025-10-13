@@ -69,6 +69,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create Git tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag sdk-rust-v${{ inputs.version }}
+          git push origin sdk-rust-v${{ inputs.version }}
+
       - name: Notify success
         run: |
           echo "✅ Rust SDK v${{ inputs.version }} published successfully!"

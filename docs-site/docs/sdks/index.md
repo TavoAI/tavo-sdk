@@ -124,10 +124,10 @@ println!("Found {} issues", result.total_issues);
 ## Support
 
 - 📖 [API Reference](../api-reference/overview.md)
-- 🐛 [GitHub Issues](https://github.com/tavoai/tavo-api/issues)
-- 💬 [Community Discussions](https://github.com/tavoai/tavo-api/discussions)
+- 🐛 [GitHub Issues](https://github.com/tavoai/tavo-sdk/issues)
+- 💬 [Community Discussions](https://github.com/tavoai/tavo-sdk/discussions)
 - 📧 [Support Email](mailto:support@tavoai.org)
 
 ## Contributing
 
-We welcome contributions to our SDKs! Please see our [Contributing Guide](https://github.com/tavoai/tavo-api/blob/main/CONTRIBUTING.md) for details.
+We welcome contributions to our SDKs! Please see our [Contributing Guide](https://github.com/tavoai/tavo-sdk/blob/main/CONTRIBUTING.md) for details.

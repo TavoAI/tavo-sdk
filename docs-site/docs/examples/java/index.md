@@ -792,7 +792,7 @@ import reactor.test.StepVerifier;
 class TavoClientIntegrationTest {
 
     @Container
-    static GenericContainer<?> tavoContainer = new GenericContainer<>("tavoai/tavo-api:latest")
+    static GenericContainer<?> tavoContainer = new GenericContainer<>("tavoai/tavo-sdk:latest")
             .withExposedPorts(8080)
             .withEnv("TAVO_API_KEY", "test-key");
 

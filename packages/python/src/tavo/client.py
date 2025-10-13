@@ -1222,7 +1222,7 @@ class LocalScannerOperations:
         while workspace_root != workspace_root.parent:
             scanner_path = (
                 workspace_root
-                / "tavo-api"
+                / "tavo-sdk"
                 / "packages"
                 / "scanner"
                 / "dist"

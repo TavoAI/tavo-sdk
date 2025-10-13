@@ -11,7 +11,7 @@
 
     <name>Tavo SDK</name>
     <description>Java SDK for Tavo AI API</description>
-    <url>https://github.com/TavoAI/tavo-api</url>
+    <url>https://github.com/TavoAI/tavo-sdk</url>
 
     <licenses>
         <license>
@@ -30,19 +30,19 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/TavoAI/tavo-api.git</connection>
-        <developerConnection>scm:git:ssh://github.com/TavoAI/tavo-api.git</developerConnection>
-        <url>https://github.com/TavoAI/tavo-api/tree/main/packages/java</url>
+        <connection>scm:git:git://github.com/TavoAI/tavo-sdk.git</connection>
+        <developerConnection>scm:git:ssh://github.com/TavoAI/tavo-sdk.git</developerConnection>
+        <url>https://github.com/TavoAI/tavo-sdk/tree/main/packages/java</url>
     </scm>
 
     <issueManagement>
         <system>GitHub Issues</system>
-        <url>https://github.com/TavoAI/tavo-api/issues</url>
+        <url>https://github.com/TavoAI/tavo-sdk/issues</url>
     </issueManagement>
 
     <ciManagement>
         <system>GitHub Actions</system>
-        <url>https://github.com/TavoAI/tavo-api/actions</url>
+        <url>https://github.com/TavoAI/tavo-sdk/actions</url>
     </ciManagement>
 
     <properties>

@@ -161,7 +161,7 @@ try {
 
 ```bash
 git clone <repository-url>
-cd tavo-api/packages/java
+cd tavo-sdk/packages/java
 mvn clean install
 ```
 

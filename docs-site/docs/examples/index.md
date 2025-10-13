@@ -124,5 +124,5 @@ Need help with integration? Check our:
 
 - [SDK Documentation](../sdks/)
 - [API Reference](../api-reference/overview.md)
-- [Community Discussions](https://github.com/tavoai/tavo-api/discussions)
-- [GitHub Issues](https://github.com/tavoai/tavo-api/issues)
+- [Community Discussions](https://github.com/tavoai/tavo-sdk/discussions)
+- [GitHub Issues](https://github.com/tavoai/tavo-sdk/issues)

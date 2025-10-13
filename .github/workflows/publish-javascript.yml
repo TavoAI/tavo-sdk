@@ -67,6 +67,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create Git tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag sdk-js-v${{ inputs.version }}
+          git push origin sdk-js-v${{ inputs.version }}
+
       - name: Notify success
         run: |
           echo "✅ JavaScript SDK v${{ inputs.version }} published successfully!"

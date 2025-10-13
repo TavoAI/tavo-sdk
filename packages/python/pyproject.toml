@@ -46,10 +46,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/TavoAI/tavo-api"
+Homepage = "https://github.com/TavoAI/tavo-sdk"
 Documentation = "https://docs.tavoai.net/python/"
-Repository = "https://github.com/TavoAI/tavo-api"
-Issues = "https://github.com/TavoAI/tavo-api/issues"
+Repository = "https://github.com/TavoAI/tavo-sdk"
+Issues = "https://github.com/TavoAI/tavo-sdk/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,5 +1,5 @@
 {
-    "name": "tavo-api-integration-tests",
+    "name": "tavo-sdk-integration-tests",
     "version": "1.0.0",
     "description": "Mock API server for SDK integration tests",
     "main": "mock-api.js",

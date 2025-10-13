@@ -2,7 +2,7 @@
   "version": 2,
   "dgSpecHash": "XkHKq8UKBFc=",
   "success": true,
-  "projectFilePath": "/home/runner/work/tavo-api/tavo-api/packages/dotnet/TavoAI.csproj",
+  "projectFilePath": "/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/TavoAI.csproj",
   "expectedPackageFiles": [
     "/home/runner/.nuget/packages/microsoft.netcore.platforms/1.1.1/microsoft.netcore.platforms.1.1.1.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.netcore.targets/1.1.0/microsoft.netcore.targets.1.1.0.nupkg.sha512",

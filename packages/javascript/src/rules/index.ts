@@ -327,7 +327,7 @@ export class SecurityScanner {
         let workspaceRoot = currentDir;
 
         while (workspaceRoot !== path.dirname(workspaceRoot)) {
-            const scannerPath = path.join(workspaceRoot, 'tavo-api', 'packages', 'scanner', 'dist', 'tavo-scanner');
+            const scannerPath = path.join(workspaceRoot, 'tavo-sdk', 'packages', 'scanner', 'dist', 'tavo-scanner');
             if (fs.existsSync(scannerPath)) {
                 return scannerPath;
             }

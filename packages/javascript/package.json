@@ -13,11 +13,11 @@
   ],
   "homepage": "https://docs.tavoai.net/javascript/",
   "bugs": {
-    "url": "https://github.com/TavoAI/tavo-api/issues"
+    "url": "https://github.com/TavoAI/tavo-sdk/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TavoAI/tavo-api.git",
+    "url": "git+https://github.com/TavoAI/tavo-sdk.git",
     "directory": "packages/javascript"
   },
   "license": "Apache-2.0",

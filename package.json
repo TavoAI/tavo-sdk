@@ -1,5 +1,5 @@
 {
-  "name": "tavo-api",
+  "name": "tavo-sdk",
   "version": "0.1.0",
   "description": "Tavo AI SDK Monorepo",
   "private": true,
@@ -43,14 +43,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/TavoAI/tavo-api.git"
+    "url": "https://github.com/TavoAI/tavo-sdk.git"
   },
   "author": "Tavo AI",
   "license": "Apache",
   "bugs": {
-    "url": "https://github.com/TavoAI/tavo-api/issues"
+    "url": "https://github.com/TavoAI/tavo-sdk/issues"
   },
-  "homepage": "https://github.com/TavoAI/tavo-api#readme",
+  "homepage": "https://github.com/TavoAI/tavo-sdk#readme",
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [
       "eslint --fix",

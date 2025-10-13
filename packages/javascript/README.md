@@ -104,5 +104,5 @@ Apache-2.0
 ## Support
 
 - [Documentation](https://docs.tavoai.net)
-- [GitHub Issues](https://github.com/TavoAI/tavo-api/issues)
+- [GitHub Issues](https://github.com/TavoAI/tavo-sdk/issues)
 - [Community Forum](https://community.tavoai.net)

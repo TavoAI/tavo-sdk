@@ -1688,7 +1688,7 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
-"@tavoai/sdk@file:/home/ccham/work/TavoAI/repos/tavo-api/packages/javascript":
+"@tavoai/sdk@file:/home/ccham/work/TavoAI/repos/tavo-sdk/packages/javascript":
   version "0.4.0"
   resolved "file:packages/javascript"
   dependencies:

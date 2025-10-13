@@ -22,7 +22,7 @@ Standalone security scanner binary for Tavo AI. Provides local security scanning
 
 ### Binary Release (Recommended)
 
-Download the latest binary release for your platform from the [releases page](https://github.com/TavoAI/tavo-api/releases).
+Download the latest binary release for your platform from the [releases page](https://github.com/TavoAI/tavo-sdk/releases).
 
 The binary is self-contained and includes all dependencies and engines - no Python installation required.
 
@@ -37,8 +37,8 @@ chmod +x tavo-scanner
 ### From Source
 
 ```bash
-git clone https://github.com/TavoAI/tavo-api.git
-cd tavo-api/packages/scanner
+git clone https://github.com/TavoAI/tavo-sdk.git
+cd tavo-sdk/packages/scanner
 
 # Download engines
 chmod +x download_engines.sh
@@ -50,7 +50,7 @@ pip install -e .
 
 ### As Binary
 
-Download the appropriate binary for your platform from the [releases page](https://github.com/TavoAI/tavo-api/releases).
+Download the appropriate binary for your platform from the [releases page](https://github.com/TavoAI/tavo-sdk/releases).
 
 The binary is self-contained and includes all dependencies and engines - no Python installation required.
 
@@ -151,7 +151,7 @@ def scan_with_binary(path: str) -> dict:
 Use the provided build script for consistent builds:
 
 ```bash
-# From the tavo-api root directory
+# From the tavo-sdk root directory
 ./build_binary.sh
 ```
 

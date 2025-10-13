@@ -9,7 +9,7 @@ consistent APIs, automatic versioning, and unified development workflows.
 ## 🏗️ Monorepo Structure
 
 ```text
-tavo-api/
+tavo-sdk/
 ├── packages/
 │   ├── python/          # Python SDK (tavo-python-sdk)
 │   ├── javascript/      # JavaScript/TypeScript SDK (@tavoai/sdk)
@@ -88,8 +88,8 @@ result, err := client.Scans.Create(context.Background(), &tavo.CreateScanRequest
 
 ```bash
 # Clone the monorepo
-git clone https://github.com/TavoAI/tavo-api.git
-cd tavo-api
+git clone https://github.com/TavoAI/tavo-sdk.git
+cd tavo-sdk
 
 # Install dependencies
 yarn install

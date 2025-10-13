@@ -40,10 +40,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/TavoAI/tavo-api"
-Documentation = "https://github.com/TavoAI/tavo-api#readme"
-"Bug Tracker" = "https://github.com/TavoAI/tavo-api/issues"
-Source = "https://github.com/TavoAI/tavo-api"
+Homepage = "https://github.com/TavoAI/tavo-sdk"
+Documentation = "https://github.com/TavoAI/tavo-sdk#readme"
+"Bug Tracker" = "https://github.com/TavoAI/tavo-sdk/issues"
+Source = "https://github.com/TavoAI/tavo-sdk"
 
 [project.scripts]
 tavo-scanner = "tavo_scanner:main"
