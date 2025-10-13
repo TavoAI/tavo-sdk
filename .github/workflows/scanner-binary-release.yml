@@ -130,7 +130,7 @@ jobs:
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tavo-scanner-${{ matrix.platform }}-${{ matrix.arch }}
+          name: ${{ matrix.platform }}-${{ matrix.arch }}
           path: packages/scanner/dist/${{ steps.binary-name.outputs.name }}
 
   create-release:
