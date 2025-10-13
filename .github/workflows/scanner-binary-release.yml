@@ -30,9 +30,15 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             arch: x64
+          - os: ubuntu-24.04-arm
+            platform: linux
+            arch: arm64
           - os: windows-latest
             platform: windows
             arch: x64
+          - os: windows-11-arm
+            platform: windows
+            arch: arm64
           - os: macos-latest
             platform: macos
             arch: x64
@@ -185,9 +191,11 @@ jobs:
             ### Downloads
 
             - **Linux (x64)**: `tavo-scanner-linux-x64.tar.gz`
+            - **Linux (ARM64)**: `tavo-scanner-linux-arm64.tar.gz`
             - **macOS (x64)**: `tavo-scanner-macos-x64.tar.gz`
             - **macOS (ARM64)**: `tavo-scanner-macos-arm64.tar.gz`
             - **Windows (x64)**: `tavo-scanner-windows-x64.zip`
+            - **Windows (ARM64)**: `tavo-scanner-windows-arm64.zip`
 
             ### Installation
 
@@ -204,5 +212,48 @@ jobs:
             - Cross-platform support
           files: releases/*.*
           prerelease: ${{ github.event.inputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create/Update Latest Release
+        if: github.event.inputs.prerelease != true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: scanner-latest
+          name: Tavo Scanner Latest
+          body: |
+            ## Tavo AI Security Scanner - Latest Release
+
+            This is the latest stable release of the Tavo AI Security Scanner.
+
+            **Current Version:** ${{ steps.version.outputs.version }}
+
+            ### Downloads
+
+            - **Linux (x64)**: `tavo-scanner-linux-x64.tar.gz`
+            - **Linux (ARM64)**: `tavo-scanner-linux-arm64.tar.gz`
+            - **macOS (x64)**: `tavo-scanner-macos-x64.tar.gz`
+            - **macOS (ARM64)**: `tavo-scanner-macos-arm64.tar.gz`
+            - **Windows (x64)**: `tavo-scanner-windows-x64.zip`
+            - **Windows (ARM64)**: `tavo-scanner-windows-arm64.zip`
+
+            ### Installation
+
+            1. Download the appropriate archive for your platform
+            2. Extract the binary
+            3. Make executable (Linux/macOS): `chmod +x tavo-scanner`
+            4. Run: `./tavo-scanner --help`
+
+            ### Features
+
+            - Comprehensive LLM security vulnerability detection
+            - OWASP LLM Top 10 coverage
+            - No external dependencies required
+            - Cross-platform support
+
+            ---
+            *This release is automatically updated with each new stable version.*
+          files: releases/*.*
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

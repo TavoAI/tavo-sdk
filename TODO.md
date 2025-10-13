@@ -1,6 +1,5 @@
 # TODO
 
-Rename tavo-sdk
 
 ## **Advanced Features**
 
