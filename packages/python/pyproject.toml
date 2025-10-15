@@ -10,7 +10,7 @@ authors = [
     {name = "Tavo AI", email = "dev@tavoai.net"}
 ]
 readme = "README.md"
-license-files = ["LICENSE"]
+license = "Apache-2.0"
 requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 3 - Alpha",
