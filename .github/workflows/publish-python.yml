@@ -65,7 +65,7 @@ jobs:
       - name: Upload source archive to release
         run: |
           # Upload the source archive to the GitHub release
-          gh release upload v${{ github.event.inputs.version }} ../tavo-python-sdk-v${{ github.event.inputs.version }}-source.tar.gz --clobber
+          gh release upload v${{ github.event.inputs.version }} tavo-python-sdk-v${{ github.event.inputs.version }}-source.tar.gz --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
