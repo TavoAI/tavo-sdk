@@ -26,6 +26,7 @@ permissions:
   contents: write
   pull-requests: write
   actions: write
+  id-token: write
 
 jobs:
   determine-version:
