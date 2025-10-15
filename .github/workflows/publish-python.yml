@@ -1,9 +1,10 @@
 name: Publish Python SDK
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       version:
+        description: "Version to publish"
         required: true
         type: string
 
@@ -33,7 +34,7 @@ jobs:
         run: |
           cd packages/python
           # Strip 'v' prefix if present and update version in pyproject.toml
-          VERSION="${{ inputs.version }}"
+          VERSION="${{ github.event.inputs.version }}"
           VERSION=${VERSION#v}  # Remove 'v' prefix if present
           sed -i "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
 
@@ -43,25 +44,28 @@ jobs:
           python -m build
 
       - name: Publish to TestPyPI
-        if: contains(inputs.version, 'alpha') || contains(inputs.version, 'beta')
+        if: contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          packages-dir: packages/python/dist
 
       - name: Publish to PyPI
-        if: ${{ !contains(inputs.version, 'alpha') && !contains(inputs.version, 'beta') }}
+        if: ${{ !contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta') }}
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/python/dist
 
       - name: Create source archive
         run: |
           cd packages/python
           # Create source code archive
-          tar -czf ../../tavo-python-sdk-v${{ inputs.version }}-source.tar.gz .
+          tar -czf ../../tavo-python-sdk-v${{ github.event.inputs.version }}-source.tar.gz .
 
       - name: Upload source archive to release
         run: |
           # Upload the source archive to the GitHub release
-          gh release upload v${{ inputs.version }} ../tavo-python-sdk-v${{ inputs.version }}-source.tar.gz --clobber
+          gh release upload v${{ github.event.inputs.version }} ../tavo-python-sdk-v${{ github.event.inputs.version }}-source.tar.gz --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -69,10 +73,10 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag sdk-python-v${{ inputs.version }}
-          git push origin sdk-python-v${{ inputs.version }}
+          git tag sdk-python-v${{ github.event.inputs.version }}
+          git push origin sdk-python-v${{ github.event.inputs.version }}
 
       - name: Notify success
         run: |
-          echo "✅ Python SDK v${{ inputs.version }} published successfully!"
-          echo "📦 Available on PyPI: https://pypi.org/project/tavo-sdk/${{ inputs.version }}/"
+          echo "✅ Python SDK v${{ github.event.inputs.version }} published successfully!"
+          echo "📦 Available on PyPI: https://pypi.org/project/tavo-sdk/${{ github.event.inputs.version }}/"
