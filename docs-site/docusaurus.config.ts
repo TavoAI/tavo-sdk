@@ -109,7 +109,7 @@ const config: Config = {
             },
             {
               label: 'Python SDK',
-              href: 'https://github.com/TavoAI/tavo-python-sdk',
+              href: 'https://github.com/TavoAI/tavo-sdk',
             },
             {
               label: 'Documentation',
@@ -179,7 +179,7 @@ const config: Config = {
             },
             {
               label: 'Python SDK',
-              href: 'https://github.com/TavoAI/tavo-python-sdk',
+              href: 'https://github.com/TavoAI/tavo-sdk',
             },
           ],
         },

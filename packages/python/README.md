@@ -1,13 +1,13 @@
-# tavo-python-sdk
+# tavo-sdk
 
 Python SDK for Tavo AI API
 
 ## Installation
 
 ```bash
-pip install tavo-python-sdk
+pip install tavo-sdk
 # or
-poetry add tavo-python-sdk
+poetry add tavo-sdk
 ```
 
 ## Usage

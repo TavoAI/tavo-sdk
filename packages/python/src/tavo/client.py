@@ -265,7 +265,7 @@ class TavoClient:
         """Get authentication headers based on available credentials"""
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "tavo-python-sdk/0.1.0",
+            "User-Agent": "tavo-sdk/0.1.0",
         }
 
         if self.config.jwt_token:

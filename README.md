@@ -11,7 +11,7 @@ consistent APIs, automatic versioning, and unified development workflows.
 ```text
 tavo-sdk/
 ├── packages/
-│   ├── python/          # Python SDK (tavo-python-sdk)
+│   ├── python/          # Python SDK (tavo-sdk)
 │   ├── javascript/      # JavaScript/TypeScript SDK (@tavoai/sdk)
 │   ├── java/           # Java SDK (sdk)
 │   └── go/             # Go SDK (tavo-go-sdk)
@@ -245,7 +245,7 @@ yarn run release -- --version 1.2.3
 
 ### Package Registries
 
-- **Python**: PyPI (`pip install tavo-python-sdk`)
+- **Python**: PyPI (`pip install tavo-sdk`)
 - **JavaScript**: npm (`yarn add @tavoai/sdk`)
 - **Java**: Maven Central (`groupId: net.tavoai`)
 - **Go**: Go Modules (`github.com/tavoai/tavo-go-sdk`)

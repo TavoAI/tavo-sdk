@@ -94,7 +94,7 @@ class TestTavoClient:
         assert call_args[1]["base_url"] == "https://api.tavoai.net/api/v1"
         assert call_args[1]["headers"]["X-API-Key"] == "test-key"
         assert call_args[1]["headers"]["Content-Type"] == "application/json"
-        assert call_args[1]["headers"]["User-Agent"] == "tavo-python-sdk/0.1.0"
+        assert call_args[1]["headers"]["User-Agent"] == "tavo-sdk/0.1.0"
         assert call_args[1]["timeout"] == pytest.approx(30.0)
 
     @pytest.mark.asyncio

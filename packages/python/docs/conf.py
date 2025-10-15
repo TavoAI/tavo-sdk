@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "tavo-python-sdk"
+project = "tavo-sdk"
 copyright_text = "2024, Tavo AI"
 author = "Tavo AI"
 release = "0.1.0"
