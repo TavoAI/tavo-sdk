@@ -8,7 +8,7 @@ version = "0.4.0"
 description = "Tavo AI Security Scanner - Standalone binary for local security scanning"
 readme = "README.md"
 authors = [
-    {name = "TavoAI", email = "dev@tavoai.com"}
+    {name = "TavoAI", email = "dev@tavoai.net"}
 ]
 license = {text = "Apache-2.0"}
 classifiers = [
