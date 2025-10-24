@@ -18,13 +18,13 @@ httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via tavo-sdk (pyproject.toml)
-idna==3.10
+idna==3.11
     # via
     #   anyio
     #   httpx
-pydantic==2.12.0
+pydantic==2.12.3
     # via tavo-sdk (pyproject.toml)
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
 python-dateutil==2.9.0.post0
     # via tavo-sdk (pyproject.toml)
