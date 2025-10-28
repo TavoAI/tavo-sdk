@@ -375,6 +375,10 @@ class TavoClient:
     def websocket(self):
         """Access WebSocket operations for real-time features"""
         return WebSocketOperations(self)
+    
+    def plugins(self):
+        """Access plugin marketplace operations"""
+        return PluginOperations(self)
 
 
 class WebSocketOperations:
@@ -1362,3 +1366,74 @@ class SessionAuthOperations:
         return await self._client._request(
             "POST", "/auth/session/authenticate", data={"token": token}
         )
+
+
+class PluginOperations:
+    """Operations for plugin marketplace"""
+
+    def __init__(self, client: TavoClient):
+        self._client = client
+
+    async def browse_marketplace(
+        self,
+        plugin_type: Optional[str] = None,
+        category: Optional[str] = None,
+        pricing_tier: Optional[str] = None,
+        search: Optional[str] = None,
+        page: int = 1,
+        per_page: int = 20,
+    ) -> Dict[str, Any]:
+        """Browse plugin marketplace"""
+        params = {"page": page, "per_page": per_page}
+
+        if plugin_type:
+            params["plugin_type"] = plugin_type
+        if category:
+            params["category"] = category
+        if pricing_tier:
+            params["pricing_tier"] = pricing_tier
+        if search:
+            params["search"] = search
+
+        return await self._client._request("GET", "/plugins/marketplace", params=params)
+
+    async def get_plugin(self, plugin_id: str) -> Dict[str, Any]:
+        """Get plugin details"""
+        return await self._client._request("GET", f"/plugins/{plugin_id}")
+
+    async def install_plugin(self, plugin_id: str) -> Dict[str, Any]:
+        """Install a plugin"""
+        return await self._client._request("POST", f"/plugins/{plugin_id}/install")
+
+    async def download_plugin(self, plugin_id: str) -> bytes:
+        """Download plugin package"""
+        response = await self._client._client.get(f"/plugins/{plugin_id}/download")
+        response.raise_for_status()
+        return response.content
+
+    async def list_installed(self) -> Dict[str, Any]:
+        """List installed plugins"""
+        return await self._client._request("GET", "/plugins/installed")
+
+    async def execute_plugin(
+        self, plugin_id: str, execution_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Execute a plugin (cloud execution)"""
+        return await self._client._request(
+            "POST", f"/plugins/{plugin_id}/execute", data=execution_data
+        )
+
+    async def create_plugin(self, plugin_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create/publish a new plugin"""
+        return await self._client._request("POST", "/plugins", data=plugin_data)
+
+    async def update_plugin(
+        self, plugin_id: str, plugin_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Update plugin metadata"""
+        return await self._client._request("PUT", f"/plugins/{plugin_id}", data=plugin_data)
+
+    async def delete_plugin(self, plugin_id: str) -> Dict[str, Any]:
+        """Delete a plugin"""
+        await self._client._request("DELETE", f"/plugins/{plugin_id}")
+        return {"message": "Plugin deleted successfully"}

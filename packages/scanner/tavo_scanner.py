@@ -10,6 +10,25 @@ import tempfile
 import subprocess
 import yaml
 
+# Plugin system imports (optional - graceful degradation if not available)
+try:
+    from tavo.plugins import (
+        PluginRegistry,
+        PluginType,
+        PluginExecutionContext,
+        PluginExecutionResult,
+    )
+    from tavo.scanner import (
+        PluginExecutor,
+        ResultAggregator,
+        ScannerConfig,
+        ScanOptions,
+    )
+
+    PLUGIN_SYSTEM_AVAILABLE = True
+except ImportError:
+    PLUGIN_SYSTEM_AVAILABLE = False
+
 
 class ScannerError(Exception):
     """Scanner-specific errors."""
@@ -268,16 +287,43 @@ class OpenGrepEngine:
 
 
 class SecurityScanner:
-    """Unified security scanner using OpenGrep."""
+    """Unified security scanner using OpenGrep with plugin support."""
 
-    def __init__(self, rule_manager: RuleManager):
+    def __init__(self, rule_manager: RuleManager, api_key: Optional[str] = None):
         self.rule_manager = rule_manager
         self.opengrep = OpenGrepEngine()
+        self.api_key = api_key
+
+        # Initialize plugin system if available
+        self.plugin_executor = None
+        if PLUGIN_SYSTEM_AVAILABLE and api_key:
+            try:
+                config = ScannerConfig(api_key=api_key)
+                self.plugin_executor = PluginExecutor(config)
+                self.result_aggregator = ResultAggregator()
+            except Exception as e:
+                print(
+                    f"Warning: Failed to initialize plugin system: {e}", file=sys.stderr
+                )
+                PLUGIN_SYSTEM_AVAILABLE = False
 
     def scan_codebase(
-        self, path: str, bundle_name: str = "llm-security"
+        self,
+        path: str,
+        bundle_name: str = "llm-security",
+        static_plugins: Optional[List[str]] = None,
+        dynamic_plugins: Optional[List[str]] = None,
+        plugin_config: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Scan a codebase for security issues."""
+        """Scan a codebase for security issues.
+
+        Args:
+            path: Path to scan
+            bundle_name: Rule bundle to use
+            static_plugins: List of static analysis plugin IDs
+            dynamic_plugins: List of dynamic testing plugin IDs
+            plugin_config: Configuration for plugins
+        """
         import time
 
         start_time = time.time()
@@ -286,6 +332,7 @@ class SecurityScanner:
         bundle = self.rule_manager.download_bundle(bundle_name)
 
         findings = []
+        plugin_results = []
 
         # Scan with OpenGrep rules
         opengrep_rules = [rule for rule in bundle["rules"] if "pattern" in rule]
@@ -296,6 +343,34 @@ class SecurityScanner:
             else:
                 findings.extend(self.opengrep.scan_directory(path_obj, opengrep_rules))
 
+        # Execute plugins if available and requested
+        if (
+            PLUGIN_SYSTEM_AVAILABLE
+            and self.plugin_executor
+            and (static_plugins or dynamic_plugins)
+        ):
+            try:
+                options = ScanOptions(
+                    static_plugins=static_plugins or [],
+                    dynamic_plugins=dynamic_plugins or [],
+                    plugin_config=plugin_config or {},
+                    static_analysis=bool(static_plugins),
+                    dynamic_testing=bool(dynamic_plugins),
+                )
+
+                plugin_results = self.plugin_executor.execute_plugins(
+                    target_path=path_obj,
+                    options=options,
+                )
+
+                # Aggregate plugin findings
+                for result in plugin_results:
+                    if result.success:
+                        findings.extend(result.findings)
+
+            except Exception as e:
+                print(f"Warning: Plugin execution failed: {e}", file=sys.stderr)
+
         scan_time = time.time() - start_time
 
         return {
@@ -304,13 +379,27 @@ class SecurityScanner:
             "scan_time": scan_time,
             "bundle": bundle["name"],
             "rules_used": len(opengrep_rules),
+            "plugin_results": (
+                [
+                    {
+                        "plugin_id": r.plugin_id,
+                        "plugin_name": r.plugin_name,
+                        "success": r.success,
+                        "findings_count": len(r.findings),
+                        "execution_time_ms": r.execution_time_ms,
+                    }
+                    for r in plugin_results
+                ]
+                if plugin_results
+                else []
+            ),
         }
 
 
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Tavo AI Security Scanner - Local security scanning with OpenGrep"
+        description="Tavo AI Security Scanner - Local security scanning with OpenGrep and plugins"
     )
     parser.add_argument("path", help="Path to file or directory to scan")
     parser.add_argument(
@@ -322,18 +411,87 @@ def main():
     parser.add_argument(
         "--format",
         "-f",
-        choices=["json", "text"],
+        choices=["json", "text", "sarif"],
         default="json",
         help="Output format (default: json)",
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
+    # Plugin options
+    parser.add_argument(
+        "--static-plugins",
+        help="Comma-separated list of static analysis plugin IDs",
+    )
+    parser.add_argument(
+        "--dynamic-plugins",
+        help="Comma-separated list of dynamic testing plugin IDs",
+    )
+    parser.add_argument(
+        "--plugin-config",
+        type=str,
+        help="Path to plugin configuration JSON file",
+    )
+    parser.add_argument(
+        "--api-key",
+        help="TavoAI API key for plugin marketplace access (or set TAVOAI_API_KEY env var)",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["local", "cloud", "zap-integration"],
+        default="local",
+        help="Execution mode (default: local)",
+    )
+
     args = parser.parse_args()
 
     try:
+        # Get API key from args or environment
+        api_key = args.api_key
+        if not api_key:
+            import os
+
+            api_key = os.getenv("TAVOAI_API_KEY") or os.getenv("TAVO_API_KEY")
+
+        # Parse plugin lists
+        static_plugins = (
+            [p.strip() for p in args.static_plugins.split(",") if p.strip()]
+            if args.static_plugins
+            else None
+        )
+        dynamic_plugins = (
+            [p.strip() for p in args.dynamic_plugins.split(",") if p.strip()]
+            if args.dynamic_plugins
+            else None
+        )
+
+        # Load plugin configuration
+        plugin_config = {}
+        if args.plugin_config:
+            with open(args.plugin_config) as f:
+                plugin_config = json.load(f)
+
+        # Show plugin system status
+        if args.verbose:
+            if PLUGIN_SYSTEM_AVAILABLE:
+                print("Plugin system: ✓ Available", file=sys.stderr)
+                if static_plugins:
+                    print(
+                        f"Static plugins: {', '.join(static_plugins)}", file=sys.stderr
+                    )
+                if dynamic_plugins:
+                    print(
+                        f"Dynamic plugins: {', '.join(dynamic_plugins)}",
+                        file=sys.stderr,
+                    )
+            else:
+                print(
+                    "Plugin system: ✗ Not available (install tavoai-sdk for plugin support)",
+                    file=sys.stderr,
+                )
+
         # Initialize scanner
         rule_manager = RuleManager()
-        scanner = SecurityScanner(rule_manager)
+        scanner = SecurityScanner(rule_manager, api_key=api_key)
 
         if args.verbose:
             print(
@@ -341,24 +499,57 @@ def main():
             )
 
         # Perform scan
-        result = scanner.scan_codebase(args.path, args.bundle)
+        result = scanner.scan_codebase(
+            args.path,
+            args.bundle,
+            static_plugins=static_plugins,
+            dynamic_plugins=dynamic_plugins,
+            plugin_config=plugin_config,
+        )
 
         # Output results
         if args.format == "json":
             print(json.dumps(result, indent=2))
-        else:
+        elif args.format == "sarif":
+            # Convert to SARIF if plugin system available
+            if PLUGIN_SYSTEM_AVAILABLE and scanner.result_aggregator:
+                # Create PluginExecutionResult from findings
+                findings_result = PluginExecutionResult(
+                    plugin_id="opengrep",
+                    plugin_name="OpenGrep",
+                    plugin_version="latest",
+                    success=True,
+                    findings=result["vulnerabilities"],
+                )
+                plugin_results = result.get("plugin_results", [])
+                # TODO: Convert plugin_results dict to PluginExecutionResult objects
+                sarif = scanner.result_aggregator.to_sarif([findings_result])
+                print(json.dumps(sarif, indent=2))
+            else:
+                # Fallback to JSON
+                print(json.dumps(result, indent=2))
+        else:  # text
             print(f"Scan Results for {args.path}")
             print(f"Bundle: {result['bundle']}")
             print(f"Rules Used: {result['rules_used']}")
             print(f"Scan Time: {result['scan_time']:.2f}s")
             print(f"Vulnerabilities Found: {len(result['vulnerabilities'])}")
+
+            if result.get("plugin_results"):
+                print(f"Plugins Executed: {len(result['plugin_results'])}")
+                for pr in result["plugin_results"]:
+                    status = "✓" if pr["success"] else "✗"
+                    print(
+                        f"  {status} {pr['plugin_name']}: {pr['findings_count']} findings"
+                    )
+
             print(f"Status: {'PASSED' if result['passed'] else 'FAILED'}")
 
             if result["vulnerabilities"]:
                 print("\nVulnerabilities:")
                 for vuln in result["vulnerabilities"]:
                     print(
-                        f"  - {vuln.get('check_id', 'Unknown')}: {vuln.get('message', 'No message')}"
+                        f"  - {vuln.get('rule_id', 'Unknown')}: {vuln.get('message', 'No message')}"
                     )
 
         # Exit with appropriate code
@@ -369,6 +560,10 @@ def main():
         sys.exit(1)
     except Exception as e:
         print(f"Unexpected error: {e}", file=sys.stderr)
+        if args.verbose:
+            import traceback
+
+            traceback.print_exc()
         sys.exit(1)
 
 
