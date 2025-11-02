@@ -1,0 +1,844 @@
+{
+  "tavo_sdk_api_clients": {
+    "python_sdk_client": {
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "description": "Check API health status",
+          "parameters": {},
+          "response_schema": "HealthResponse",
+          "auth_required": false
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "description": "Authenticate user and get JWT token",
+          "parameters": {
+            "body": ["username", "password"]
+          },
+          "response_schema": "Token",
+          "auth_required": false
+        },
+        {
+          "method": "POST",
+          "path": "/auth/register",
+          "description": "Register a new user",
+          "parameters": {
+            "body": ["user_data"]
+          },
+          "response_schema": "UserSchema",
+          "auth_required": false
+        },
+        {
+          "method": "POST",
+          "path": "/auth/refresh",
+          "description": "Refresh JWT token",
+          "parameters": {
+            "body": ["refresh_token"]
+          },
+          "response_schema": "Token",
+          "auth_required": false
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "description": "Get current user information",
+          "parameters": {},
+          "response_schema": "UserSchema",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/users",
+          "description": "Create a new user (admin only)",
+          "parameters": {
+            "body": ["user_data"]
+          },
+          "response_schema": "UserSchema",
+          "auth_required": true,
+          "admin_only": true
+        },
+        {
+          "method": "GET",
+          "path": "/users",
+          "description": "List all users (admin only)",
+          "parameters": {},
+          "response_schema": "List[UserSchema]",
+          "auth_required": true,
+          "admin_only": true
+        },
+        {
+          "method": "GET",
+          "path": "/users/{user_id}",
+          "description": "Get user details",
+          "parameters": {
+            "path": ["user_id"]
+          },
+          "response_schema": "UserSchema",
+          "auth_required": true
+        },
+        {
+          "method": "PUT",
+          "path": "/users/{user_id}",
+          "description": "Update user information",
+          "parameters": {
+            "path": ["user_id"],
+            "body": ["user_data"]
+          },
+          "response_schema": "UserSchema",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/users/me",
+          "description": "Get current user profile",
+          "parameters": {},
+          "response_schema": "UserSchema",
+          "auth_required": true
+        },
+        {
+          "method": "PUT",
+          "path": "/users/me",
+          "description": "Update current user profile",
+          "parameters": {
+            "body": ["user_data"]
+          },
+          "response_schema": "UserSchema",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/users/me/api-keys",
+          "description": "List current user's API keys",
+          "parameters": {},
+          "response_schema": "List[APIKeySchema]",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/users/me/api-keys",
+          "description": "Create a new API key",
+          "parameters": {
+            "body": ["name", "kwargs"]
+          },
+          "response_schema": "APIKeyWithKey",
+          "auth_required": true
+        },
+        {
+          "method": "PUT",
+          "path": "/users/me/api-keys/{api_key_id}",
+          "description": "Update an API key",
+          "parameters": {
+            "path": ["api_key_id"],
+            "body": ["name", "kwargs"]
+          },
+          "response_schema": "APIKeySchema",
+          "auth_required": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/users/me/api-keys/{api_key_id}",
+          "description": "Delete an API key",
+          "parameters": {
+            "path": ["api_key_id"]
+          },
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/users/me/api-keys/{api_key_id}/rotate",
+          "description": "Rotate an API key",
+          "parameters": {
+            "path": ["api_key_id"],
+            "body": ["kwargs"]
+          },
+          "response_schema": "APIKeyWithKey",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/organizations",
+          "description": "Create a new organization",
+          "parameters": {
+            "body": ["org_data"]
+          },
+          "response_schema": "OrganizationSchema",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/organizations",
+          "description": "List organizations the user belongs to",
+          "parameters": {},
+          "response_schema": "List[OrganizationSchema]",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/organizations/{org_id}",
+          "description": "Get organization details",
+          "parameters": {
+            "path": ["org_id"]
+          },
+          "response_schema": "OrganizationSchema",
+          "auth_required": true
+        },
+        {
+          "method": "PUT",
+          "path": "/organizations/{org_id}",
+          "description": "Update organization",
+          "parameters": {
+            "path": ["org_id"],
+            "body": ["org_data"]
+          },
+          "response_schema": "OrganizationSchema",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/organizations/{org_id}/members",
+          "description": "List organization members",
+          "parameters": {
+            "path": ["org_id"]
+          },
+          "response_schema": "List[OrganizationMemberSchema]",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/organizations/{org_id}/invites",
+          "description": "Create organization invite",
+          "parameters": {
+            "path": ["org_id"],
+            "body": ["invite_data"]
+          },
+          "response_schema": "OrganizationInviteSchema",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/organizations/{org_id}/invites",
+          "description": "List organization invites",
+          "parameters": {
+            "path": ["org_id"]
+          },
+          "response_schema": "List[OrganizationInviteSchema]",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/organizations/invites/{token}/accept",
+          "description": "Accept organization invite",
+          "parameters": {
+            "path": ["token"]
+          },
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/organizations/invites/{token}/reject",
+          "description": "Reject organization invite",
+          "parameters": {
+            "path": ["token"]
+          },
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/scans",
+          "description": "Create a new security scan",
+          "parameters": {
+            "body": ["repository_url", "kwargs"]
+          },
+          "response_schema": "Scan",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/scans/{scan_id}",
+          "description": "Get scan details",
+          "parameters": {
+            "path": ["scan_id"]
+          },
+          "response_schema": "Scan",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/scans",
+          "description": "List scans",
+          "parameters": {
+            "query": ["params"]
+          },
+          "response_schema": "List[Scan]",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/scans/{scan_id}/results",
+          "description": "Get scan results",
+          "parameters": {
+            "path": ["scan_id"],
+            "query": ["params"]
+          },
+          "response_schema": "ScanResults",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/scans/{scan_id}/cancel",
+          "description": "Cancel a running scan",
+          "parameters": {
+            "path": ["scan_id"]
+          },
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/scans/rules",
+          "description": "Create a new scan rule",
+          "parameters": {
+            "body": ["rule_data"]
+          },
+          "response_schema": "ScanRuleSchema",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/scans/rules",
+          "description": "List all scan rules",
+          "parameters": {},
+          "response_schema": "List[ScanRuleSchema]",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/scans/rules/{rule_id}",
+          "description": "Get scan rule details",
+          "parameters": {
+            "path": ["rule_id"]
+          },
+          "response_schema": "ScanRuleSchema",
+          "auth_required": true
+        },
+        {
+          "method": "PUT",
+          "path": "/scans/rules/{rule_id}",
+          "description": "Update scan rule",
+          "parameters": {
+            "path": ["rule_id"],
+            "body": ["rule_data"]
+          },
+          "response_schema": "ScanRuleSchema",
+          "auth_required": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/scans/rules/{rule_id}",
+          "description": "Delete scan rule",
+          "parameters": {
+            "path": ["rule_id"]
+          },
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/scans/rules/upload",
+          "description": "Upload scan rules file",
+          "parameters": {
+            "body": ["file"]
+          },
+          "response_schema": "ScanRuleSchema",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/jobs/status/{job_id}",
+          "description": "Get job status",
+          "parameters": {
+            "path": ["job_id"]
+          },
+          "response_schema": "JobStatus",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/jobs/dashboard",
+          "description": "Get job dashboard",
+          "parameters": {},
+          "response_schema": "JobSummary",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/webhooks/events",
+          "description": "List webhook events",
+          "parameters": {},
+          "response_schema": "WebhookEvents",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/webhooks/events/{event_id}",
+          "description": "Get a specific webhook event",
+          "parameters": {
+            "path": ["event_id"]
+          },
+          "response_schema": "WebhookEvent",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/ai/analyze/{scan_id}",
+          "description": "Analyze code for fixes",
+          "parameters": {
+            "path": ["scan_id"],
+            "body": ["options"]
+          },
+          "response_schema": "CodeFixResponse",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/ai/classify/{scan_id}",
+          "description": "Classify vulnerabilities",
+          "parameters": {
+            "path": ["scan_id"],
+            "body": ["options"]
+          },
+          "response_schema": "VulnerabilityClassificationResponse",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/ai/risk-score/{scan_id}",
+          "description": "Calculate risk score",
+          "parameters": {
+            "path": ["scan_id"],
+            "body": ["options"]
+          },
+          "response_schema": "RiskScore",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/ai/compliance/{scan_id}",
+          "description": "Generate compliance report",
+          "parameters": {
+            "path": ["scan_id"],
+            "body": ["options"]
+          },
+          "response_schema": "ComplianceReport",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/ai/predictive/{scan_id}",
+          "description": "Perform predictive analysis",
+          "parameters": {
+            "path": ["scan_id"],
+            "body": ["options"]
+          },
+          "response_schema": "PredictiveAnalysis",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/billing/usage",
+          "description": "Get usage report",
+          "parameters": {},
+          "response_schema": "UsageReport",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/billing/usage/summary",
+          "description": "Get usage summary",
+          "parameters": {},
+          "response_schema": "UsageSummary",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/billing/subscription",
+          "description": "Get subscription info",
+          "parameters": {},
+          "response_schema": "SubscriptionInfo",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/billing/features",
+          "description": "Get feature access",
+          "parameters": {},
+          "response_schema": "Features",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/billing/billing",
+          "description": "Get billing information",
+          "parameters": {},
+          "response_schema": "BillingInfo",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/reports",
+          "description": "Create a new report",
+          "parameters": {
+            "body": ["scan_id", "report_type", "format", "title", "description", "kwargs"]
+          },
+          "response_schema": "Report",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/reports/{report_id}",
+          "description": "Get report details",
+          "parameters": {
+            "path": ["report_id"]
+          },
+          "response_schema": "Report",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/reports",
+          "description": "List reports with filtering",
+          "parameters": {
+            "query": ["skip", "limit", "report_type", "status", "scan_id", "sort_by", "sort_order", "params"]
+          },
+          "response_schema": "List[Report]",
+          "auth_required": true
+        },
+        {
+          "method": "PUT",
+          "path": "/reports/{report_id}",
+          "description": "Update report status and content",
+          "parameters": {
+            "path": ["report_id"],
+            "body": ["report_data"]
+          },
+          "response_schema": "Report",
+          "auth_required": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/reports/{report_id}",
+          "description": "Delete a report",
+          "parameters": {
+            "path": ["report_id"]
+          },
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/reports/{report_id}/download",
+          "description": "Download report file content",
+          "parameters": {
+            "path": ["report_id"]
+          },
+          "response_schema": "Blob",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/reports/summary",
+          "description": "Get report summary statistics",
+          "parameters": {},
+          "response_schema": "ReportSummary",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/rules/bundles",
+          "description": "List available rule bundles",
+          "parameters": {
+            "query": ["category", "official_only", "page", "per_page"]
+          },
+          "response_schema": "RuleBundles",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/rules/bundles/{bundle_id}/rules",
+          "description": "Get rules from a specific bundle",
+          "parameters": {
+            "path": ["bundle_id"]
+          },
+          "response_schema": "BundleRules",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/rules/bundles/{bundle_id}/install",
+          "description": "Install a rule bundle",
+          "parameters": {
+            "path": ["bundle_id"],
+            "body": ["organization_id"]
+          },
+          "response_schema": "InstallResult",
+          "auth_required": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/rules/bundles/{bundle_id}/install",
+          "description": "Uninstall a rule bundle",
+          "parameters": {
+            "path": ["bundle_id"]
+          },
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/rules/validate",
+          "description": "Validate rule syntax",
+          "parameters": {
+            "body": ["rules"]
+          },
+          "response_schema": "ValidationResult",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/rules/updates",
+          "description": "Check for updates to installed rule bundles",
+          "parameters": {
+            "query": ["bundle_ids"]
+          },
+          "response_schema": "BundleUpdates",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/device/code",
+          "description": "Create a device code for authentication",
+          "parameters": {
+            "body": ["client_name", "client_id"]
+          },
+          "response_schema": "DeviceCode",
+          "auth_required": false
+        },
+        {
+          "method": "POST",
+          "path": "/device/token",
+          "description": "Poll for device token status",
+          "parameters": {
+            "body": ["device_code"]
+          },
+          "response_schema": "DeviceToken",
+          "auth_required": false
+        },
+        {
+          "method": "POST",
+          "path": "/auth/session/create",
+          "description": "Create a new session token",
+          "parameters": {
+            "body": ["description"]
+          },
+          "response_schema": "SessionToken",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/auth/session/list",
+          "description": "List all session tokens",
+          "parameters": {},
+          "response_schema": "List[SessionTokenInfo]",
+          "auth_required": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/auth/session/{token_id}",
+          "description": "Delete a specific session token",
+          "parameters": {
+            "path": ["token_id"]
+          },
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/auth/session/",
+          "description": "Delete all session tokens",
+          "parameters": {},
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/auth/session/validate",
+          "description": "Validate a session token",
+          "parameters": {
+            "body": ["token"]
+          },
+          "response_schema": "ValidationResult",
+          "auth_required": false
+        },
+        {
+          "method": "POST",
+          "path": "/auth/session/authenticate",
+          "description": "Authenticate using a session token",
+          "parameters": {
+            "body": ["token"]
+          },
+          "response_schema": "AuthResult",
+          "auth_required": false
+        },
+        {
+          "method": "GET",
+          "path": "/plugins/marketplace",
+          "description": "Browse plugin marketplace",
+          "parameters": {
+            "query": ["plugin_type", "category", "pricing_tier", "search", "page", "per_page"]
+          },
+          "response_schema": "PluginMarketplace",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/plugins/{plugin_id}",
+          "description": "Get plugin details",
+          "parameters": {
+            "path": ["plugin_id"]
+          },
+          "response_schema": "PluginDetails",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/plugins/{plugin_id}/install",
+          "description": "Install a plugin",
+          "parameters": {
+            "path": ["plugin_id"]
+          },
+          "response_schema": "InstallResult",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/plugins/{plugin_id}/download",
+          "description": "Download plugin package",
+          "parameters": {
+            "path": ["plugin_id"]
+          },
+          "response_schema": "Blob",
+          "auth_required": true
+        },
+        {
+          "method": "GET",
+          "path": "/plugins/installed",
+          "description": "List installed plugins",
+          "parameters": {},
+          "response_schema": "InstalledPlugins",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/plugins/{plugin_id}/execute",
+          "description": "Execute a plugin (cloud execution)",
+          "parameters": {
+            "path": ["plugin_id"],
+            "body": ["execution_data"]
+          },
+          "response_schema": "ExecutionResult",
+          "auth_required": true
+        },
+        {
+          "method": "POST",
+          "path": "/plugins",
+          "description": "Create/publish a new plugin",
+          "parameters": {
+            "body": ["plugin_data"]
+          },
+          "response_schema": "Plugin",
+          "auth_required": true
+        },
+        {
+          "method": "PUT",
+          "path": "/plugins/{plugin_id}",
+          "description": "Update plugin metadata",
+          "parameters": {
+            "path": ["plugin_id"],
+            "body": ["plugin_data"]
+          },
+          "response_schema": "Plugin",
+          "auth_required": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/plugins/{plugin_id}",
+          "description": "Delete a plugin",
+          "parameters": {
+            "path": ["plugin_id"]
+          },
+          "response_schema": "Message",
+          "auth_required": true
+        },
+        {
+          "method": "WS",
+          "path": "/ws/scan/{scan_id}",
+          "description": "WebSocket connection for scan progress updates",
+          "parameters": {
+            "path": ["scan_id"],
+            "query": ["token", "client_id"]
+          },
+          "response_schema": "WebSocketMessages",
+          "auth_required": true
+        },
+        {
+          "method": "WS",
+          "path": "/ws/notifications",
+          "description": "WebSocket connection for user notifications",
+          "parameters": {
+            "query": ["token", "client_id"]
+          },
+          "response_schema": "WebSocketMessages",
+          "auth_required": true
+        },
+        {
+          "method": "WS",
+          "path": "/ws/general",
+          "description": "WebSocket connection for general broadcasts",
+          "parameters": {
+            "query": ["token", "client_id"]
+          },
+          "response_schema": "WebSocketMessages",
+          "auth_required": true
+        }
+      ]
+    },
+    "javascript_sdk": {
+      "description": "JavaScript SDK appears to be minimal, mainly rule exports",
+      "endpoints": []
+    }
+  },
+  "summary": {
+    "total_endpoints_sdk_calls": 88,
+    "primary_client": "python_sdk_client",
+    "key_features": [
+      "Comprehensive API coverage across all major domains",
+      "Support for multiple authentication methods (API key, JWT, session tokens)",
+      "WebSocket support for real-time updates",
+      "Local scanner integration",
+      "Plugin marketplace operations",
+      "Device code authentication",
+      "Rule bundle management"
+    ],
+    "missing_from_api_server": [
+      "Plugin marketplace endpoints (/plugins/*)",
+      "Rule bundle management endpoints (/rules/bundles/*)",
+      "Device authentication endpoints (/device/*)",
+      "Some advanced AI analysis endpoints"
+    ]
+  }
+}
