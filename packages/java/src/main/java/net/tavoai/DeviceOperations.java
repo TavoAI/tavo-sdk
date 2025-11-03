@@ -7,13 +7,37 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 /**
  * Device authentication operations for CLI tools and scanners.
  */
-public class DeviceOperations extends BaseOperations {
+public class DeviceOperations {
+    private static final String DEVICE_ENDPOINT = "/device";
+    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+
+    private final TavoClient client;
+    private final Gson gson;
+    private final Type mapType;
+
+    /**
+     * Constructor for DeviceOperations.
+     * @param client the TavoClient instance
+     */
     public DeviceOperations(TavoClient client) {
-        super(client);
+        this.client = client;
+        this.gson = new Gson();
+        this.mapType = new TypeToken<Map<String, Object>>(){}.getType();
+    }
+
+    /**
+     * Helper method to create a new map.
+     * @return a new HashMap
+     */
+    private Map<String, Object> createMap() {
+        return new HashMap<>();
     }
 
     /**
@@ -24,20 +48,11 @@ public class DeviceOperations extends BaseOperations {
      * @throws TavoException if the request fails
      */
     public Map<String, Object> createDeviceCode(String clientId, String clientName) throws TavoException {
-        try {
-            Map<String, Object> requestBody = createMap();
-            if (clientId != null) requestBody.put("client_id", clientId);
-            if (clientName != null) requestBody.put("client_name", clientName);
+        Map<String, Object> requestBody = createMap();
+        if (clientId != null) requestBody.put("client_id", clientId);
+        if (clientName != null) requestBody.put("client_name", clientName);
 
-            Request request = new Request.Builder()
-                    .url(client.getBaseUrl() + "/device/code")
-                    .post(RequestBody.create(gson.toJson(requestBody), JSON))
-                    .build();
-
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
-            throw new TavoException("Failed to create device code", e);
-        }
+        return client.makeRequest("POST", DEVICE_ENDPOINT + "/code", requestBody);
     }
 
     /**
@@ -48,20 +63,11 @@ public class DeviceOperations extends BaseOperations {
      * @throws TavoException if the request fails
      */
     public Map<String, Object> createDeviceCodeForCli(String clientId, String clientName) throws TavoException {
-        try {
-            Map<String, Object> requestBody = createMap();
-            if (clientId != null) requestBody.put("client_id", clientId);
-            requestBody.put("client_name", clientName != null ? clientName : "Tavo CLI");
+        Map<String, Object> requestBody = createMap();
+        if (clientId != null) requestBody.put("client_id", clientId);
+        requestBody.put("client_name", clientName != null ? clientName : "Tavo CLI");
 
-            Request request = new Request.Builder()
-                    .url(client.getBaseUrl() + "/device/code/cli")
-                    .post(RequestBody.create(gson.toJson(requestBody), JSON))
-                    .build();
-
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
-            throw new TavoException("Failed to create CLI device code", e);
-        }
+        return client.makeRequest("POST", DEVICE_ENDPOINT + "/code/cli", requestBody);
     }
 
     /**
@@ -71,19 +77,10 @@ public class DeviceOperations extends BaseOperations {
      * @throws TavoException if the request fails
      */
     public Map<String, Object> pollDeviceToken(String deviceCode) throws TavoException {
-        try {
-            Map<String, Object> requestBody = createMap();
-            requestBody.put("device_code", deviceCode);
+        Map<String, Object> requestBody = createMap();
+        requestBody.put("device_code", deviceCode);
 
-            Request request = new Request.Builder()
-                    .url(client.getBaseUrl() + "/device/token")
-                    .post(RequestBody.create(gson.toJson(requestBody), JSON))
-                    .build();
-
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
-            throw new TavoException("Failed to poll device token", e);
-        }
+        return client.makeRequest("POST", DEVICE_ENDPOINT + "/token", requestBody);
     }
 
     /**
@@ -93,16 +90,7 @@ public class DeviceOperations extends BaseOperations {
      * @throws TavoException if the request fails
      */
     public Map<String, Object> getDeviceCodeStatus(String deviceCode) throws TavoException {
-        try {
-            Request request = new Request.Builder()
-                    .url(client.getBaseUrl() + "/device/code/" + deviceCode + "/status")
-                    .get()
-                    .build();
-
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
-            throw new TavoException("Failed to get device code status", e);
-        }
+        return client.makeRequest("GET", DEVICE_ENDPOINT + "/code/" + deviceCode + "/status", null);
     }
 
     /**
@@ -111,16 +99,7 @@ public class DeviceOperations extends BaseOperations {
      * @throws TavoException if the request fails
      */
     public Map<String, Object> getUsageWarnings() throws TavoException {
-        try {
-            Request request = new Request.Builder()
-                    .url(client.getBaseUrl() + "/device/usage/warnings")
-                    .get()
-                    .build();
-
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
-            throw new TavoException("Failed to get usage warnings", e);
-        }
+        return client.makeRequest("GET", DEVICE_ENDPOINT + "/usage/warnings", null);
     }
 
     /**
@@ -129,15 +108,143 @@ public class DeviceOperations extends BaseOperations {
      * @throws TavoException if the request fails
      */
     public Map<String, Object> getLimits() throws TavoException {
-        try {
-            Request request = new Request.Builder()
-                    .url(client.getBaseUrl() + "/device/limits")
-                    .get()
-                    .build();
+        return client.makeRequest("GET", DEVICE_ENDPOINT + "/limits", null);
+    }
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
-            throw new TavoException("Failed to get limits", e);
-        }
+    // ===========================================
+    // Async Operations with CompletableFuture
+    // ===========================================
+
+    /**
+     * Create device code asynchronously.
+     * @param clientID optional client ID
+     * @param clientName optional client name
+     * @return CompletableFuture with device code response
+     */
+    public CompletableFuture<Map<String, Object>> createDeviceCodeAsync(String clientID, String clientName) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return createDeviceCode(clientID, clientName);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Create CLI-optimized device code asynchronously.
+     * @param clientID optional client ID
+     * @param clientName optional client name (defaults to "Tavo CLI")
+     * @return CompletableFuture with device code response
+     */
+    public CompletableFuture<Map<String, Object>> createDeviceCodeForCliAsync(String clientID, String clientName) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return createDeviceCodeForCli(clientID, clientName);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Poll for device token asynchronously.
+     * @param deviceCode the device code to poll for
+     * @return CompletableFuture with token response
+     */
+    public CompletableFuture<Map<String, Object>> pollDeviceTokenAsync(String deviceCode) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return pollDeviceToken(deviceCode);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Get device code status asynchronously (lightweight polling for CLI).
+     * @param deviceCode the device code to check
+     * @return CompletableFuture with status response
+     */
+    public CompletableFuture<Map<String, Object>> getDeviceCodeStatusAsync(String deviceCode) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getDeviceCodeStatus(deviceCode);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Get usage warnings asynchronously.
+     * @return CompletableFuture with usage warnings
+     */
+    public CompletableFuture<Map<String, Object>> getUsageWarningsAsync() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getUsageWarnings();
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Get limits asynchronously.
+     * @return CompletableFuture with limits and quotas
+     */
+    public CompletableFuture<Map<String, Object>> getLimitsAsync() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getLimits();
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    // ===========================================
+    // Cancellable Async Operations
+    // ===========================================
+
+    /**
+     * Create device code with cancellation support.
+     * @param clientID optional client ID
+     * @param clientName optional client name
+     * @param cancellationToken optional cancellation token
+     * @return CompletableFuture with device code response
+     */
+    public CompletableFuture<Map<String, Object>> createDeviceCodeAsync(String clientID, String clientName, CancellationToken cancellationToken) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                if (cancellationToken != null) {
+                    cancellationToken.throwIfCancelled();
+                }
+                return createDeviceCode(clientID, clientName);
+            } catch (TavoException | CancellationToken.CancellationException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Poll device token with cancellation support.
+     * @param deviceCode the device code to poll for
+     * @param cancellationToken optional cancellation token
+     * @return CompletableFuture with token response
+     */
+    public CompletableFuture<Map<String, Object>> pollDeviceTokenAsync(String deviceCode, CancellationToken cancellationToken) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                if (cancellationToken != null) {
+                    cancellationToken.throwIfCancelled();
+                }
+                return pollDeviceToken(deviceCode);
+            } catch (TavoException | CancellationToken.CancellationException e) {
+                throw new CompletionException(e);
+            }
+        });
     }
 }

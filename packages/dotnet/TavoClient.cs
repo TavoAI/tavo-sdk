@@ -1,9 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace TavoAI
@@ -15,16 +21,6 @@ namespace TavoAI
     {
         private readonly HttpClient _httpClient;
         private readonly TavoConfig _config;
-
-        /// <summary>
-        /// Initializes a new instance of the TavoClient
-        /// </summary>
-        /// <param name="apiKey">Your Tavo AI API key</param>
-        /// <param name="baseUrl">Base URL for the API (optional)</param>
-        public TavoClient(string apiKey, string baseUrl = null)
-            : this(new TavoConfig { ApiKey = apiKey, BaseUrl = baseUrl ?? "https://api.tavoai.net" })
-        {
-        }
 
         /// <summary>
         /// Initializes a new instance of the TavoClient with configuration
@@ -40,19 +36,8 @@ namespace TavoAI
                 BaseAddress = new Uri($"{_config.BaseUrl}/api/{_config.ApiVersion}")
             };
 
-            // Set authentication headers
-            if (!string.IsNullOrEmpty(_config.JwtToken))
-            {
-                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.JwtToken}");
-            }
-            else if (!string.IsNullOrEmpty(_config.SessionToken))
-            {
-                _httpClient.DefaultRequestHeaders.Add("X-Session-Token", _config.SessionToken);
-            }
-            else if (!string.IsNullOrEmpty(_config.ApiKey))
-            {
-                _httpClient.DefaultRequestHeaders.Add("X-API-Key", _config.ApiKey);
-            }
+            // Make config accessible to nested classes
+            Config = _config;
         }
 
         /// <summary>
@@ -68,49 +53,56 @@ namespace TavoAI
         }
 
         /// <summary>
-        /// User operations
+        /// Device operations (CLI tools and scanners)
         /// </summary>
-        public UserOperations Users => new UserOperations(this);
+        public DeviceOperations Device => new DeviceOperations(this);
 
         /// <summary>
-        /// Report operations
+        /// Scanner operations (rule/plugin discovery, heartbeats)
         /// </summary>
-        public ReportOperations Reports => new ReportOperations(this);
+        public ScannerOperations Scanner => new ScannerOperations(this);
 
         /// <summary>
-        /// Organization operations
+        /// Code submission operations (file/repo/code analysis)
         /// </summary>
-        public OrganizationOperations Organizations => new OrganizationOperations(this);
+        public CodeSubmissionOperations CodeSubmission => new CodeSubmissionOperations(this);
 
         /// <summary>
-        /// Job operations
+        /// WebSocket operations for real-time communication
         /// </summary>
+        public WebSocketOperations WebSocket => new WebSocketOperations(this);
+
+        /// <summary>
+        /// Rule management operations
+        /// </summary>
+        public RuleManagementOperations RuleManagement => new RuleManagementOperations(this);
+
+        /// <summary>
+        /// Local scanner operations
+        /// </summary>
+        public LocalScannerOperations LocalScanner => new LocalScannerOperations();
+
+        /// <summary>
+        /// Plugin marketplace operations
+        /// </summary>
+        public PluginOperations Plugins => new PluginOperations(this);
+
+        /// <summary>
+        /// Public access to client configuration for nested operations
+        /// </summary>
+        public TavoConfig Config { get; private set; }
+
+        /// <summary>
+        /// Job operations (deprecated - use DeviceOperations, ScannerOperations, and CodeSubmissionOperations)
+        /// </summary>
+        [Obsolete("JobOperations.dashboard() is deprecated. Use DeviceOperations, ScannerOperations, and CodeSubmissionOperations for tooling-focused endpoints.")]
         public JobOperations Jobs => new JobOperations(this);
 
         /// <summary>
-        /// Scan operations
+        /// Webhook operations (deprecated - use GitHub App webhook management)
         /// </summary>
-        public ScanOperations Scans => new ScanOperations(this);
-
-        /// <summary>
-        /// Webhook operations
-        /// </summary>
+        [Obsolete("WebhookOperations are deprecated. Use GitHub App webhook management for repository integrations.")]
         public WebhookOperations Webhooks => new WebhookOperations(this);
-
-        /// <summary>
-        /// AI analysis operations
-        /// </summary>
-        public AIAnalysisOperations AI => new AIAnalysisOperations(this);
-
-        /// <summary>
-        /// Billing operations
-        /// </summary>
-        public BillingOperations Billing => new BillingOperations(this);
-
-        /// <summary>
-        /// Authentication operations
-        /// </summary>
-        public AuthOperations Auth => new AuthOperations(this);
 
         /// <summary>
         /// Makes an HTTP request to the API
@@ -141,50 +133,53 @@ namespace TavoAI
         {
             return await MakeRequestAsync<Dictionary<string, object>>(method, path, data);
         }
-    }
 
-    /// <summary>
-    /// Result of a security scan
-    /// </summary>
-    public class ScanResult
-    {
-        public bool Success { get; set; }
-        public List<Vulnerability> Vulnerabilities { get; set; } = new();
-        public int TotalIssues { get; set; }
-        public string ScanId { get; set; }
-    }
+        /// <summary>
+        /// Makes an HTTP request to the API with cancellation support
+        /// </summary>
+        internal async Task<T> MakeRequestAsync<T>(string method, string path, object data, CancellationToken cancellationToken)
+        {
+            var request = new HttpRequestMessage
+            {
+                Method = new HttpMethod(method),
+                RequestUri = new Uri(path, UriKind.Relative),
+                Content = data != null ? new StringContent(
+                    JsonConvert.SerializeObject(data),
+                    Encoding.UTF8,
+                    "application/json") : null
+            };
 
-    /// <summary>
-    /// Security vulnerability
-    /// </summary>
-    public class Vulnerability
-    {
-        public string Id { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public string Severity { get; set; }
-        public string Category { get; set; }
-        public Location Location { get; set; }
-    }
+            var response = await _httpClient.SendAsync(request, cancellationToken);
+            response.EnsureSuccessStatusCode();
 
-    /// <summary>
-    /// Location of a vulnerability
-    /// </summary>
-    public class Location
-    {
-        public string File { get; set; }
-        public int Line { get; set; }
-        public int Column { get; set; }
-    }
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonConvert.DeserializeObject<T>(content);
+        }
 
-    /// <summary>
-    /// Result of AI model analysis
-    /// </summary>
-    public class ModelAnalysisResult
-    {
-        public bool Safe { get; set; }
-        public List<string> Risks { get; set; } = new();
-        public Dictionary<string, object> Recommendations { get; set; } = new();
+        /// <summary>
+        /// Makes an HTTP request to the API with cancellation support (untyped)
+        /// </summary>
+        internal async Task<Dictionary<string, object>> MakeRequestAsync(string method, string path, object data, CancellationToken cancellationToken)
+        {
+            return await MakeRequestAsync<Dictionary<string, object>>(method, path, data, cancellationToken);
+        }
+
+        /// <summary>
+        /// Downloads a file from the API
+        /// </summary>
+        internal async Task<byte[]> DownloadFileAsync(string path, CancellationToken cancellationToken = default)
+        {
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri(path, UriKind.Relative)
+            };
+
+            var response = await _httpClient.SendAsync(request, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        }
     }
 
     /// <summary>
@@ -192,9 +187,9 @@ namespace TavoAI
     /// </summary>
     public class TavoConfig
     {
-        public string ApiKey { get; set; }
-        public string JwtToken { get; set; }
-        public string SessionToken { get; set; }
+        public string? ApiKey { get; set; }
+        public string? JwtToken { get; set; }
+        public string? SessionToken { get; set; }
         public string BaseUrl { get; set; } = "https://api.tavoai.net";
         public string ApiVersion { get; set; } = "v1";
         public int Timeout { get; set; } = 30000;
@@ -213,195 +208,539 @@ namespace TavoAI
     }
 
     /// <summary>
-    /// User operations
+    /// Device operations for CLI tools and scanners
     /// </summary>
-    public class UserOperations
+    public class DeviceOperations
     {
         private readonly TavoClient _client;
 
-        internal UserOperations(TavoClient client)
+        internal DeviceOperations(TavoClient client)
         {
             _client = client;
         }
 
         /// <summary>
-        /// Get current user profile
+        /// Create device code for authentication
         /// </summary>
-        public async Task<Dictionary<string, object>> GetCurrentUserAsync()
+        public async Task<Dictionary<string, object>> CreateDeviceCodeAsync(string? clientId = null, string? clientName = null, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("GET", "/users/me", null);
+            var data = new Dictionary<string, object>();
+            if (!string.IsNullOrEmpty(clientId)) data["client_id"] = clientId;
+            if (!string.IsNullOrEmpty(clientName)) data["client_name"] = clientName;
+            return await _client.MakeRequestAsync("POST", "/device/code", data, cancellationToken);
         }
 
         /// <summary>
-        /// Update current user profile
+        /// Create CLI-optimized device code for authentication
         /// </summary>
-        public async Task<Dictionary<string, object>> UpdateCurrentUserAsync(Dictionary<string, object> userData)
+        public async Task<Dictionary<string, object>> CreateDeviceCodeForCliAsync(string? clientId = null, string? clientName = null, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("PUT", "/users/me", userData);
+            var data = new Dictionary<string, object>();
+            data["client_name"] = clientName ?? "Tavo CLI";
+            if (!string.IsNullOrEmpty(clientId)) data["client_id"] = clientId;
+            return await _client.MakeRequestAsync("POST", "/device/code/cli", data, cancellationToken);
         }
 
         /// <summary>
-        /// List current user's API keys
+        /// Poll for device token
         /// </summary>
-        public async Task<Dictionary<string, object>> ListApiKeysAsync()
+        public async Task<Dictionary<string, object>> PollDeviceTokenAsync(string deviceCode, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("GET", "/users/me/api-keys", null);
+            var data = new Dictionary<string, object> { ["device_code"] = deviceCode };
+            return await _client.MakeRequestAsync("POST", "/device/token", data, cancellationToken);
         }
 
         /// <summary>
-        /// Create a new API key
+        /// Get device code status (lightweight polling for CLI)
         /// </summary>
-        public async Task<Dictionary<string, object>> CreateApiKeyAsync(string name, Dictionary<string, object> additionalData = null)
+        public async Task<Dictionary<string, object>> GetDeviceCodeStatusAsync(string deviceCode, CancellationToken cancellationToken = default)
         {
-            var data = additionalData ?? new Dictionary<string, object>();
-            data["name"] = name;
-            return await _client.MakeRequestAsync("POST", "/users/me/api-keys", data);
+            return await _client.MakeRequestAsync("GET", $"/device/code/{deviceCode}/status", null, cancellationToken);
         }
 
         /// <summary>
-        /// Update an API key
+        /// Get usage warnings and limits for CLI tools
         /// </summary>
-        public async Task<Dictionary<string, object>> UpdateApiKeyAsync(string apiKeyId, Dictionary<string, object> updateData)
+        public async Task<Dictionary<string, object>> GetUsageWarningsAsync(CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("PUT", $"/users/me/api-keys/{apiKeyId}", updateData);
+            return await _client.MakeRequestAsync("GET", "/device/usage/warnings", null, cancellationToken);
         }
 
         /// <summary>
-        /// Delete an API key
+        /// Get current limits and quotas for CLI tools
         /// </summary>
-        public async Task DeleteApiKeyAsync(string apiKeyId)
+        public async Task<Dictionary<string, object>> GetLimitsAsync(CancellationToken cancellationToken = default)
         {
-            await _client.MakeRequestAsync("DELETE", $"/users/me/api-keys/{apiKeyId}", null);
-        }
-
-        /// <summary>
-        /// Rotate an API key
-        /// </summary>
-        public async Task<Dictionary<string, object>> RotateApiKeyAsync(string apiKeyId, Dictionary<string, object> additionalData = null)
-        {
-            return await _client.MakeRequestAsync("POST", $"/users/me/api-keys/{apiKeyId}/rotate", additionalData ?? new Dictionary<string, object>());
+            return await _client.MakeRequestAsync("GET", "/device/limits", null, cancellationToken);
         }
     }
 
     /// <summary>
-    /// Report operations
+    /// Scanner operations for CLI tools and scanners
     /// </summary>
-    public class ReportOperations
+    public class ScannerOperations
     {
         private readonly TavoClient _client;
 
-        internal ReportOperations(TavoClient client)
+        internal ScannerOperations(TavoClient client)
         {
             _client = client;
         }
 
         /// <summary>
-        /// Generate a report
+        /// Discover rules optimized for scanner types
         /// </summary>
-        public async Task<Dictionary<string, object>> GenerateReportAsync(Dictionary<string, object> reportRequest)
+        public async Task<List<Dictionary<string, object>>> DiscoverRulesAsync(string? scannerType = null, string? language = null, string? category = null, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("POST", "/reports/generate", reportRequest);
+            var queryParams = new List<string>();
+            if (!string.IsNullOrEmpty(scannerType)) queryParams.Add($"scanner_type={Uri.EscapeDataString(scannerType)}");
+            if (!string.IsNullOrEmpty(language)) queryParams.Add($"language={Uri.EscapeDataString(language)}");
+            if (!string.IsNullOrEmpty(category)) queryParams.Add($"category={Uri.EscapeDataString(category)}");
+
+            var query = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+            return await _client.MakeRequestAsync<List<Dictionary<string, object>>>($"GET", $"/scanner/rules{query}", null, cancellationToken);
         }
 
         /// <summary>
-        /// Get a report
+        /// Get rules for a specific bundle
         /// </summary>
-        public async Task<Dictionary<string, object>> GetReportAsync(string reportId)
+        public async Task<List<Dictionary<string, object>>> GetBundleRulesAsync(string bundleId, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("GET", $"/reports/{reportId}", null);
+            return await _client.MakeRequestAsync<List<Dictionary<string, object>>>("GET", $"/scanner/bundles/{bundleId}/rules", null, cancellationToken);
         }
 
         /// <summary>
-        /// List reports
+        /// Track bundle usage for analytics
         /// </summary>
-        public async Task<Dictionary<string, object>> ListReportsAsync(Dictionary<string, object> parameters = null)
+        public async Task<Dictionary<string, object>> TrackBundleUsageAsync(string bundleId, Dictionary<string, object>? usageData = null, CancellationToken cancellationToken = default)
         {
-            var query = "";
-            if (parameters != null && parameters.Count > 0)
+            return await _client.MakeRequestAsync("POST", $"/scanner/bundles/{bundleId}/usage", usageData ?? new Dictionary<string, object>(), cancellationToken);
+        }
+
+        /// <summary>
+        /// Discover plugins for scanners
+        /// </summary>
+        public async Task<List<Dictionary<string, object>>> DiscoverPluginsAsync(string? scannerType = null, string? language = null, string? category = null, CancellationToken cancellationToken = default)
+        {
+            var queryParams = new List<string>();
+            if (!string.IsNullOrEmpty(scannerType)) queryParams.Add($"scanner_type={Uri.EscapeDataString(scannerType)}");
+            if (!string.IsNullOrEmpty(language)) queryParams.Add($"language={Uri.EscapeDataString(language)}");
+            if (!string.IsNullOrEmpty(category)) queryParams.Add($"category={Uri.EscapeDataString(category)}");
+
+            var query = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+            return await _client.MakeRequestAsync<List<Dictionary<string, object>>>($"GET", $"/scanner/plugins{query}", null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Get configuration for a specific plugin
+        /// </summary>
+        public async Task<Dictionary<string, object>> GetPluginConfigAsync(string pluginId, CancellationToken cancellationToken = default)
+        {
+            return await _client.MakeRequestAsync("GET", $"/scanner/plugins/{pluginId}/config", null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Get recommendations for rules and plugins
+        /// </summary>
+        public async Task<Dictionary<string, object>> GetRecommendationsAsync(string? language = null, string? scannerType = null, List<string>? currentRules = null, List<string>? currentPlugins = null, CancellationToken cancellationToken = default)
+        {
+            var data = new Dictionary<string, object>();
+            if (!string.IsNullOrEmpty(language)) data["language"] = language;
+            if (!string.IsNullOrEmpty(scannerType)) data["scanner_type"] = scannerType;
+            if (currentRules != null) data["current_rules"] = currentRules;
+            if (currentPlugins != null) data["current_plugins"] = currentPlugins;
+
+            return await _client.MakeRequestAsync("POST", "/scanner/recommendations", data, cancellationToken);
+        }
+
+        /// <summary>
+        /// Send scanner heartbeat for tracking and analytics
+        /// </summary>
+        public async Task<Dictionary<string, object>> SendHeartbeatAsync(HeartbeatData heartbeatData, CancellationToken cancellationToken = default)
+        {
+            var data = new Dictionary<string, object>
             {
-                var queryParams = new List<string>();
-                foreach (var param in parameters)
-                {
-                    queryParams.Add($"{param.Key}={param.Value}");
-                }
-                query = "?" + string.Join("&", queryParams);
-            }
-            return await _client.MakeRequestAsync("GET", $"/reports{query}", null);
+                ["scanner_version"] = heartbeatData.ScannerVersion,
+                ["scanner_type"] = heartbeatData.ScannerType,
+                ["active_rules"] = heartbeatData.ActiveRules,
+                ["active_plugins"] = heartbeatData.ActivePlugins,
+                ["system_info"] = heartbeatData.SystemInfo,
+                ["scan_count"] = heartbeatData.ScanCount
+            };
+
+            return await _client.MakeRequestAsync("POST", "/scanner/heartbeat", data, cancellationToken);
         }
 
         /// <summary>
-        /// Delete a report
+        /// Heartbeat data structure
         /// </summary>
-        public async Task DeleteReportAsync(string reportId)
+        public class HeartbeatData
         {
-            await _client.MakeRequestAsync("DELETE", $"/reports/{reportId}", null);
-        }
-
-        /// <summary>
-        /// Get report summary statistics
-        /// </summary>
-        public async Task<Dictionary<string, object>> GetSummaryAsync()
-        {
-            return await _client.MakeRequestAsync("GET", "/reports/summary", null);
+            public string? ScannerVersion { get; set; }
+            public string? ScannerType { get; set; }
+            public List<string> ActiveRules { get; set; } = new();
+            public List<string> ActivePlugins { get; set; } = new();
+            public Dictionary<string, object> SystemInfo { get; set; } = new();
+            public long? ScanCount { get; set; }
         }
     }
 
     /// <summary>
-    /// Organization operations
+    /// Code submission operations for CLI tools and scanners
     /// </summary>
-    public class OrganizationOperations
+    public class CodeSubmissionOperations
     {
         private readonly TavoClient _client;
 
-        internal OrganizationOperations(TavoClient client)
+        internal CodeSubmissionOperations(TavoClient client)
         {
             _client = client;
         }
 
         /// <summary>
-        /// List organizations
+        /// Submit code files directly for scanning
         /// </summary>
-        public async Task<Dictionary<string, object>> ListOrganizationsAsync()
+        public async Task<Dictionary<string, object>> SubmitCodeAsync(List<FileInfo> files, string? repositoryName = null, string? branch = null, string? commitSha = null, Dictionary<string, object>? scanConfig = null, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("GET", "/organizations", null);
+            var data = new Dictionary<string, object>();
+            data["files"] = files.Select(f => new Dictionary<string, object>
+            {
+                ["filename"] = f.Filename,
+                ["content"] = f.Content,
+                ["language"] = f.Language
+            }).ToList();
+
+            if (!string.IsNullOrEmpty(repositoryName)) data["repository_name"] = repositoryName;
+            if (!string.IsNullOrEmpty(branch)) data["branch"] = branch;
+            if (!string.IsNullOrEmpty(commitSha)) data["commit_sha"] = commitSha;
+            if (scanConfig != null) data["scan_config"] = scanConfig;
+
+            return await _client.MakeRequestAsync("POST", "/code/submit", data, cancellationToken);
         }
 
         /// <summary>
-        /// Create a new organization
+        /// Submit repository for scanning
         /// </summary>
-        public async Task<Dictionary<string, object>> CreateOrganizationAsync(Dictionary<string, object> orgData)
+        public async Task<Dictionary<string, object>> SubmitRepositoryAsync(string repositoryUrl, RepositorySnapshot snapshot, string? branch = null, string? commitSha = null, Dictionary<string, object>? scanConfig = null, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("POST", "/organizations", orgData);
+            var data = new Dictionary<string, object>
+            {
+                ["repository_url"] = repositoryUrl,
+                ["snapshot_data"] = new Dictionary<string, object>
+                {
+                    ["url"] = snapshot.Url,
+                    ["branch"] = snapshot.Branch,
+                    ["commit_sha"] = snapshot.CommitSha,
+                    ["files"] = snapshot.Files.Select(f => new Dictionary<string, object>
+                    {
+                        ["filename"] = f.Filename,
+                        ["content"] = f.Content,
+                        ["language"] = f.Language
+                    }).ToList()
+                }
+            };
+
+            if (!string.IsNullOrEmpty(branch)) data["branch"] = branch;
+            if (!string.IsNullOrEmpty(commitSha)) data["commit_sha"] = commitSha;
+            if (scanConfig != null) data["scan_config"] = scanConfig;
+
+            return await _client.MakeRequestAsync("POST", "/code/submit/repository", data, cancellationToken);
         }
 
         /// <summary>
-        /// Get organization details
+        /// Submit code for targeted analysis
         /// </summary>
-        public async Task<Dictionary<string, object>> GetOrganizationAsync(string orgId)
+        public async Task<Dictionary<string, object>> SubmitAnalysisAsync(string codeContent, AnalysisContext analysisContext, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("GET", $"/organizations/{orgId}", null);
+            var data = new Dictionary<string, object>
+            {
+                ["code_content"] = codeContent,
+                ["language"] = analysisContext.Language,
+                ["analysis_type"] = analysisContext.AnalysisType,
+                ["rules"] = analysisContext.Rules,
+                ["plugins"] = analysisContext.Plugins,
+                ["context"] = analysisContext.Context
+            };
+
+            return await _client.MakeRequestAsync("POST", "/code/analyze", data, cancellationToken);
         }
 
         /// <summary>
-        /// Update an organization
+        /// Get scan status (CLI-optimized)
         /// </summary>
-        public async Task<Dictionary<string, object>> UpdateOrganizationAsync(string orgId, Dictionary<string, object> orgData)
+        public async Task<Dictionary<string, object>> GetScanStatusAsync(string scanId, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("PUT", $"/organizations/{orgId}", orgData);
+            return await _client.MakeRequestAsync("GET", $"/code/scans/{scanId}/status", null, cancellationToken);
         }
 
         /// <summary>
-        /// Delete an organization
+        /// Get scan results summary (CLI-optimized)
         /// </summary>
-        public async Task DeleteOrganizationAsync(string orgId)
+        public async Task<Dictionary<string, object>> GetScanResultsAsync(string scanId, CancellationToken cancellationToken = default)
         {
-            await _client.MakeRequestAsync("DELETE", $"/organizations/{orgId}", null);
+            return await _client.MakeRequestAsync("GET", $"/code/scans/{scanId}/results/summary", null, cancellationToken);
+        }
+
+        /// <summary>
+        /// File information for code submission
+        /// </summary>
+        public class FileInfo
+        {
+            public string? Filename { get; set; }
+            public string? Content { get; set; }
+            public string? Language { get; set; }
+        }
+
+        /// <summary>
+        /// Repository snapshot data
+        /// </summary>
+        public class RepositorySnapshot
+        {
+            public string? Url { get; set; }
+            public string? Branch { get; set; }
+            public string? CommitSha { get; set; }
+            public List<FileInfo> Files { get; set; } = new();
+        }
+
+        /// <summary>
+        /// Analysis context
+        /// </summary>
+        public class AnalysisContext
+        {
+            public string? Language { get; set; }
+            public string? AnalysisType { get; set; }
+            public List<string> Rules { get; set; } = new();
+            public List<string> Plugins { get; set; } = new();
+            public Dictionary<string, object> Context { get; set; } = new();
         }
     }
 
     /// <summary>
-    /// Job operations
+    /// WebSocket operations for real-time communication
     /// </summary>
+    public class WebSocketOperations
+    {
+        private readonly TavoClient _client;
+
+        internal WebSocketOperations(TavoClient client)
+        {
+            _client = client;
+        }
+
+        /// <summary>
+        /// WebSocket configuration
+        /// </summary>
+        public class WebSocketConfig
+        {
+            public TimeSpan ReconnectInterval { get; set; } = TimeSpan.FromSeconds(5);
+            public int MaxReconnectAttempts { get; set; } = 10;
+            public TimeSpan PingInterval { get; set; } = TimeSpan.FromSeconds(30);
+            public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromSeconds(60);
+            public TimeSpan WriteTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        }
+
+        /// <summary>
+        /// WebSocket connection for real-time communication
+        /// </summary>
+        public class WebSocketConnection : IDisposable
+        {
+            private readonly ClientWebSocket _webSocket;
+            private readonly WebSocketConfig _config;
+            private readonly TavoClient _client;
+            private readonly string _uri;
+            private readonly Action<string> _messageHandler;
+            private readonly Action<Exception> _errorHandler;
+            private readonly Action _connectHandler;
+            private readonly Action _disconnectHandler;
+            private readonly CancellationTokenSource _cts;
+            private Task _receiveTask;
+            private Task _pingTask;
+            private bool _isConnected;
+
+            public WebSocketConnection(
+                string uri,
+                WebSocketConfig config,
+                TavoClient client,
+                Action<string>? messageHandler,
+                Action<Exception>? errorHandler,
+                Action? connectHandler,
+                Action? disconnectHandler)
+            {
+                _webSocket = new ClientWebSocket();
+                _config = config;
+                _client = client;
+                _uri = uri;
+                _messageHandler = messageHandler;
+                _errorHandler = errorHandler;
+                _connectHandler = connectHandler;
+                _disconnectHandler = disconnectHandler;
+                _cts = new CancellationTokenSource();
+                _isConnected = false;
+
+                // Add authentication headers
+                if (!string.IsNullOrEmpty(_client.Config.ApiKey))
+                {
+                    _webSocket.Options.SetRequestHeader("X-API-Key", _client.Config.ApiKey);
+                }
+                if (!string.IsNullOrEmpty(_client.Config.JwtToken))
+                {
+                    _webSocket.Options.SetRequestHeader("Authorization", $"Bearer {_client.Config.JwtToken}");
+                }
+                if (!string.IsNullOrEmpty(_client.Config.SessionToken))
+                {
+                    _webSocket.Options.SetRequestHeader("X-Session-Token", _client.Config.SessionToken);
+                }
+            }
+
+            /// <summary>
+            /// Connect to the WebSocket
+            /// </summary>
+            public async Task ConnectAsync()
+            {
+                try
+                {
+                    await _webSocket.ConnectAsync(new Uri(_uri), _cts.Token);
+                    _isConnected = true;
+
+                    // Start receive and ping tasks
+                    _receiveTask = ReceiveMessagesAsync();
+                    _pingTask = PingAsync();
+
+                    _connectHandler?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    _errorHandler?.Invoke(ex);
+                    throw;
+                }
+            }
+
+            /// <summary>
+            /// Disconnect from the WebSocket
+            /// </summary>
+            public async Task DisconnectAsync()
+            {
+                _cts.Cancel();
+
+                if (_webSocket.State == WebSocketState.Open)
+                {
+                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Client disconnecting", CancellationToken.None);
+                }
+
+                _isConnected = false;
+                _disconnectHandler?.Invoke();
+            }
+
+            /// <summary>
+            /// Send a message
+            /// </summary>
+            public async Task SendMessageAsync(string messageType, object data)
+            {
+                if (!_isConnected) throw new InvalidOperationException("Not connected");
+
+                var message = new Dictionary<string, object>
+                {
+                    ["type"] = messageType,
+                    ["data"] = data,
+                    ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                };
+
+                var json = JsonConvert.SerializeObject(message);
+                var buffer = Encoding.UTF8.GetBytes(json);
+
+                await _webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, _cts.Token);
+            }
+
+            /// <summary>
+            /// Check if connected
+            /// </summary>
+            public bool IsConnected => _isConnected;
+
+            private async Task ReceiveMessagesAsync()
+            {
+                var buffer = new byte[8192];
+
+                try
+                {
+                    while (!_cts.Token.IsCancellationRequested && _isConnected)
+                    {
+                        var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
+
+                        if (result.MessageType == WebSocketMessageType.Text)
+                        {
+                            var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                            _messageHandler?.Invoke(message);
+                        }
+                        else if (result.MessageType == WebSocketMessageType.Close)
+                        {
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _errorHandler?.Invoke(ex);
+                }
+            }
+
+            private async Task PingAsync()
+            {
+                try
+                {
+                    while (!_cts.Token.IsCancellationRequested && _isConnected)
+                    {
+                        await Task.Delay(_config.PingInterval, _cts.Token);
+                        await _webSocket.SendAsync(new ArraySegment<byte>(new byte[0]), WebSocketMessageType.Binary, true, _cts.Token);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected when cancelled
+                }
+                catch (Exception ex)
+                {
+                    _errorHandler?.Invoke(ex);
+                }
+            }
+
+            public void Dispose()
+            {
+                _cts?.Dispose();
+                _webSocket?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Connect to real-time scan progress updates
+        /// </summary>
+        public async Task<WebSocketConnection> ConnectToScanProgressAsync(string scanId, WebSocketConfig? config = null, Action<string>? messageHandler = null, Action<Exception>? errorHandler = null, Action? connectHandler = null, Action? disconnectHandler = null)
+        {
+            config ??= new WebSocketConfig();
+            var wsUrl = _client.Config.BaseUrl.Replace("http", "ws") + $"/api/v1/code/scans/{scanId}/progress";
+
+            var connection = new WebSocketConnection(wsUrl, config, _client, messageHandler, errorHandler, connectHandler, disconnectHandler);
+            await connection.ConnectAsync();
+            return connection;
+        }
+
+        /// <summary>
+        /// Connect to general real-time updates
+        /// </summary>
+        public async Task<WebSocketConnection> ConnectToGeneralUpdatesAsync(WebSocketConfig? config = null, Action<string>? messageHandler = null, Action<Exception>? errorHandler = null, Action? connectHandler = null, Action? disconnectHandler = null)
+        {
+            config ??= new WebSocketConfig();
+            var wsUrl = _client.Config.BaseUrl.Replace("http", "ws") + "/api/v1/updates";
+
+            var connection = new WebSocketConnection(wsUrl, config, _client, messageHandler, errorHandler, connectHandler, disconnectHandler);
+            await connection.ConnectAsync();
+            return connection;
+        }
+    }
+
+    /// <summary>
+    /// Job operations (deprecated)
+    /// </summary>
+    [Obsolete("JobOperations.dashboard() is deprecated. Use DeviceOperations, ScannerOperations, and CodeSubmissionOperations for tooling-focused endpoints.")]
     public class JobOperations
     {
         private readonly TavoClient _client;
@@ -422,7 +761,7 @@ namespace TavoAI
         /// <summary>
         /// List jobs
         /// </summary>
-        public async Task<Dictionary<string, object>> ListJobsAsync(Dictionary<string, object> parameters = null)
+        public async Task<Dictionary<string, object>> ListJobsAsync(Dictionary<string, object>? parameters = null)
         {
             var query = "";
             if (parameters != null && parameters.Count > 0)
@@ -447,63 +786,9 @@ namespace TavoAI
     }
 
     /// <summary>
-    /// Scan operations
+    /// Webhook operations (deprecated)
     /// </summary>
-    public class ScanOperations
-    {
-        private readonly TavoClient _client;
-
-        internal ScanOperations(TavoClient client)
-        {
-            _client = client;
-        }
-
-        /// <summary>
-        /// Create a new scan
-        /// </summary>
-        public async Task<Dictionary<string, object>> CreateScanAsync(Dictionary<string, object> scanRequest)
-        {
-            return await _client.MakeRequestAsync("POST", "/scans", scanRequest);
-        }
-
-        /// <summary>
-        /// Get scan details
-        /// </summary>
-        public async Task<Dictionary<string, object>> GetScanAsync(string scanId)
-        {
-            return await _client.MakeRequestAsync("GET", $"/scans/{scanId}", null);
-        }
-
-        /// <summary>
-        /// List scans
-        /// </summary>
-        public async Task<Dictionary<string, object>> ListScansAsync(Dictionary<string, object> parameters = null)
-        {
-            var query = "";
-            if (parameters != null && parameters.Count > 0)
-            {
-                var queryParams = new List<string>();
-                foreach (var param in parameters)
-                {
-                    queryParams.Add($"{param.Key}={param.Value}");
-                }
-                query = "?" + string.Join("&", queryParams);
-            }
-            return await _client.MakeRequestAsync("GET", $"/scans{query}", null);
-        }
-
-        /// <summary>
-        /// Cancel a scan
-        /// </summary>
-        public async Task<Dictionary<string, object>> CancelScanAsync(string scanId)
-        {
-            return await _client.MakeRequestAsync("POST", $"/scans/{scanId}/cancel", null);
-        }
-    }
-
-    /// <summary>
-    /// Webhook operations
-    /// </summary>
+    [Obsolete("WebhookOperations are deprecated. Use GitHub App webhook management for repository integrations.")]
     public class WebhookOperations
     {
         private readonly TavoClient _client;
@@ -555,112 +840,335 @@ namespace TavoAI
     }
 
     /// <summary>
-    /// AI analysis operations
+    /// Rule management operations for rule bundles
     /// </summary>
-    public class AIAnalysisOperations
+    public class RuleManagementOperations
     {
         private readonly TavoClient _client;
 
-        internal AIAnalysisOperations(TavoClient client)
+        internal RuleManagementOperations(TavoClient client)
         {
             _client = client;
         }
 
         /// <summary>
-        /// Analyze AI model
+        /// List available rule bundles
         /// </summary>
-        public async Task<Dictionary<string, object>> AnalyzeModelAsync(Dictionary<string, object> modelConfig)
+        public async Task<Dictionary<string, object>> ListBundlesAsync(string? category = null, bool officialOnly = false, int page = 1, int perPage = 50, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("POST", "/ai/analyze/model", modelConfig);
-        }
-
-        /// <summary>
-        /// Analyze code with AI
-        /// </summary>
-        public async Task<Dictionary<string, object>> AnalyzeCodeAsync(Dictionary<string, object> codeAnalysisRequest)
-        {
-            return await _client.MakeRequestAsync("POST", "/ai/analyze/code", codeAnalysisRequest);
-        }
-    }
-
-    /// <summary>
-    /// Billing operations
-    /// </summary>
-    public class BillingOperations
-    {
-        private readonly TavoClient _client;
-
-        internal BillingOperations(TavoClient client)
-        {
-            _client = client;
-        }
-
-        /// <summary>
-        /// Get billing information
-        /// </summary>
-        public async Task<Dictionary<string, object>> GetBillingInfoAsync()
-        {
-            return await _client.MakeRequestAsync("GET", "/billing", null);
-        }
-
-        /// <summary>
-        /// Get usage report
-        /// </summary>
-        public async Task<Dictionary<string, object>> GetUsageReportAsync(Dictionary<string, object> parameters = null)
-        {
-            var query = "";
-            if (parameters != null && parameters.Count > 0)
+            var queryParams = new List<string>
             {
-                var queryParams = new List<string>();
-                foreach (var param in parameters)
-                {
-                    queryParams.Add($"{param.Key}={param.Value}");
-                }
-                query = "?" + string.Join("&", queryParams);
-            }
-            return await _client.MakeRequestAsync("GET", $"/billing/usage{query}", null);
-        }
-    }
-
-    /// <summary>
-    /// Authentication operations
-    /// </summary>
-    public class AuthOperations
-    {
-        private readonly TavoClient _client;
-
-        internal AuthOperations(TavoClient client)
-        {
-            _client = client;
-        }
-
-        /// <summary>
-        /// Login with credentials
-        /// </summary>
-        public async Task<Dictionary<string, object>> LoginAsync(string email, string password)
-        {
-            var credentials = new Dictionary<string, object>
-            {
-                ["email"] = email,
-                ["password"] = password
+                $"page={page}",
+                $"per_page={perPage}"
             };
-            return await _client.MakeRequestAsync("POST", "/auth/login", credentials);
+
+            if (!string.IsNullOrEmpty(category))
+                queryParams.Add($"category={Uri.EscapeDataString(category)}");
+            if (officialOnly)
+                queryParams.Add("official_only=true");
+
+            var query = "?" + string.Join("&", queryParams);
+            return await _client.MakeRequestAsync("GET", $"/rules/bundles{query}", null, cancellationToken);
         }
 
         /// <summary>
-        /// Get current user info (when authenticated)
+        /// Get rules from a specific bundle
         /// </summary>
-        public async Task<Dictionary<string, object>> GetCurrentUserAsync()
+        public async Task<Dictionary<string, object>> GetBundleRulesAsync(string bundleId, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("GET", "/auth/me", null);
+            return await _client.MakeRequestAsync("GET", $"/rules/bundles/{bundleId}/rules", null, cancellationToken);
         }
 
         /// <summary>
-        /// Logout
+        /// Install a rule bundle
         /// </summary>
-        public async Task<Dictionary<string, object>> LogoutAsync()
+        public async Task<Dictionary<string, object>> InstallBundleAsync(string bundleId, string? organizationId = null, CancellationToken cancellationToken = default)
         {
-            return await _client.MakeRequestAsync("POST", "/auth/logout", null);
+            var data = new Dictionary<string, object>();
+            if (!string.IsNullOrEmpty(organizationId))
+                data["organization_id"] = organizationId;
+
+            return await _client.MakeRequestAsync("POST", $"/rules/bundles/{bundleId}/install", data, cancellationToken);
+        }
+
+        /// <summary>
+        /// Uninstall a rule bundle
+        /// </summary>
+        public async Task<Dictionary<string, object>> UninstallBundleAsync(string bundleId, CancellationToken cancellationToken = default)
+        {
+            return await _client.MakeRequestAsync("DELETE", $"/rules/bundles/{bundleId}/install", null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Validate rule syntax
+        /// </summary>
+        public async Task<Dictionary<string, object>> ValidateRulesAsync(List<Dictionary<string, object>> rules, CancellationToken cancellationToken = default)
+        {
+            var data = new Dictionary<string, object> { ["rules"] = rules };
+            return await _client.MakeRequestAsync("POST", "/rules/validate", data, cancellationToken);
+        }
+
+        /// <summary>
+        /// Check for updates to installed rule bundles
+        /// </summary>
+        public async Task<Dictionary<string, object>> CheckBundleUpdatesAsync(List<string>? bundleIds = null, CancellationToken cancellationToken = default)
+        {
+            var queryParams = new List<string>();
+            if (bundleIds != null && bundleIds.Count > 0)
+            {
+                queryParams.Add($"bundle_ids={Uri.EscapeDataString(string.Join(",", bundleIds))}");
+            }
+
+            var query = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+            return await _client.MakeRequestAsync("GET", $"/rules/updates{query}", null, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Local scanner operations using scanner binaries
+    /// </summary>
+    public class LocalScannerOperations
+    {
+        private string? _scannerPath;
+
+        internal LocalScannerOperations()
+        {
+            _scannerPath = FindScannerBinary();
+        }
+
+        /// <summary>
+        /// Find the scanner binary in the SDK or system PATH
+        /// </summary>
+        private static string? FindScannerBinary()
+        {
+            // First, try to find it relative to the SDK installation
+            var sdkDir = AppDomain.CurrentDomain.BaseDirectory;
+            var scannerPath = Path.Combine(sdkDir, "..", "..", "..", "..", "scanner", "dist", "tavo-scanner");
+
+            if (File.Exists(scannerPath))
+                return scannerPath;
+
+            // Try to find it in the workspace
+            var currentDir = Directory.GetCurrentDirectory();
+            var workspaceRoot = currentDir;
+            while (workspaceRoot != null && !Directory.Exists(Path.Combine(workspaceRoot, ".git")))
+            {
+                workspaceRoot = Directory.GetParent(workspaceRoot)?.FullName;
+            }
+
+            if (workspaceRoot != null)
+            {
+                scannerPath = Path.Combine(workspaceRoot, "tavo-sdk", "packages", "scanner", "dist", "tavo-scanner");
+                if (File.Exists(scannerPath))
+                    return scannerPath;
+            }
+
+            // Fall back to system PATH
+            return "tavo-scanner";
+        }
+
+        /// <summary>
+        /// Scan a codebase using the local scanner binary
+        /// </summary>
+        public async Task<Dictionary<string, object>> ScanCodebaseAsync(string path, string bundle = "llm-security", string outputFormat = "json", CancellationToken cancellationToken = default)
+        {
+            if (_scannerPath == null)
+            {
+                throw new InvalidOperationException("Scanner binary not found. Please install the Tavo scanner.");
+            }
+
+            if (!File.Exists(path) && !Directory.Exists(path))
+            {
+                throw new ArgumentException($"Path not found: {path}");
+            }
+
+            var cmd = $"{_scannerPath} \"{path}\" --bundle {bundle} --format {outputFormat}";
+
+            var result = await RunCommandAsync(cmd, cancellationToken: cancellationToken);
+
+            if (result.ExitCode != 0 && result.ExitCode != 1)
+            {
+                var errorMsg = result.Error.Trim();
+                if (string.IsNullOrEmpty(errorMsg))
+                    errorMsg = "Unknown scanner error";
+                throw new InvalidOperationException($"Scanner failed: {errorMsg}");
+            }
+
+            if (outputFormat == "json")
+            {
+                try
+                {
+                    return JsonConvert.DeserializeObject<Dictionary<string, object>>(result.Output) ?? new Dictionary<string, object>();
+                }
+                catch (Newtonsoft.Json.JsonException ex)
+                {
+                    throw new InvalidOperationException($"Failed to parse scanner output: {ex.Message}", ex);
+                }
+            }
+
+            return new Dictionary<string, object>
+            {
+                ["output"] = result.Output,
+                ["exit_code"] = result.ExitCode,
+                ["passed"] = result.ExitCode == 0
+            };
+        }
+
+        /// <summary>
+        /// Scan a single file
+        /// </summary>
+        public async Task<Dictionary<string, object>> ScanFileAsync(string filePath, string bundle = "llm-security", CancellationToken cancellationToken = default)
+        {
+            return await ScanCodebaseAsync(filePath, bundle, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Scan a directory
+        /// </summary>
+        public async Task<Dictionary<string, object>> ScanDirectoryAsync(string dirPath, string bundle = "llm-security", CancellationToken cancellationToken = default)
+        {
+            return await ScanCodebaseAsync(dirPath, bundle, cancellationToken: cancellationToken);
+        }
+
+        private static async Task<CommandResult> RunCommandAsync(string command, CancellationToken cancellationToken = default)
+        {
+            var isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = isWindows ? "cmd.exe" : "/bin/bash",
+                Arguments = isWindows ? $"/c {command}" : $"-c \"{command}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process == null)
+                throw new InvalidOperationException("Failed to start process");
+
+            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
+            await process.WaitForExitAsync(cancellationToken);
+
+            var output = await outputTask;
+            var error = await errorTask;
+
+            return new CommandResult
+            {
+                ExitCode = process.ExitCode,
+                Output = output,
+                Error = error
+            };
+        }
+
+        private class CommandResult
+        {
+            public int ExitCode { get; set; }
+            public string Output { get; set; } = "";
+            public string Error { get; set; } = "";
+        }
+    }
+
+    /// <summary>
+    /// Plugin marketplace operations
+    /// </summary>
+    public class PluginOperations
+    {
+        private readonly TavoClient _client;
+
+        internal PluginOperations(TavoClient client)
+        {
+            _client = client;
+        }
+
+        /// <summary>
+        /// Browse plugin marketplace
+        /// </summary>
+        public async Task<Dictionary<string, object>> BrowseMarketplaceAsync(string? pluginType = null, string? category = null, string? pricingTier = null, string? search = null, int page = 1, int perPage = 20, CancellationToken cancellationToken = default)
+        {
+            var queryParams = new List<string>
+            {
+                $"page={page}",
+                $"per_page={perPage}"
+            };
+
+            if (!string.IsNullOrEmpty(pluginType))
+                queryParams.Add($"plugin_type={Uri.EscapeDataString(pluginType)}");
+            if (!string.IsNullOrEmpty(category))
+                queryParams.Add($"category={Uri.EscapeDataString(category)}");
+            if (!string.IsNullOrEmpty(pricingTier))
+                queryParams.Add($"pricing_tier={Uri.EscapeDataString(pricingTier)}");
+            if (!string.IsNullOrEmpty(search))
+                queryParams.Add($"search={Uri.EscapeDataString(search)}");
+
+            var query = "?" + string.Join("&", queryParams);
+            return await _client.MakeRequestAsync("GET", $"/plugins/marketplace{query}", null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Get plugin details
+        /// </summary>
+        public async Task<Dictionary<string, object>> GetPluginAsync(string pluginId, CancellationToken cancellationToken = default)
+        {
+            return await _client.MakeRequestAsync("GET", $"/plugins/{pluginId}", null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Install a plugin
+        /// </summary>
+        public async Task<Dictionary<string, object>> InstallPluginAsync(string pluginId, CancellationToken cancellationToken = default)
+        {
+            return await _client.MakeRequestAsync("POST", $"/plugins/{pluginId}/install", null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Download plugin package
+        /// </summary>
+        public async Task<byte[]> DownloadPluginAsync(string pluginId, CancellationToken cancellationToken = default)
+        {
+            return await _client.DownloadFileAsync($"/plugins/{pluginId}/download", cancellationToken);
+        }
+
+        /// <summary>
+        /// List installed plugins
+        /// </summary>
+        public async Task<Dictionary<string, object>> ListInstalledAsync(CancellationToken cancellationToken = default)
+        {
+            return await _client.MakeRequestAsync("GET", "/plugins/installed", null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Execute a plugin (cloud execution)
+        /// </summary>
+        public async Task<Dictionary<string, object>> ExecutePluginAsync(string pluginId, Dictionary<string, object> executionData, CancellationToken cancellationToken = default)
+        {
+            return await _client.MakeRequestAsync("POST", $"/plugins/{pluginId}/execute", executionData, cancellationToken);
+        }
+
+        /// <summary>
+        /// Create/publish a new plugin
+        /// </summary>
+        public async Task<Dictionary<string, object>> CreatePluginAsync(Dictionary<string, object> pluginData, CancellationToken cancellationToken = default)
+        {
+            return await _client.MakeRequestAsync("POST", "/plugins", pluginData, cancellationToken);
+        }
+
+        /// <summary>
+        /// Update plugin metadata
+        /// </summary>
+        public async Task<Dictionary<string, object>> UpdatePluginAsync(string pluginId, Dictionary<string, object> pluginData, CancellationToken cancellationToken = default)
+        {
+            return await _client.MakeRequestAsync("PUT", $"/plugins/{pluginId}", pluginData, cancellationToken);
+        }
+
+        /// <summary>
+        /// Delete a plugin
+        /// </summary>
+        public async Task DeletePluginAsync(string pluginId, CancellationToken cancellationToken = default)
+        {
+            await _client.MakeRequestAsync("DELETE", $"/plugins/{pluginId}", null, cancellationToken);
         }
     }
 }

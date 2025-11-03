@@ -334,6 +334,14 @@ public class TavoClient implements AutoCloseable {
         return new CodeSubmissionOperations(this);
     }
 
+    /**
+     * Access WebSocket operations for real-time communication.
+     * @return a WebSocketOperations instance
+     */
+    public WebSocketOperations websocket() {
+        return new WebSocketOperations(this);
+    }
+
     @Override
     public void close() {
         // OkHttpClient doesn't need explicit closing in modern versions

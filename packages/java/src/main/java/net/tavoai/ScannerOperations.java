@@ -8,13 +8,36 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 /**
  * Scanner integration operations for CLI tools and scanners.
  */
-public class ScannerOperations extends BaseOperations {
+public class ScannerOperations {
+    private static final String SCANNER_ENDPOINT = "/scanner";
+    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+
+    private final TavoClient client;
+    private final Gson gson;
+    private final Type mapType;
+
+    /**
+     * Constructor for ScannerOperations.
+     * @param client the TavoClient instance
+     */
     public ScannerOperations(TavoClient client) {
-        super(client);
+        this.client = client;
+        this.gson = new Gson();
+        this.mapType = new TypeToken<Map<String, Object>>(){}.getType();
+    }
+
+    /**
+     * Helper method to create a new map.
+     * @return a new HashMap
+     */
+    private Map<String, Object> createMap() {
+        return new java.util.HashMap<>();
     }
 
     /**
@@ -182,5 +205,122 @@ public class ScannerOperations extends BaseOperations {
         } catch (IOException e) {
             throw new TavoException("Failed to send heartbeat", e);
         }
+    }
+
+    // ===========================================
+    // Async Operations with CompletableFuture
+    // ===========================================
+
+    /**
+     * Discover rules asynchronously.
+     * @param scannerType optional scanner type filter
+     * @param language optional language filter
+     * @param category optional category filter
+     * @return CompletableFuture with discovered rules
+     */
+    public CompletableFuture<Map<String, Object>> discoverRulesAsync(String scannerType, String language, String category) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return discoverRules(scannerType, language, category);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Get bundle rules asynchronously.
+     * @param bundleID the bundle ID
+     * @return CompletableFuture with bundle rules
+     */
+    public CompletableFuture<Map<String, Object>> getBundleRulesAsync(String bundleID) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getBundleRules(bundleID);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Track bundle usage asynchronously.
+     * @param bundleID the bundle ID
+     * @param usageData optional usage data
+     * @return CompletableFuture with tracking response
+     */
+    public CompletableFuture<Map<String, Object>> trackBundleUsageAsync(String bundleID, Map<String, Object> usageData) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return trackBundleUsage(bundleID, usageData);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Discover plugins asynchronously.
+     * @param scannerType optional scanner type filter
+     * @param language optional language filter
+     * @param category optional category filter
+     * @return CompletableFuture with discovered plugins
+     */
+    public CompletableFuture<Map<String, Object>> discoverPluginsAsync(String scannerType, String language, String category) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return discoverPlugins(scannerType, language, category);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Get plugin config asynchronously.
+     * @param pluginID the plugin ID
+     * @return CompletableFuture with plugin configuration
+     */
+    public CompletableFuture<Map<String, Object>> getPluginConfigAsync(String pluginID) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getPluginConfig(pluginID);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Get recommendations asynchronously.
+     * @param language optional language context
+     * @param scannerType optional scanner type context
+     * @param currentRules current rules being used
+     * @param currentPlugins current plugins being used
+     * @return CompletableFuture with recommendations
+     */
+    public CompletableFuture<Map<String, Object>> getRecommendationsAsync(String language, String scannerType, java.util.List<String> currentRules, java.util.List<String> currentPlugins) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getRecommendations(language, scannerType, currentRules, currentPlugins);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * Send heartbeat asynchronously.
+     * @param heartbeatData heartbeat data
+     * @return CompletableFuture with heartbeat response
+     */
+    public CompletableFuture<Map<String, Object>> sendHeartbeatAsync(Map<String, Object> heartbeatData) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return sendHeartbeat(heartbeatData);
+            } catch (TavoException e) {
+                throw new CompletionException(e);
+            }
+        });
     }
 }
