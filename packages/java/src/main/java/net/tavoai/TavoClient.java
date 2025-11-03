@@ -17,6 +17,13 @@ public class TavoClient implements AutoCloseable {
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     private final TavoConfig config;
+
+    /**
+     * Get the client configuration
+     */
+    public TavoConfig getConfig() {
+        return config;
+    }
     private final OkHttpClient httpClient;
     private final Gson gson;
 
@@ -57,7 +64,7 @@ public class TavoClient implements AutoCloseable {
     /**
      * Get the base URL for API requests
      */
-    private String getBaseUrl() {
+    public String getBaseUrl() {
         return config.getBaseUrl() + "/api/" + config.getApiVersion();
     }
 
@@ -179,12 +186,30 @@ public class TavoClient implements AutoCloseable {
     /**
      * Execute a single HTTP request
      */
-    private Map<String, Object> executeRequest(Request request) throws TavoException {
+    public Map<String, Object> executeRequest(Request request) throws TavoException {
         try (Response response = httpClient.newCall(request).execute()) {
             int statusCode = response.code();
 
             if (response.isSuccessful()) {
                 return parseResponseBody(response);
+            } else {
+                String errorBody = response.body() != null ? response.body().string() : "Unknown error";
+                throw new TavoException("HTTP " + statusCode + ": " + errorBody, statusCode);
+            }
+        } catch (IOException e) {
+            throw new TavoException("Network error: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Execute a single HTTP request with custom return type
+     */
+    public <T> T executeRequest(Request request, java.lang.reflect.Type returnType) throws TavoException {
+        try (Response response = httpClient.newCall(request).execute()) {
+            int statusCode = response.code();
+
+            if (response.isSuccessful()) {
+                return parseResponseBody(response, returnType);
             } else {
                 String errorBody = response.body() != null ? response.body().string() : "Unknown error";
                 throw new TavoException("HTTP " + statusCode + ": " + errorBody, statusCode);
@@ -205,6 +230,19 @@ public class TavoClient implements AutoCloseable {
             return gson.fromJson(responseString, type);
         } else {
             return Map.of();
+        }
+    }
+
+    /**
+     * Parse response body as JSON with custom type
+     */
+    private <T> T parseResponseBody(Response response, java.lang.reflect.Type returnType) throws IOException {
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+            String responseString = responseBody.string();
+            return gson.fromJson(responseString, returnType);
+        } else {
+            return null;
         }
     }
 

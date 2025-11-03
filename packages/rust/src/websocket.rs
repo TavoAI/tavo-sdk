@@ -387,31 +387,6 @@ impl<'a> WebSocketOperations<'a> {
     ///
     /// A receiver channel for WebSocket messages and the connection handle
     ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use tavo_ai::TavoClient;
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = TavoClient::new("api-key")?;
-    /// let mut connection = client.websocket().connect_to_scan_progress("scan-123", None).await?;
-    ///
-    /// while let Some(message) = connection.recv().await {
-    ///     match message {
-    ///         WebSocketMessage::ScanProgress { progress, status, .. } => {
-    ///             println!("Scan progress: {}% - {}", progress, status);
-    ///         }
-    ///         WebSocketMessage::ScanCompleted { total_issues, .. } => {
-    ///             println!("Scan completed with {} issues", total_issues);
-    ///             break;
-    ///         }
-    ///         _ => {}
-    ///     }
-    /// }
-    ///
-    /// connection.disconnect().await?;
-    /// # Ok(())
-    /// # }
-    /// ```
     pub async fn connect_to_scan_progress(
         &self,
         scan_id: &str,
@@ -445,30 +420,6 @@ impl<'a> WebSocketOperations<'a> {
     ///
     /// A WebSocket connection for receiving general updates
     ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use tavo_ai::TavoClient;
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = TavoClient::new("api-key")?;
-    /// let mut connection = client.websocket().connect_to_general_updates(None).await?;
-    ///
-    /// while let Some(message) = connection.recv().await {
-    ///     match message {
-    ///         WebSocketMessage::SystemUpdate { message, level, .. } => {
-    ///             println!("[{}] {}", level, message);
-    ///         }
-    ///         WebSocketMessage::Heartbeat { server_time } => {
-    ///             println!("Server time: {}", server_time);
-    ///         }
-    ///         _ => {}
-    ///     }
-    /// }
-    ///
-    /// connection.disconnect().await?;
-    /// # Ok(())
-    /// # }
-    /// ```
     pub async fn connect_to_general_updates(
         &self,
         config: Option<WebSocketConfig>,

@@ -60,8 +60,8 @@ public class ScannerOperations {
                     .get()
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to discover rules", e);
         }
     }
@@ -79,8 +79,8 @@ public class ScannerOperations {
                     .get()
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to get bundle rules", e);
         }
     }
@@ -101,8 +101,8 @@ public class ScannerOperations {
                     .post(RequestBody.create(gson.toJson(requestBody), JSON))
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to track bundle usage", e);
         }
     }
@@ -127,8 +127,8 @@ public class ScannerOperations {
                     .get()
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to discover plugins", e);
         }
     }
@@ -146,8 +146,8 @@ public class ScannerOperations {
                     .get()
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to get plugin config", e);
         }
     }
@@ -182,8 +182,8 @@ public class ScannerOperations {
                     .get()
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to get recommendations", e);
         }
     }
@@ -201,8 +201,8 @@ public class ScannerOperations {
                     .post(RequestBody.create(gson.toJson(heartbeatData), JSON))
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to send heartbeat", e);
         }
     }

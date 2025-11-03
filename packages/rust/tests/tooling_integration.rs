@@ -10,15 +10,21 @@ use tavo_ai::code_submission::{ScanStatus, ScanResultsSummary};
 use tokio_util::sync::CancellationToken;
 use std::collections::HashMap;
 
-/// Mock server URL for integration tests
-const MOCK_SERVER_URL: &str = "http://localhost:3002";
+/// Mock server URL for integration tests - use non-routable IP to fail fast
+const MOCK_SERVER_URL: &str = "http://10.255.255.1";
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn create_test_client() -> TavoClient {
-        TavoClient::with_base_url("test-api-key", MOCK_SERVER_URL).unwrap()
+        // Create a client with very short timeout for fast test failures
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_millis(10))
+            .connect_timeout(std::time::Duration::from_millis(1))
+            .build()
+            .unwrap();
+        TavoClient::with_client(client, MOCK_SERVER_URL)
     }
 
     #[tokio::test]
@@ -293,7 +299,7 @@ mod tests {
         // Test base URL client
         let client = TavoClient::with_base_url("test-key", "https://custom.api.com");
         assert!(client.is_ok());
-        assert_eq!(client.base_url, "https://custom.api.com");
+        assert_eq!(client.unwrap().base_url, "https://custom.api.com");
 
         // Test invalid API key
         let client = TavoClient::new("");

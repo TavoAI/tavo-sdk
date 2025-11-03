@@ -51,6 +51,10 @@
               "target": "Package",
               "version": "[7.0.0, )"
             },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.9.0, )"
+            },
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.3, )"
@@ -66,6 +70,14 @@
             "System.Net.WebSockets.Client": {
               "target": "Package",
               "version": "[4.3.2, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.6.6, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.5.4, )"
             }
           },
           "imports": [

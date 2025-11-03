@@ -101,14 +101,14 @@ public class WebSocketOperations {
             this.disconnectHandler = disconnectHandler;
 
             // Add authentication headers
-            if (client.config.getApiKey() != null) {
-                addHeader("X-API-Key", client.config.getApiKey());
+            if (client.getConfig().getApiKey() != null) {
+                addHeader("X-API-Key", client.getConfig().getApiKey());
             }
-            if (client.config.getJwtToken() != null) {
-                addHeader("Authorization", "Bearer " + client.config.getJwtToken());
+            if (client.getConfig().getJwtToken() != null) {
+                addHeader("Authorization", "Bearer " + client.getConfig().getJwtToken());
             }
-            if (client.config.getSessionToken() != null) {
-                addHeader("X-Session-Token", client.config.getSessionToken());
+            if (client.getConfig().getSessionToken() != null) {
+                addHeader("X-Session-Token", client.getConfig().getSessionToken());
             }
         }
 

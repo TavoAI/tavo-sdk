@@ -214,10 +214,21 @@ pub struct TavoClient {
     api_key: Option<String>,
     jwt_token: Option<String>,
     session_token: Option<String>,
-    base_url: String,
+    pub base_url: String,
 }
 
 impl TavoClient {
+    /// Create a new TavoClient with a custom reqwest client (for testing)
+    pub fn with_client(client: Client, base_url: impl Into<String>) -> Self {
+        Self {
+            client,
+            api_key: None,
+            jwt_token: None,
+            session_token: None,
+            base_url: base_url.into(),
+        }
+    }
+
     /// Create a new TavoClient with the given API key
     ///
     /// # Arguments

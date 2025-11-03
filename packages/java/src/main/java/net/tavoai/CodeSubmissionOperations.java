@@ -63,7 +63,12 @@ public class CodeSubmissionOperations {
             for (int i = 0; i < files.size(); i++) {
                 File file = files.get(i);
                 String filename = i < filenames.size() ? filenames.get(i) : file.getName();
-                String mimeType = Files.probeContentType(file.toPath());
+                String mimeType;
+                try {
+                    mimeType = Files.probeContentType(file.toPath());
+                } catch (IOException e) {
+                    mimeType = "application/octet-stream";
+                }
                 if (mimeType == null) mimeType = "application/octet-stream";
 
                 RequestBody fileBody = RequestBody.create(file, MediaType.parse(mimeType));
@@ -81,8 +86,8 @@ public class CodeSubmissionOperations {
                     .post(multipartBuilder.build())
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to submit code for scanning", e);
         }
     }
@@ -111,8 +116,8 @@ public class CodeSubmissionOperations {
                     .post(RequestBody.create(gson.toJson(requestBody), JSON))
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to submit repository snapshot", e);
         }
     }
@@ -143,8 +148,8 @@ public class CodeSubmissionOperations {
                     .post(RequestBody.create(gson.toJson(requestBody), JSON))
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to submit code analysis request", e);
         }
     }
@@ -162,8 +167,8 @@ public class CodeSubmissionOperations {
                     .get()
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to get scan status", e);
         }
     }
@@ -181,8 +186,8 @@ public class CodeSubmissionOperations {
                     .get()
                     .build();
 
-            return executeRequest(request, mapType);
-        } catch (IOException e) {
+            return client.executeRequest(request, mapType);
+        } catch (TavoException e) {
             throw new TavoException("Failed to get scan results summary", e);
         }
     }

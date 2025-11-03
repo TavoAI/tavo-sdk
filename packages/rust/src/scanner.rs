@@ -78,7 +78,7 @@ pub struct HeartbeatResponse {
 
 /// Scanner operations for CLI tools and scanners
 pub struct ScannerOperations<'a> {
-    client: &'a TavoClient,
+    pub client: &'a TavoClient,
 }
 
 impl<'a> ScannerOperations<'a> {

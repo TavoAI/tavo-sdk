@@ -37,7 +37,7 @@ pub struct UsageWarnings {
 
 /// Device operations for CLI tools and scanners
 pub struct DeviceOperations<'a> {
-    client: &'a TavoClient,
+    pub client: &'a TavoClient,
 }
 
 impl<'a> DeviceOperations<'a> {

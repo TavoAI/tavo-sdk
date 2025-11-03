@@ -89,7 +89,7 @@ pub struct AnalysisContext {
 
 /// Code submission operations for CLI tools and scanners
 pub struct CodeSubmissionOperations<'a> {
-    client: &'a TavoClient,
+    pub client: &'a TavoClient,
 }
 
 impl<'a> CodeSubmissionOperations<'a> {
@@ -107,29 +107,6 @@ impl<'a> CodeSubmissionOperations<'a> {
     /// * `commit_sha` - Optional commit SHA
     /// * `scan_config` - Optional scan configuration
     ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use tavo_ai::{TavoClient, FileInfo};
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = TavoClient::new("api-key")?;
-    ///
-    /// let files = vec![
-    ///     FileInfo {
-    ///         filename: "main.rs".to_string(),
-    ///         content: "fn main() { println!(\"Hello, world!\"); }".to_string(),
-    ///         language: Some("rust".to_string()),
-    ///     }
-    /// ];
-    ///
-    /// let response = client.code_submission()
-    ///     .submit_code(files, Some("my-repo"), Some("main"), None, None)
-    ///     .await?;
-    ///
-    /// println!("Scan submitted with ID: {}", response.scan_id);
-    /// # Ok(())
-    /// # }
-    /// ```
     pub async fn submit_code(
         &self,
         files: Vec<FileInfo>,
@@ -184,34 +161,6 @@ impl<'a> CodeSubmissionOperations<'a> {
     /// * `commit_sha` - Optional commit SHA
     /// * `scan_config` - Optional scan configuration
     ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use tavo_ai::{TavoClient, RepositorySnapshot, FileInfo};
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = TavoClient::new("api-key")?;
-    ///
-    /// let snapshot = RepositorySnapshot {
-    ///     url: "https://github.com/user/repo".to_string(),
-    ///     branch: Some("main".to_string()),
-    ///     commit_sha: Some("abc123".to_string()),
-    ///     files: vec![
-    ///         FileInfo {
-    ///             filename: "src/main.rs".to_string(),
-    ///             content: "fn main() {}".to_string(),
-    ///             language: Some("rust".to_string()),
-    ///         }
-    ///     ],
-    /// };
-    ///
-    /// let response = client.code_submission()
-    ///     .submit_repository("https://github.com/user/repo", snapshot, None, None, None)
-    ///     .await?;
-    ///
-    /// println!("Repository scan submitted: {}", response.scan_id);
-    /// # Ok(())
-    /// # }
-    /// ```
     pub async fn submit_repository(
         &self,
         repository_url: &str,
@@ -274,29 +223,6 @@ impl<'a> CodeSubmissionOperations<'a> {
     /// * `code_content` - The code content to analyze
     /// * `analysis_context` - Analysis context including language, rules, plugins
     ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use tavo_ai::{TavoClient, AnalysisContext};
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = TavoClient::new("api-key")?;
-    ///
-    /// let context = AnalysisContext {
-    ///     language: "rust".to_string(),
-    ///     analysis_type: Some("security".to_string()),
-    ///     rules: Some(vec!["rule1".to_string(), "rule2".to_string()]),
-    ///     plugins: Some(vec!["plugin1".to_string()]),
-    ///     context: None,
-    /// };
-    ///
-    /// let response = client.code_submission()
-    ///     .submit_analysis("fn main() { unsafe { std::ptr::null::<i32>().read() } }", context)
-    ///     .await?;
-    ///
-    /// println!("Analysis submitted: {}", response.analysis_id);
-    /// # Ok(())
-    /// # }
-    /// ```
     pub async fn submit_analysis(
         &self,
         code_content: &str,
