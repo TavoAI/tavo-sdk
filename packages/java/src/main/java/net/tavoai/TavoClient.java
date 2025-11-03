@@ -310,6 +310,30 @@ public class TavoClient implements AutoCloseable {
         return new ReportOperations(this);
     }
 
+    /**
+     * Access device operations.
+     * @return a DeviceOperations instance
+     */
+    public DeviceOperations device() {
+        return new DeviceOperations(this);
+    }
+
+    /**
+     * Access scanner operations.
+     * @return a ScannerOperations instance
+     */
+    public ScannerOperations scanner() {
+        return new ScannerOperations(this);
+    }
+
+    /**
+     * Access code submission operations.
+     * @return a CodeSubmissionOperations instance
+     */
+    public CodeSubmissionOperations codeSubmission() {
+        return new CodeSubmissionOperations(this);
+    }
+
     @Override
     public void close() {
         // OkHttpClient doesn't need explicit closing in modern versions

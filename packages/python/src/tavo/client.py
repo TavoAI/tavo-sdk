@@ -368,6 +368,18 @@ class TavoClient:
         """Access session authentication operations"""
         return SessionAuthOperations(self)
 
+    def device(self):
+        """Access device operations for CLI tools"""
+        return DeviceOperations(self)
+
+    def scanner(self):
+        """Access scanner integration operations"""
+        return ScannerOperations(self)
+
+    def code_submission(self):
+        """Access code submission operations"""
+        return CodeSubmissionOperations(self)
+
     def local_scanner(self):
         """Access local scanning operations"""
         return LocalScannerOperations()
@@ -375,7 +387,7 @@ class TavoClient:
     def websocket(self):
         """Access WebSocket operations for real-time features"""
         return WebSocketOperations(self)
-    
+
     def plugins(self):
         """Access plugin marketplace operations"""
         return PluginOperations(self)
@@ -855,24 +867,63 @@ class JobOperations:
         return response
 
     async def dashboard(self) -> Dict[str, Any]:
-        """Get job dashboard."""
+        """Get job dashboard.
+
+        DEPRECATED: This endpoint is designed for UI dashboards and may not be suitable
+        for CLI tools. Consider using specific job status endpoints instead.
+
+        Returns:
+            Dict containing dashboard data
+        """
+        import warnings
+
+        warnings.warn(
+            "dashboard() is deprecated for CLI tools. Use specific job status endpoints instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         response = await self._client._request("GET", "/jobs/dashboard")
         return response
 
 
 class WebhookOperations:
-    """Operations for webhook management."""
+    """Operations for webhook management.
+
+    DEPRECATED: Webhook operations are primarily designed for UI dashboards
+    and may not be suitable for CLI tools. Consider using direct API polling
+    for status updates instead.
+    """
 
     def __init__(self, client: "TavoClient"):
         self._client = client
 
     async def list_events(self) -> Dict[str, Any]:
-        """List webhook events."""
+        """List webhook events.
+
+        DEPRECATED: Use GitHub App webhook management instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "list_events() is deprecated. Use GitHub App webhook management instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         response = await self._client._request("GET", "/webhooks/events")
         return response
 
     async def get_event(self, event_id: str) -> Dict[str, Any]:
-        """Get a specific webhook event."""
+        """Get a specific webhook event.
+
+        DEPRECATED: Use GitHub App webhook management instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "get_event() is deprecated. Use GitHub App webhook management instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         response = await self._client._request("GET", f"/webhooks/events/{event_id}")
         return response
 
@@ -1368,6 +1419,241 @@ class SessionAuthOperations:
         )
 
 
+class DeviceOperations:
+    """Device authentication operations for CLI tools"""
+
+    def __init__(self, client: TavoClient):
+        self._client = client
+
+    async def create_device_code(
+        self, client_id: Optional[str] = None, client_name: Optional[str] = "Tavo SDK"
+    ) -> Dict[str, Any]:
+        """Create device code for authentication"""
+        data = {}
+        if client_id:
+            data["client_id"] = client_id
+        if client_name:
+            data["client_name"] = client_name
+
+        return await self._client._request("POST", "/device/code", data=data)
+
+    async def create_device_code_for_cli(
+        self, client_id: Optional[str] = None, client_name: Optional[str] = "Tavo CLI"
+    ) -> Dict[str, Any]:
+        """Create CLI-optimized device code for authentication"""
+        data = {}
+        if client_id:
+            data["client_id"] = client_id
+        data["client_name"] = client_name
+
+        return await self._client._request("POST", "/device/code/cli", data=data)
+
+    async def poll_device_token(self, device_code: str) -> Dict[str, Any]:
+        """Poll for device token"""
+        return await self._client._request(
+            "POST", "/device/token", data={"device_code": device_code}
+        )
+
+    async def get_device_code_status(self, device_code: str) -> Dict[str, Any]:
+        """Get device code status (lightweight polling for CLI)"""
+        return await self._client._request("GET", f"/device/code/{device_code}/status")
+
+    async def get_usage_warnings(self) -> Dict[str, Any]:
+        """Get usage warnings and limits for CLI tools"""
+        return await self._client._request("GET", "/device/usage/warnings")
+
+    async def get_limits(self) -> Dict[str, Any]:
+        """Get current limits and quotas for CLI tools"""
+        return await self._client._request("GET", "/device/limits")
+
+
+class ScannerOperations:
+    """Scanner integration operations for CLI tools and scanners"""
+
+    def __init__(self, client: TavoClient):
+        self._client = client
+
+    async def discover_rules(
+        self,
+        scanner_type: Optional[str] = None,
+        language: Optional[str] = None,
+        category: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Discover rules optimized for scanner types"""
+        params = {}
+        if scanner_type:
+            params["scanner_type"] = scanner_type
+        if language:
+            params["language"] = language
+        if category:
+            params["category"] = category
+
+        return await self._client._request(
+            "GET", "/scanner/rules/discover", params=params
+        )
+
+    async def get_bundle_rules(self, bundle_id: str) -> Dict[str, Any]:
+        """Get rules from a specific bundle"""
+        return await self._client._request(
+            "GET", f"/scanner/rules/bundle/{bundle_id}/rules"
+        )
+
+    async def track_bundle_usage(
+        self, bundle_id: str, usage_data: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Track bundle usage by scanners"""
+        data = usage_data or {}
+        return await self._client._request(
+            "POST", f"/scanner/rules/bundle/{bundle_id}/use", data=data
+        )
+
+    async def discover_plugins(
+        self,
+        scanner_type: Optional[str] = None,
+        language: Optional[str] = None,
+        category: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Discover plugins optimized for scanner types"""
+        params = {}
+        if scanner_type:
+            params["scanner_type"] = scanner_type
+        if language:
+            params["language"] = language
+        if category:
+            params["category"] = category
+
+        return await self._client._request(
+            "GET", "/scanner/plugins/discover", params=params
+        )
+
+    async def get_plugin_config(self, plugin_id: str) -> Dict[str, Any]:
+        """Get plugin configuration for scanner use"""
+        return await self._client._request(
+            "GET", f"/scanner/plugins/{plugin_id}/config"
+        )
+
+    async def get_recommendations(
+        self,
+        language: Optional[str] = None,
+        scanner_type: Optional[str] = None,
+        current_rules: Optional[List[str]] = None,
+        current_plugins: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Get AI-powered rule/plugin recommendations"""
+        params = {}
+        if language:
+            params["language"] = language
+        if scanner_type:
+            params["scannerType"] = scanner_type
+        if current_rules:
+            params["currentRules"] = current_rules
+        if current_plugins:
+            params["currentPlugins"] = current_plugins
+
+        return await self._client._request(
+            "GET", "/scanner/recommendations", params=params
+        )
+
+    async def send_heartbeat(self, heartbeat_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Send scanner heartbeat for tracking"""
+        return await self._client._request(
+            "POST", "/scanner/heartbeat", data=heartbeat_data
+        )
+
+
+class CodeSubmissionOperations:
+    """Code submission operations for CLI tools and scanners"""
+
+    def __init__(self, client: TavoClient):
+        self._client = client
+
+    async def submit_code(
+        self,
+        files: List[bytes],
+        filenames: List[str],
+        repository_name: Optional[str] = None,
+        branch: Optional[str] = None,
+        commit_sha: Optional[str] = None,
+        scan_config: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Submit code files directly for scanning"""
+        # Create multipart form data
+        files_data = []
+        for i, (file_content, filename) in enumerate(zip(files, filenames)):
+            files_data.append(("files", (filename, file_content)))
+
+        data = {}
+        if repository_name:
+            data["repository_name"] = repository_name
+        if branch:
+            data["branch"] = branch
+        if commit_sha:
+            data["commit_sha"] = commit_sha
+        if scan_config:
+            data["scan_config"] = json.dumps(scan_config)
+
+        # This would need to be implemented as multipart upload
+        # For now, return a placeholder
+        return await self._client._request("POST", "/code/submit/code", data=data)
+
+    async def submit_repository(
+        self,
+        repository_url: str,
+        snapshot_data: Dict[str, Any],
+        branch: Optional[str] = None,
+        commit_sha: Optional[str] = None,
+        scan_config: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Submit repository snapshot for scanning"""
+        data = {
+            "repository_url": repository_url,
+            "snapshot_data": snapshot_data,
+        }
+        if branch:
+            data["branch"] = branch
+        if commit_sha:
+            data["commit_sha"] = commit_sha
+        if scan_config:
+            data["scan_config"] = scan_config
+
+        return await self._client._request("POST", "/code/submit/repository", data=data)
+
+    async def submit_analysis(
+        self,
+        code_content: str,
+        language: str,
+        analysis_type: Optional[str] = None,
+        rules: Optional[List[str]] = None,
+        plugins: Optional[List[str]] = None,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Submit code snippet for targeted analysis"""
+        data = {
+            "code_content": code_content,
+            "language": language,
+        }
+        if analysis_type:
+            data["analysis_type"] = analysis_type
+        if rules:
+            data["rules"] = rules
+        if plugins:
+            data["plugins"] = plugins
+        if context:
+            data["context"] = context
+
+        return await self._client._request("POST", "/code/submit/analysis", data=data)
+
+    async def get_scan_status(self, scan_id: str) -> Dict[str, Any]:
+        """Get scan status (CLI-optimized)"""
+        return await self._client._request("GET", f"/code/scans/{scan_id}/status")
+
+    async def get_scan_results(self, scan_id: str) -> Dict[str, Any]:
+        """Get scan results summary (CLI-optimized)"""
+        return await self._client._request(
+            "GET", f"/code/scans/{scan_id}/results/summary"
+        )
+
+
 class PluginOperations:
     """Operations for plugin marketplace"""
 
@@ -1431,7 +1717,9 @@ class PluginOperations:
         self, plugin_id: str, plugin_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Update plugin metadata"""
-        return await self._client._request("PUT", f"/plugins/{plugin_id}", data=plugin_data)
+        return await self._client._request(
+            "PUT", f"/plugins/{plugin_id}", data=plugin_data
+        )
 
     async def delete_plugin(self, plugin_id: str) -> Dict[str, Any]:
         """Delete a plugin"""

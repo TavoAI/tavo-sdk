@@ -620,9 +620,11 @@ export class TavoClient {
       },
 
       /**
-       * Get job dashboard
+       * Get job dashboard (DEPRECATED - use scan status endpoints instead)
+       * @deprecated Use scan-specific status endpoints for CLI tools
        */
       dashboard: async (): Promise<any> => {
+        console.warn('jobs.dashboard() is deprecated for CLI tools. Use scan-specific status endpoints instead.');
         const response = await this.axios.get('/jobs/dashboard');
         return response.data;
       },
@@ -630,22 +632,27 @@ export class TavoClient {
   }
 
   /**
-   * Webhook operations
+   * Webhook operations (DEPRECATED - use GitHub App webhook endpoints instead)
+   * @deprecated Use GitHub App installation webhook management for CLI tools
    */
   get webhooks() {
     return {
       /**
-       * List webhook events
+       * List webhook events (DEPRECATED)
+       * @deprecated Use GitHub App webhook management instead
        */
       listEvents: async (): Promise<any> => {
+        console.warn('webhooks.listEvents() is deprecated. Use GitHub App webhook management instead.');
         const response = await this.axios.get('/webhooks/events');
         return response.data;
       },
 
       /**
-       * Get webhook event
+       * Get webhook event (DEPRECATED)
+       * @deprecated Use GitHub App webhook management instead
        */
       getEvent: async (eventId: string): Promise<any> => {
+        console.warn('webhooks.getEvent() is deprecated. Use GitHub App webhook management instead.');
         const response = await this.axios.get(`/webhooks/events/${eventId}`);
         return response.data;
       },
@@ -933,6 +940,192 @@ export class TavoClient {
   }
 
   /**
+   * Scanner integration operations (for CLI tools and scanners)
+   */
+  get scanner() {
+    return {
+      /**
+       * Discover rules optimized for scanner types
+       */
+      discoverRules: async (options?: {
+        scannerType?: string;
+        language?: string;
+        category?: string;
+      }): Promise<any> => {
+        const params: any = {};
+        if (options?.scannerType) params.scanner_type = options.scannerType;
+        if (options?.language) params.language = options.language;
+        if (options?.category) params.category = options.category;
+
+        const response = await this.axios.get('/scanner/rules/discover', { params });
+        return response.data;
+      },
+
+      /**
+       * Get rules from a specific bundle
+       */
+      getBundleRules: async (bundleId: string): Promise<any> => {
+        const response = await this.axios.get(`/scanner/rules/bundle/${bundleId}/rules`);
+        return response.data;
+      },
+
+      /**
+       * Track bundle usage by scanners
+       */
+      trackBundleUsage: async (bundleId: string, usageData?: any): Promise<any> => {
+        const response = await this.axios.post(`/scanner/rules/bundle/${bundleId}/use`, usageData || {});
+        return response.data;
+      },
+
+      /**
+       * Discover plugins optimized for scanner types
+       */
+      discoverPlugins: async (options?: {
+        scannerType?: string;
+        language?: string;
+        category?: string;
+      }): Promise<any> => {
+        const params: any = {};
+        if (options?.scannerType) params.scanner_type = options.scannerType;
+        if (options?.language) params.language = options.language;
+        if (options?.category) params.category = options.category;
+
+        const response = await this.axios.get('/scanner/plugins/discover', { params });
+        return response.data;
+      },
+
+      /**
+       * Get plugin configuration for scanner use
+       */
+      getPluginConfig: async (pluginId: string): Promise<any> => {
+        const response = await this.axios.get(`/scanner/plugins/${pluginId}/config`);
+        return response.data;
+      },
+
+      /**
+       * Get AI-powered rule/plugin recommendations
+       */
+      getRecommendations: async (context?: {
+        language?: string;
+        scannerType?: string;
+        currentRules?: string[];
+        currentPlugins?: string[];
+      }): Promise<any> => {
+        const response = await this.axios.get('/scanner/recommendations', { params: context });
+        return response.data;
+      },
+
+      /**
+       * Send scanner heartbeat for tracking
+       */
+      sendHeartbeat: async (heartbeatData: {
+        scannerVersion?: string;
+        scannerType?: string;
+        activeRules?: string[];
+        activePlugins?: string[];
+        systemInfo?: any;
+      }): Promise<any> => {
+        const response = await this.axios.post('/scanner/heartbeat', heartbeatData);
+        return response.data;
+      },
+    };
+  }
+
+  /**
+   * Code submission operations (for CLI tools and scanners)
+   */
+  get codeSubmission() {
+    return {
+      /**
+       * Submit code files directly for scanning
+       */
+      submitCode: async (files: File[], options?: {
+        repositoryName?: string;
+        branch?: string;
+        commitSha?: string;
+        scanConfig?: any;
+      }): Promise<any> => {
+        const formData = new FormData();
+        files.forEach((file, index) => {
+          formData.append('files', file);
+        });
+
+        if (options?.repositoryName) formData.append('repository_name', options.repositoryName);
+        if (options?.branch) formData.append('branch', options.branch);
+        if (options?.commitSha) formData.append('commit_sha', options.commitSha);
+        if (options?.scanConfig) formData.append('scan_config', JSON.stringify(options.scanConfig));
+
+        const response = await this.axios.post('/code/submit/code', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data;
+      },
+
+      /**
+       * Submit repository snapshot for scanning
+       */
+      submitRepository: async (repositoryUrl: string, snapshotData: any, options?: {
+        branch?: string;
+        commitSha?: string;
+        scanConfig?: any;
+      }): Promise<any> => {
+        const data: any = {
+          repository_url: repositoryUrl,
+          snapshot_data: snapshotData,
+        };
+
+        if (options?.branch) data.branch = options.branch;
+        if (options?.commitSha) data.commit_sha = options.commitSha;
+        if (options?.scanConfig) data.scan_config = options.scanConfig;
+
+        const response = await this.axios.post('/code/submit/repository', data);
+        return response.data;
+      },
+
+      /**
+       * Submit code snippet for targeted analysis
+       */
+      submitAnalysis: async (codeContent: string, language: string, options?: {
+        analysisType?: string;
+        rules?: string[];
+        plugins?: string[];
+        context?: any;
+      }): Promise<any> => {
+        const data: any = {
+          code_content: codeContent,
+          language: language,
+        };
+
+        if (options?.analysisType) data.analysis_type = options.analysisType;
+        if (options?.rules) data.rules = options.rules;
+        if (options?.plugins) data.plugins = options.plugins;
+        if (options?.context) data.context = options.context;
+
+        const response = await this.axios.post('/code/submit/analysis', data);
+        return response.data;
+      },
+
+      /**
+       * Get scan status (CLI-optimized)
+       */
+      getScanStatus: async (scanId: string): Promise<any> => {
+        const response = await this.axios.get(`/code/scans/${scanId}/status`);
+        return response.data;
+      },
+
+      /**
+       * Get scan results summary (CLI-optimized)
+       */
+      getScanResults: async (scanId: string): Promise<any> => {
+        const response = await this.axios.get(`/code/scans/${scanId}/results/summary`);
+        return response.data;
+      },
+    };
+  }
+
+  /**
    * Device authentication operations
    */
   get deviceAuth() {
@@ -953,12 +1146,51 @@ export class TavoClient {
       },
 
       /**
+       * Create CLI-optimized device code for authentication
+       */
+      createDeviceCodeForCli: async (options?: {
+        clientId?: string;
+        clientName?: string;
+      }): Promise<any> => {
+        const data: any = {};
+        if (options?.clientId) data.client_id = options.clientId;
+        if (options?.clientName) data.client_name = options.clientName || 'Tavo CLI';
+
+        const response = await this.axios.post('/device/code/cli', data);
+        return response.data;
+      },
+
+      /**
        * Poll for device token
        */
       pollDeviceToken: async (deviceCode: string): Promise<any> => {
         const response = await this.axios.post('/device/token', {
           device_code: deviceCode,
         });
+        return response.data;
+      },
+
+      /**
+       * Get device code status (lightweight polling for CLI)
+       */
+      getDeviceCodeStatus: async (deviceCode: string): Promise<any> => {
+        const response = await this.axios.get(`/device/code/${deviceCode}/status`);
+        return response.data;
+      },
+
+      /**
+       * Get usage warnings and limits for CLI tools
+       */
+      getUsageWarnings: async (): Promise<any> => {
+        const response = await this.axios.get('/device/usage/warnings');
+        return response.data;
+      },
+
+      /**
+       * Get current limits and quotas for CLI tools
+       */
+      getLimits: async (): Promise<any> => {
+        const response = await this.axios.get('/device/limits');
         return response.data;
       },
     };
