@@ -1,6 +1,6 @@
 # Python SDK
 
-The Tavo AI Python SDK provides a comprehensive, async-first interface for integrating with the Tavo AI platform. Built with modern Python patterns and full type hints for excellent developer experience.
+The Tavo AI Python SDK provides generated API clients for all platform endpoints plus integrated tavo-scanner execution capabilities. Built with async-first design and full type annotations.
 
 ## Installation
 
@@ -8,201 +8,183 @@ The Tavo AI Python SDK provides a comprehensive, async-first interface for integ
 pip install tavo-ai
 ```
 
+## Architecture
+
+The Python SDK provides two main components:
+
+### API Clients
+Generated async clients for all Tavo AI REST API endpoints located in `packages/python/src/endpoints/`:
+- `DeviceAuthClient` - Device authentication operations
+- `ScanToolsClient` - Core scanning functionality
+- `AiAnalysisClient` - AI-powered code analysis
+- And 21+ additional endpoint clients
+
+### Scanner Integration
+Built-in tavo-scanner wrapper in `packages/python/src/tavo/scanner_wrapper.py`:
+- Subprocess execution of tavo-scanner binary
+- Plugin and rule configuration management
+- Automatic binary discovery (relative paths and PATH)
+- Async execution with timeout handling
+
 ## Quick Start
 
 ```python
 import asyncio
-from tavo_ai import TavoClient
+from tavo import TavoClient, TavoScanner
 
 async def main():
-    # Initialize the client
+    # Initialize API client
     client = TavoClient(api_key="your-api-key")
 
-    # Scan code for vulnerabilities
-    result = await client.scan_code("""
-        def process_user_input(user_input):
-            query = f"SELECT * FROM users WHERE id = '{user_input}'"
-            # Potential SQL injection vulnerability
-            return execute_query(query)
-    """)
+    # Use generated endpoint clients
+    auth_result = await client.device_auth.post_code(
+        client_id="123",
+        client_name="my-app"
+    )
+    print(f"Authentication: {auth_result}")
 
-    print(f"Found {result.total_issues} issues")
-    for vulnerability in result.vulnerabilities:
-        print(f"- {vulnerability.title}: {vulnerability.description}")
+    # Use scanner integration
+    scanner = TavoScanner()
+    scan_result = await scanner.scan_directory(
+        "./my-project",
+        plugins=["security", "performance"]
+    )
+    print(f"Scan completed: {scan_result['status']}")
 
 asyncio.run(main())
 ```
 
 ## Authentication
 
-The SDK supports API key authentication:
+The SDK supports multiple authentication methods:
 
 ```python
-from tavo_ai import TavoClient
+from tavo import TavoClient
 
-# Initialize with API key
+# API Key authentication (recommended)
 client = TavoClient(api_key="your-api-key")
 
-# Or set it later
-client = TavoClient()
-client.api_key = "your-api-key"
+# JWT Token authentication
+client = TavoClient(jwt_token="your-jwt-token")
+
+# Session Token authentication
+client = TavoClient(session_token="your-session-token")
+
+# Environment variables (TAVO_API_KEY, TAVO_JWT_TOKEN, TAVO_SESSION_TOKEN)
+client = TavoClient()  # Will read from env vars
 ```
 
-## Core Operations
+## API Client Usage
 
-### Code Scanning
-
-Scan source code for security vulnerabilities:
+Access all platform endpoints through the generated client:
 
 ```python
-# Basic code scan
-result = await client.scan_code(code_string, language="python")
+from tavo import TavoClient
 
-# With custom options
-result = await client.scan_code(
-    code=code_string,
-    language="python",
-    timeout=30
+client = TavoClient(api_key="your-api-key")
+
+# Authentication operations
+auth_result = await client.device_auth.post_code("client_id", "client_name")
+token_result = await client.device_auth.post_token("device_code")
+
+# Scanning operations
+scan_result = await client.scan_tools.get_scan("scan_id")
+bulk_result = await client.scan_bulk_operations.create_bulk_scan([...])
+
+# AI Analysis
+analysis = await client.ai_analysis.analyze_code("code", "python")
+
+# Jobs management
+jobs = await client.jobs.list_jobs()
+job_status = await client.jobs.get_job("job_id")
+
+# Health checks
+health = await client.health.health_check()
+```
+
+## Scanner Integration
+
+Execute tavo-scanner as a subprocess with full configuration:
+
+```python
+from tavo import TavoScanner
+
+# Basic scanning
+scanner = TavoScanner()
+result = await scanner.scan_directory("./my-project")
+
+# Advanced scanning with plugins
+result = await scanner.scan_with_plugins(
+    "./my-project",
+    plugins=["security", "performance", "accessibility"]
+)
+
+# Custom rules and configuration
+result = await scanner.scan_with_rules(
+    "./my-project",
+    rules_path="./custom-rules.json"
 )
 ```
 
-### AI Model Analysis
+## Available Endpoint Clients
 
-Analyze AI models for security risks:
+The SDK provides 24+ generated endpoint clients:
+
+| Client | Purpose |
+|--------|---------|
+| `device_auth` | Device authentication and tokens |
+| `scan_tools` | Core scanning operations |
+| `scan_management` | Scan lifecycle management |
+| `scan_rules` | Scan rule configuration |
+| `scan_schedules` | Scheduled scanning |
+| `scan_bulk_operations` | Bulk scan operations |
+| `scanner_integration` | Scanner integrations |
+| `ai_analysis` | AI-powered code analysis |
+| `ai_analysis_core` | Core AI analysis operations |
+| `ai_bulk_operations` | Bulk AI operations |
+| `ai_performance_quality` | Performance analysis |
+| `ai_results_export` | Export analysis results |
+| `ai_risk_compliance` | Risk and compliance analysis |
+| `registry` | Plugin/registry management |
+| `plugin_execution` | Plugin execution |
+| `plugin_marketplace` | Plugin marketplace |
+| `rules` | Rule management |
+| `code_submission` | Code submission for analysis |
+| `repositories` | Repository management |
+| `repository_connections` | Repository connections |
+| `repository_providers` | Repository provider integrations |
+| `repository_webhooks` | Repository webhooks |
+| `jobs` | Background job management |
+| `health` | Health check endpoints |
+
+## Scanner Configuration
+
+Configure scanner behavior and plugins:
 
 ```python
-model_config = {
-    "model_type": "transformer",
-    "parameters": {
-        "layers": 12,
-        "heads": 8,
-        "hidden_size": 768
-    }
+from tavo import TavoScanner
+from tavo.scanner.scanner_config import ScanOptions
+
+# Configure scanner
+config = {
+    "plugins": ["security", "performance"],
+    "rules_path": "./custom-rules.json",
+    "timeout": 600,  # 10 minutes
+    "output_format": "sarif"
 }
 
-analysis = await client.analyze_model(model_config)
-print(f"Model is safe: {analysis.safe}")
-```
+scanner = TavoScanner(config)
 
-### User Management
-
-```python
-# Get current user
-user = await client.get_current_user()
-
-# Update user profile
-updated_user = await client.update_user(user_id, {
-    "name": "New Name",
-    "email": "new@example.com"
-})
-```
-
-### Organization Management
-
-```python
-# List organizations
-orgs = await client.list_organizations()
-
-# Create new organization
-new_org = await client.create_organization({
-    "name": "My Company",
-    "description": "Security scanning service"
-})
-```
-
-### Scan Jobs
-
-```python
-# Start a new scan job
-job = await client.create_scan_job({
-    "target_url": "https://example.com",
-    "scan_type": "full_scan"
-})
-
-# Get job status
-status = await client.get_scan_job(job.id)
-
-# List all jobs
-jobs = await client.list_scan_jobs(limit=10)
-```
-
-### Webhooks
-
-```python
-# Create webhook
-webhook = await client.create_webhook({
-    "url": "https://myapp.com/webhook",
-    "events": ["scan.completed", "vulnerability.found"]
-})
-
-# List webhooks
-webhooks = await client.list_webhooks()
-
-# Delete webhook
-await client.delete_webhook(webhook.id)
-```
-
-### API Key Management
-
-```python
-# List your API keys
-api_keys = await client.users().api_keys().list_my_keys()
-
-# Create a new API key
-new_key = await client.users().api_keys().create_key("My API Key")
-
-# Update an API key
-updated_key = await client.users().api_keys().update_key(
-    api_key_id, "Updated Name"
+# Or use ScanOptions
+options = ScanOptions(
+    static_analysis=True,
+    static_plugins=["security"],
+    static_rules="./rules.json",
+    output_format="json",
+    timeout=300
 )
 
-# Rotate an API key (generates new secret)
-rotated_key = await client.users().api_keys().rotate_key(api_key_id)
-
-# Delete an API key
-await client.users().api_keys().delete_key(api_key_id)
-```
-
-### Report Management
-
-```python
-# Create a new report
-report = await client.reports().create({
-    "scan_id": scan_id,
-    "report_type": "scan_summary",
-    "format": "pdf",
-    "title": "Security Audit Report"
-})
-
-# Get report details
-report_details = await client.reports().get(report_id)
-
-# List reports with filtering
-reports = await client.reports().list(
-    limit=10,
-    report_type="scan_summary",
-    status="completed"
-)
-
-# Update report
-updated_report = await client.reports().update(report_id, {
-    "title": "Updated Report Title"
-})
-
-# Download report file
-report_content = await client.reports().download(report_id)
-
-# Get report summary statistics
-summary = await client.reports().get_summary()
-print(f"Total reports: {summary['total_reports']}")
-print(f"Reports by type: {summary['reports_by_type']}")
-
-# Generate reports in different formats
-pdf_report = await client.reports().generate_pdf(scan_id)
-csv_report = await client.reports().generate_csv(scan_id)
-json_report = await client.reports().generate_json(scan_id)
-sarif_report = await client.reports().generate_sarif(scan_id)
-html_report = await client.reports().generate_html(scan_id)
+result = await scanner.scan_directory("./project", options)
 ```
 
 ## Error Handling
@@ -210,158 +192,108 @@ html_report = await client.reports().generate_html(scan_id)
 The SDK provides comprehensive error handling:
 
 ```python
-from tavo_ai import TavoError, TavoAPIError, TavoAuthError
-
-try:
-    result = await client.scan_code(code)
-except TavoAuthError:
-    print("Authentication failed - check your API key")
-except TavoAPIError as e:
-    print(f"API error: {e.message}")
-except TavoError as e:
-    print(f"General error: {e}")
-```
-
-## Configuration
-
-### Custom Base URL
-
-```python
-# Use custom API endpoint
-client = TavoClient(
-    api_key="your-api-key",
-    base_url="https://api-staging.tavoai.net"
-)
-```
-
-### Timeout Configuration
-
-```python
-# Set custom timeout (in seconds)
-client = TavoClient(
-    api_key="your-api-key",
-    timeout=60
-)
-```
-
-### Retry Configuration
-
-```python
-# Configure retry behavior
-client = TavoClient(
-    api_key="your-api-key",
-    max_retries=3,
-    retry_delay=1.0
-)
-```
-
-## Advanced Usage
-
-### Async Context Manager
-
-```python
-async with TavoClient(api_key="your-api-key") as client:
-    result = await client.scan_code(code)
-    # Client automatically handles cleanup
-```
-
-### Batch Operations
-
-```python
-# Scan multiple code snippets
+from tavo import TavoClient, TavoScanner
 import asyncio
 
-async def batch_scan(codes):
-    async with TavoClient(api_key="your-api-key") as client:
-        tasks = [client.scan_code(code) for code in codes]
-        results = await asyncio.gather(*tasks)
-        return results
+async def robust_scan():
+    client = TavoClient(api_key="your-key")
+    scanner = TavoScanner()
 
-results = await batch_scan(code_list)
+    try:
+        # API operations with automatic retries
+        result = await client.health.health_check()
+
+        # Scanner execution with timeout handling
+        scan_result = await scanner.scan_directory("./project")
+
+    except Exception as e:
+        print(f"Operation failed: {e}")
+        # SDK handles retries, timeouts, and error parsing automatically
 ```
 
-### Custom Request Headers
+## Advanced Features
+
+### Async Context Management
 
 ```python
-# Add custom headers to all requests
-client = TavoClient(api_key="your-api-key")
-client.session.headers.update({
-    "X-Custom-Header": "value",
-    "User-Agent": "MyApp/1.0"
+from tavo import TavoClient
+
+async with TavoClient(api_key="your-key") as client:
+    result = await client.device_auth.post_code("id", "name")
+    # Client automatically closes connections
+```
+
+### WebSocket Integration
+
+```python
+client = TavoClient(api_key="your-key")
+
+# Connect to real-time updates
+await client.connect_websocket("client-123")
+
+# Register message handlers
+client.on_websocket_message("scan_update", handle_scan_update)
+
+# Send messages
+await client.send_websocket_message({
+    "type": "subscribe",
+    "scan_id": "scan-123"
 })
 ```
 
-## Type Safety
-
-The SDK is fully typed with Python type hints:
+### Custom Scanner Configuration
 
 ```python
-from typing import List, Dict, Any
-from tavo_ai import ScanResult, Vulnerability
+from tavo import TavoScanner
 
-async def analyze_codebase(files: List[str]) -> Dict[str, List[Vulnerability]]:
-    results = {}
-    async with TavoClient(api_key="your-api-key") as client:
-        for file_path in files:
-            with open(file_path, 'r') as f:
-                code = f.read()
-            result = await client.scan_code(code)
-            results[file_path] = result.vulnerabilities
-    return results
+# Custom scanner path
+scanner = TavoScanner({
+    "scanner_path": "/custom/path/to/tavo-scanner",
+    "timeout": 1200,
+    "working_directory": "/tmp"
+})
+
+# Create temporary config files
+plugin_config_path = await scanner.create_plugin_config(
+    "security", {"strict_mode": True}
+)
+
+result = await scanner.scan_with_rules("./project", plugin_config_path)
 ```
 
-## Integration Examples
+## Migration Guide
 
-### Django Integration
+If you're upgrading from a previous version of the SDK:
 
+### Old API (Deprecated)
 ```python
-# settings.py
-TAVO_API_KEY = os.getenv('TAVO_API_KEY')
-
-# views.py
-from django.http import JsonResponse
+# Old operation-based API
 from tavo_ai import TavoClient
-
-async def scan_code_view(request):
-    if request.method == 'POST':
-        code = request.POST.get('code')
-        async with TavoClient(api_key=settings.TAVO_API_KEY) as client:
-            result = await client.scan_code(code)
-            return JsonResponse({
-                'total_issues': result.total_issues,
-                'vulnerabilities': [
-                    {'title': v.title, 'severity': v.severity}
-                    for v in result.vulnerabilities
-                ]
-            })
+client = TavoClient(api_key="key")
+auth_ops = client.auth()
+result = await auth_ops.some_method()
 ```
 
-### FastAPI Integration
-
+### New API (Recommended)
 ```python
-from fastapi import FastAPI, HTTPException
-from tavo_ai import TavoClient, TavoError
-
-app = FastAPI()
-client = TavoClient(api_key=os.getenv('TAVO_API_KEY'))
-
-@app.post("/scan")
-async def scan_code(code: str):
-    try:
-        result = await client.scan_code(code)
-        return {
-            "success": True,
-            "total_issues": result.total_issues,
-            "vulnerabilities": result.vulnerabilities
-        }
-    except TavoError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# New generated client API
+from tavo import TavoClient
+client = TavoClient(api_key="key")
+result = await client.device_auth.some_method()
 ```
 
-## Best Practices
+## Contributing
 
-1. **Reuse Client Instances**: Create one client instance and reuse it for multiple operations
-2. **Handle Errors Appropriately**: Always catch and handle `TavoError` exceptions
-3. **Use Async/Await**: Take advantage of async operations for better performance
-4. **Set Reasonable Timeouts**: Configure timeouts based on your use case
-5. **Monitor Rate Limits**: Be aware of API rate limits and implement backoff strategies
+The Python SDK is generated from the Tavo AI API specification. To contribute:
+
+1. **API Changes**: Modify the API specification in the main Tavo repository
+2. **Regeneration**: Run the generation script to update client code
+3. **Testing**: Add tests for new functionality
+4. **Documentation**: Update this guide for new features
+
+## Support
+
+- 📖 [API Reference](../../api-reference/overview.md)
+- 🐛 [GitHub Issues](https://github.com/tavoai/tavo-sdk/issues)
+- 💬 [Community Discussions](https://github.com/tavoai/tavo-sdk/discussions)
+
