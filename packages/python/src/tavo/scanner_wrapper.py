@@ -54,6 +54,7 @@ class ScannerConfig:
 
         # Check in PATH
         import shutil
+
         scanner_in_path = shutil.which("tavo-scanner")
         if scanner_in_path:
             return Path(scanner_in_path)
@@ -71,7 +72,7 @@ class TavoScanner:
         self,
         target_path: Union[str, Path],
         scan_options: Optional[ScanOptions] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Scan a directory with tavo-scanner
 
@@ -84,7 +85,9 @@ class TavoScanner:
             Scan results as dictionary
         """
         if not self.config.scanner_path:
-            raise FileNotFoundError("tavo-scanner binary not found. Please install tavo-cli or set scanner_path.")
+            raise FileNotFoundError(
+                "tavo-scanner binary not found. Please install tavo-cli or set scanner_path."
+            )
 
         # Merge scan options with config
         merged_config = ScannerConfig()
@@ -136,10 +139,7 @@ class TavoScanner:
         return await self._execute_scanner(cmd, merged_config.working_directory)
 
     async def scan_with_plugins(
-        self,
-        target_path: Union[str, Path],
-        plugins: List[str],
-        **kwargs
+        self, target_path: Union[str, Path], plugins: List[str], **kwargs
     ) -> Dict[str, Any]:
         """Scan with specific plugins"""
         config = ScannerConfig(plugins=plugins)
@@ -147,10 +147,7 @@ class TavoScanner:
         return await scanner.scan_directory(target_path, **kwargs)
 
     async def scan_with_rules(
-        self,
-        target_path: Union[str, Path],
-        rules_path: Union[str, Path],
-        **kwargs
+        self, target_path: Union[str, Path], rules_path: Union[str, Path], **kwargs
     ) -> Dict[str, Any]:
         """Scan with custom rules"""
         config = ScannerConfig(rules_path=Path(rules_path))
@@ -158,9 +155,7 @@ class TavoScanner:
         return await scanner.scan_directory(target_path, **kwargs)
 
     async def _execute_scanner(
-        self,
-        cmd: List[str],
-        working_directory: Optional[Path] = None
+        self, cmd: List[str], working_directory: Optional[Path] = None
     ) -> Dict[str, Any]:
         """Execute the scanner subprocess"""
         try:
@@ -169,7 +164,7 @@ class TavoScanner:
                 *cmd,
                 cwd=working_directory,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             # Wait for completion
@@ -177,7 +172,9 @@ class TavoScanner:
 
             if process.returncode != 0:
                 error_msg = stderr.decode().strip()
-                raise RuntimeError(f"Scanner failed with exit code {process.returncode}: {error_msg}")
+                raise RuntimeError(
+                    f"Scanner failed with exit code {process.returncode}: {error_msg}"
+                )
 
             # Parse output
             output = stdout.decode().strip()
@@ -191,18 +188,20 @@ class TavoScanner:
                 return {"status": "success", "output": output}
 
         except FileNotFoundError:
-            raise FileNotFoundError(f"tavo-scanner binary not found at {self.config.scanner_path}")
+            raise FileNotFoundError(
+                f"tavo-scanner binary not found at {self.config.scanner_path}"
+            )
         except asyncio.TimeoutError:
             raise TimeoutError(f"Scanner timed out after {self.config.timeout} seconds")
 
     def create_plugin_config(self, plugin_name: str, config: Dict[str, Any]) -> Path:
         """Create a temporary plugin configuration file"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(config, f, indent=2)
             return Path(f.name)
 
     def create_rules_file(self, rules: Dict[str, Any]) -> Path:
         """Create a temporary rules file"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(rules, f, indent=2)
             return Path(f.name)

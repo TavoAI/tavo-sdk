@@ -22,7 +22,6 @@ namespace TavoAI
             this.httpClient = httpClient;
         }
 
-
         /// <summary>
         /// POST /submit/code
         /// </summary>
@@ -31,9 +30,14 @@ namespace TavoAI
         /// <param name="repository_name">repository_name parameter</param>
         /// <param name="branch">branch parameter</param>
         /// <param name="commit_sha">commit_sha parameter</param>
-        public async Task<Task<dict>> postsubmitcode(List<object>? files = null, object? scan_config = null, string? repository_name = null, string? branch = null, string? commit_sha = null)
-        {'                    var url = "/submit/code";\n                    var content = JsonContent.Create(new { "files", files, "scan_config", scan_config, "repository_name", repository_name, "branch", branch, "commit_sha", commit_sha });\n                    var response = await this.httpClient.PostAsync(url, content);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<object> postsubmitcode(List<object>? files = null, object? scan_config = null, string? repository_name = null, string? branch = null, string? commit_sha = null)
+        {
+                    var url = "/submit/code";
+                    var content = JsonContent.Create(new { files = files, scan_config = scan_config, repository_name = repository_name, branch = branch, commit_sha = commit_sha });
+                    var response = await this.httpClient.PostAsync(url, content);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// POST /submit/repository
         /// </summary>
@@ -42,9 +46,14 @@ namespace TavoAI
         /// <param name="scan_config">scan_config parameter</param>
         /// <param name="branch">branch parameter</param>
         /// <param name="commit_sha">commit_sha parameter</param>
-        public async Task<Task<dict>> postsubmitrepository(string? repository_url = null, object? snapshot_data = null, object? scan_config = null, string? branch = null, string? commit_sha = null)
-        {'                    var url = "/submit/repository";\n                    var content = JsonContent.Create(new { "repository_url", repository_url, "snapshot_data", snapshot_data, "scan_config", scan_config, "branch", branch, "commit_sha", commit_sha });\n                    var response = await this.httpClient.PostAsync(url, content);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<object> postsubmitrepository(string? repository_url = null, object? snapshot_data = null, object? scan_config = null, string? branch = null, string? commit_sha = null)
+        {
+                    var url = "/submit/repository";
+                    var content = JsonContent.Create(new { repository_url = repository_url, snapshot_data = snapshot_data, scan_config = scan_config, branch = branch, commit_sha = commit_sha });
+                    var response = await this.httpClient.PostAsync(url, content);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// POST /submit/analysis
         /// </summary>
@@ -54,21 +63,41 @@ namespace TavoAI
         /// <param name="rules">rules parameter</param>
         /// <param name="plugins">plugins parameter</param>
         /// <param name="context">context parameter</param>
-        public async Task<Task<dict>> postsubmitanalysis(string? code_content = null, string? language = null, string? analysis_type = null, List<string>? rules = null, List<string>? plugins = null, object? context = null)
-        {'                    var url = "/submit/analysis";\n                    var content = JsonContent.Create(new { "code_content", code_content, "language", language, "analysis_type", analysis_type, "rules", rules, "plugins", plugins, "context", context });\n                    var response = await this.httpClient.PostAsync(url, content);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<object> postsubmitanalysis(string? code_content = null, string? language = null, string? analysis_type = null, List<string>? rules = null, List<string>? plugins = null, object? context = null)
+        {
+                    var url = "/submit/analysis";
+                    var content = JsonContent.Create(new { code_content = code_content, language = language, analysis_type = analysis_type, rules = rules, plugins = plugins, context = context });
+                    var response = await this.httpClient.PostAsync(url, content);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// GET /scans/{scan_id}/status
         /// </summary>
                 /// <param name="scan_id">scan_id parameter</param>
-        public async Task<Task<object>> getscans{scan_id}status(string scan_id)
-        {'                    var queryParams = new Dictionary<string, object?> { "scan_id", scan_id };\n                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));\n                    var url = "/scans/{scan_id}/status" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");\n                    var content = null;\n                    var response = await this.httpClient.GetAsync(url);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<object> getscansstatus(string scan_id)
+        {
+                    var queryParams = new Dictionary<string, object?> { "scan_id", scan_id };
+                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));
+                    var url = $"{formatted_path}" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");
+                    var content = null;
+                    var response = await this.httpClient.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// GET /scans/{scan_id}/results/summary
         /// </summary>
                 /// <param name="scan_id">scan_id parameter</param>
-        public async Task<Task<object>> getscans{scan_id}resultssummary(string scan_id)
-        {'                    var queryParams = new Dictionary<string, object?> { "scan_id", scan_id };\n                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));\n                    var url = "/scans/{scan_id}/results/summary" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");\n                    var content = null;\n                    var response = await this.httpClient.GetAsync(url);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
+        public async Task<object> getscansresultssummary(string scan_id)
+        {
+                    var queryParams = new Dictionary<string, object?> { "scan_id", scan_id };
+                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));
+                    var url = $"{formatted_path}" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");
+                    var content = null;
+                    var response = await this.httpClient.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
     }
 }

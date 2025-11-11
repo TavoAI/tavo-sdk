@@ -17,6 +17,25 @@ const sidebars: SidebarsConfig = {
     'intro',
     {
       type: 'category',
+      label: 'API Reference',
+      items: [
+        'api-reference/overview',
+        {
+          type: 'category',
+          label: 'Endpoints',
+          items: [
+            'api-reference/api-reference/ai_analysis',
+            'api-reference/api-reference/scan_management',
+            'api-reference/api-reference/repositories',
+            'api-reference/api-reference/registry',
+            'api-reference/api-reference/jobs',
+            'api-reference/api-reference/health',
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Getting Started',
       items: [
         'getting-started/installation',
@@ -48,6 +67,13 @@ const sidebars: SidebarsConfig = {
         'examples/aspnet-core',
         'examples/dotnet',
         'examples/rust',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Advanced',
+      items: [
+        'advanced/performance',
       ],
     },
   ],

@@ -2,6 +2,10 @@
 
 The Tavo AI API provides comprehensive security scanning and AI model analysis capabilities through multiple SDKs and direct REST API access.
 
+:::info Auto-Generated Documentation
+This API reference is automatically generated from the live OpenAPI specification of the Tavo AI API server. The documentation reflects the current state of the API and is updated with each deployment.
+:::
+
 ## SDKs Overview
 
 ### Authentication Methods

@@ -22,7 +22,6 @@ namespace TavoAI
             this.httpClient = httpClient;
         }
 
-
         /// <summary>
         /// GET /results
         /// </summary>
@@ -33,9 +32,16 @@ namespace TavoAI
         /// <param name="severity">severity parameter</param>
         /// <param name="start_date">start_date parameter</param>
         /// <param name="end_date">end_date parameter</param>
-        public async Task<Task<Dict[str, Any]>> getresults(double? skip = null, double? limit = null, string? scan_id = null, string? analysis_type = null, string? severity = null, string? start_date = null, string? end_date = null)
-        {'                    var queryParams = new Dictionary<string, object?> { "skip", skip, "limit", limit, "scan_id", scan_id, "analysis_type", analysis_type, "severity", severity, "start_date", start_date, "end_date", end_date };\n                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));\n                    var url = "/results" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");\n                    var content = null;\n                    var response = await this.httpClient.GetAsync(url);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<Dictionary<string, object>> getresults(double? skip = null, double? limit = null, string? scan_id = null, string? analysis_type = null, string? severity = null, string? start_date = null, string? end_date = null)
+        {
+                    var queryParams = new Dictionary<string, object?> { "skip", skip, "limit", limit, "scan_id", scan_id, "analysis_type", analysis_type, "severity", severity, "start_date", start_date, "end_date", end_date };
+                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));
+                    var url = $"{formatted_path}" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");
+                    var content = null;
+                    var response = await this.httpClient.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// GET /results/export
         /// </summary>
@@ -44,7 +50,15 @@ namespace TavoAI
         /// <param name="analysis_type">analysis_type parameter</param>
         /// <param name="start_date">start_date parameter</param>
         /// <param name="end_date">end_date parameter</param>
-        public async Task<Task<Response>> getresultsexport(string? format = null, string? scan_id = null, string? analysis_type = null, string? start_date = null, string? end_date = null)
-        {'                    var queryParams = new Dictionary<string, object?> { "format", format, "scan_id", scan_id, "analysis_type", analysis_type, "start_date", start_date, "end_date", end_date };\n                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));\n                    var url = "/results/export" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");\n                    var content = null;\n                    var response = await this.httpClient.GetAsync(url);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
+        public async Task<object> getresultsexport(string? format = null, string? scan_id = null, string? analysis_type = null, string? start_date = null, string? end_date = null)
+        {
+                    var queryParams = new Dictionary<string, object?> { "format", format, "scan_id", scan_id, "analysis_type", analysis_type, "start_date", start_date, "end_date", end_date };
+                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));
+                    var url = $"{formatted_path}" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");
+                    var content = null;
+                    var response = await this.httpClient.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
     }
 }

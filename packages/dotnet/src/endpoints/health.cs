@@ -22,26 +22,41 @@ namespace TavoAI
             this.httpClient = httpClient;
         }
 
-
         /// <summary>
         /// GET /health
         /// </summary>
         
-        public async Task<Task<Dict[str, Any]>> gethealth()
-        {'                    var url = "/health";\n                    var content = null;\n                    var response = await this.httpClient.GetAsync(url);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<Dictionary<string, object>> gethealth()
+        {
+                    var url = "/health";
+                    var content = null;
+                    var response = await this.httpClient.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// GET /health/ready
         /// </summary>
         
-        public async Task<Task<Dict[str, Any]>> gethealthready()
-        {'                    var url = "/health/ready";\n                    var content = null;\n                    var response = await this.httpClient.GetAsync(url);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<Dictionary<string, object>> gethealthready()
+        {
+                    var url = "/health/ready";
+                    var content = null;
+                    var response = await this.httpClient.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// GET /health/live
         /// </summary>
         
-        public async Task<Task<Dict[str, Any]>> gethealthlive()
-        {'                    var url = "/health/live";\n                    var content = null;\n                    var response = await this.httpClient.GetAsync(url);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
+        public async Task<Dictionary<string, object>> gethealthlive()
+        {
+                    var url = "/health/live";
+                    var content = null;
+                    var response = await this.httpClient.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
     }
 }

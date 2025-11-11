@@ -43,3 +43,7 @@ typing-inspection==0.4.2
     # via pydantic
 websockets==15.0.1
     # via tavo-sdk (pyproject.toml)
+
+# Optional OPA client support
+opa-python-client==2.0.3
+    # via tavo-sdk (pyproject.toml)

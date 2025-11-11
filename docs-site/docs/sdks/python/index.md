@@ -10,21 +10,60 @@ pip install tavo-ai
 
 ## Architecture
 
-The Python SDK provides two main components:
+The Python SDK provides a modular, async-first architecture with generated API clients and integrated scanner capabilities.
 
-### API Clients
-Generated async clients for all Tavo AI REST API endpoints located in `packages/python/src/endpoints/`:
-- `DeviceAuthClient` - Device authentication operations
-- `ScanToolsClient` - Core scanning functionality
-- `AiAnalysisClient` - AI-powered code analysis
-- And 21+ additional endpoint clients
+### Modular API Clients
+
+The SDK provides **26 specialized client classes** for different API endpoint categories, each with full type annotations and async methods:
+
+#### Core Scanning (`tavo.scans`, `tavo.scan_management`, etc.)
+```python
+# Scan management operations
+scan_client = client.scan_management
+result = await scan_client.create_scan(repository_url="https://github.com/user/repo")
+
+# Scan tools and rules
+tools_client = client.scan_tools
+rules_client = client.scan_rules
+```
+
+#### AI Analysis (`tavo.ai_analysis`, `tavo.ai_analysis_core`, etc.)
+```python
+# AI-powered analysis
+ai_client = client.ai_analysis
+analysis = await ai_client.analyze_code(code="print('hello')", language="python")
+
+# Risk compliance checking
+compliance_client = client.ai_risk_compliance
+report = await compliance_client.check_compliance(scan_id="123")
+```
+
+#### Repository & Registry Management
+```python
+# Repository operations
+repo_client = client.repositories
+connections_client = client.repository_connections
+
+# Plugin marketplace
+marketplace_client = client.plugin_marketplace
+plugins = await marketplace_client.list_plugins()
+```
+
+#### Authentication & Device Management
+```python
+# Device authentication flow
+auth_client = client.device_auth
+code_result = await auth_client.post_code(client_id="123", client_name="my-app")
+```
 
 ### Scanner Integration
-Built-in tavo-scanner wrapper in `packages/python/src/tavo/scanner_wrapper.py`:
-- Subprocess execution of tavo-scanner binary
-- Plugin and rule configuration management
-- Automatic binary discovery (relative paths and PATH)
-- Async execution with timeout handling
+
+Built-in tavo-scanner wrapper with advanced capabilities:
+- **Async subprocess execution** with timeout handling
+- **Plugin and rule management** with validation
+- **Automatic binary discovery** (relative paths, PATH, and custom locations)
+- **Structured result parsing** with error handling
+- **Progress monitoring** and cancellation support
 
 ## Quick Start
 
@@ -33,25 +72,119 @@ import asyncio
 from tavo import TavoClient, TavoScanner
 
 async def main():
-    # Initialize API client
+    # Initialize API client with modular architecture
     client = TavoClient(api_key="your-api-key")
 
-    # Use generated endpoint clients
-    auth_result = await client.device_auth.post_code(
-        client_id="123",
-        client_name="my-app"
+    # 1. Device authentication
+    auth_client = client.device_auth
+    auth_result = await auth_client.post_code(
+        client_id="your-client-id",
+        client_name="my-security-scanner"
     )
-    print(f"Authentication: {auth_result}")
+    print(f"Device auth successful: {auth_result}")
 
-    # Use scanner integration
-    scanner = TavoScanner()
-    scan_result = await scanner.scan_directory(
-        "./my-project",
-        plugins=["security", "performance"]
+    # 2. Create and run a security scan
+    scan_client = client.scan_management
+    scan_result = await scan_client.create_scan(
+        repository_url="https://github.com/your-org/your-repo",
+        scan_type="security",
+        branch="main"
     )
-    print(f"Scan completed: {scan_result['status']}")
+    print(f"Scan created: {scan_result}")
+
+    # 3. Get scan results with AI analysis
+    ai_client = client.ai_analysis
+    analysis = await ai_client.analyze_scan(scan_id=scan_result["id"])
+    print(f"AI analysis: {len(analysis['vulnerabilities'])} issues found")
+
+    # 4. Alternative: Use integrated scanner
+    scanner = TavoScanner()
+    local_result = await scanner.scan_directory(
+        "./my-project",
+        plugins=["security", "performance"],
+        rules=["custom-security-rules"]
+    )
+    print(f"Local scan: {local_result['total_issues']} issues found")
 
 asyncio.run(main())
+```
+
+## Client Architecture
+
+The `TavoClient` provides access to all API endpoints through modular client properties:
+
+```python
+client = TavoClient(api_key="your-api-key")
+
+# Access different API categories
+client.device_auth        # Device authentication
+client.scan_management    # Scan lifecycle management
+client.ai_analysis        # AI-powered analysis
+client.repositories       # Repository operations
+client.plugin_marketplace # Plugin management
+client.registry          # Registry operations
+# ... and 20+ more specialized clients
+```
+
+Each client provides fully typed async methods matching the REST API:
+
+```python
+# Type hints and IDE completion
+result: Dict[str, Any] = await client.scan_management.create_scan(
+    repository_url="https://github.com/user/repo",
+    scan_type="security"
+)
+```
+
+## Error Handling
+
+The SDK provides comprehensive error handling with specific exception types:
+
+```python
+from tavo import TavoClient, TavoAPIError, AuthenticationError
+
+try:
+    client = TavoClient(api_key="invalid-key")
+    result = await client.health.get_status()
+except AuthenticationError as e:
+    print(f"Auth failed: {e}")
+except TavoAPIError as e:
+    print(f"API error: {e.status_code} - {e.message}")
+```
+
+## Best Practices
+
+### Connection Management
+```python
+# Reuse client instances for multiple requests
+client = TavoClient(api_key="your-key")
+
+# Client automatically handles connection pooling
+results = await asyncio.gather(
+    client.scan_management.list_scans(),
+    client.repositories.list_repositories(),
+    client.ai_analysis.get_models()
+)
+```
+
+### Timeout Configuration
+```python
+# Configure timeouts for long-running operations
+client = TavoClient(
+    api_key="your-key",
+    timeout=30.0  # seconds
+)
+```
+
+### Logging
+```python
+import logging
+
+# Enable debug logging
+logging.getLogger("tavo").setLevel(logging.DEBUG)
+
+client = TavoClient(api_key="your-key")
+# All requests now logged with timing and errors
 ```
 
 ## Authentication

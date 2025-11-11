@@ -16,36 +16,195 @@ yarn add @tavoai/sdk
 
 ## Architecture
 
-The TypeScript SDK provides two main components:
+The TypeScript SDK provides a modern, modular architecture with generated API clients and integrated scanner capabilities.
 
-### API Clients
-Generated Promise-based clients for all Tavo AI REST API endpoints located in `packages/typescript/src/endpoints/`:
-- `DeviceAuthClient` - Device authentication operations  
-- `ScanToolsClient` - Core scanning functionality
-- `AiAnalysisClient` - AI-powered code analysis
-- And 21+ additional endpoint clients
+### Modular API Clients
+
+The SDK provides **26 specialized client classes** for different API endpoint categories, each with full TypeScript types and async methods:
+
+#### Core Scanning (`client.scans`, `client.scanManagement`, etc.)
+```typescript
+// Scan management operations
+const scanClient = client.scanManagement;
+const result = await scanClient.createScan({
+  repositoryUrl: "https://github.com/your-org/your-repo",
+  scanType: "security",
+  branch: "main"
+});
+
+// Scan tools and rules
+const toolsClient = client.scanTools;
+const rulesClient = client.scanRules;
+```
+
+#### AI Analysis (`client.aiAnalysis`, `client.aiAnalysisCore`, etc.)
+```typescript
+// AI-powered analysis
+const aiClient = client.aiAnalysis;
+const analysis = await aiClient.analyzeCode({
+  code: "console.log('hello')",
+  language: "javascript"
+});
+
+// Risk compliance checking
+const complianceClient = client.aiRiskCompliance;
+const report = await complianceClient.checkCompliance({ scanId: "123" });
+```
+
+#### Repository & Registry Management
+```typescript
+// Repository operations
+const repoClient = client.repositories;
+const connectionsClient = client.repositoryConnections;
+
+// Plugin marketplace
+const marketplaceClient = client.pluginMarketplace;
+const plugins = await marketplaceClient.listPlugins();
+```
+
+#### Authentication & Device Management
+```typescript
+// Device authentication flow
+const authClient = client.deviceAuth;
+const authResult = await authClient.postCode({
+  clientId: "your-client-id",
+  clientName: "my-security-scanner"
+});
+```
 
 ### Scanner Integration
-Built-in tavo-scanner wrapper in `packages/typescript/src/scanner.ts`:
-- Child process execution of tavo-scanner binary
-- Plugin and rule configuration management
-- Automatic binary discovery
-- Promise-based async execution
+
+Advanced scanner integration with modern async patterns:
+- **Promise-based async execution** with proper error handling
+- **Plugin and rule management** with TypeScript validation
+- **Automatic binary discovery** (relative paths, PATH, and custom locations)
+- **Structured result parsing** with comprehensive type safety
+- **Progress monitoring** and cancellation support
+- **Memory-efficient streaming** for large scan outputs
 
 ## Quick Start
 
 ```typescript
 import { TavoSdk } from '@tavoai/sdk';
 
-// API client usage
-const client = TavoSdk.CreateClient('your-api-key');
-const result = await client.deviceAuth.postCode({ clientId: '123', clientName: 'test' });
+async function main() {
+  // Initialize API client with modular architecture
+  const client = TavoSdk.createClient({ apiKey: 'your-api-key' });
 
-// Scanner usage
-const scanner = TavoSdk.CreateScanner();
-const scanResult = await scanner.scanDirectory('./my-project', {
-  plugins: ['security', 'performance']
+  // 1. Device authentication
+  const authClient = client.deviceAuth;
+  const authResult = await authClient.postCode({
+    clientId: 'your-client-id',
+    clientName: 'my-security-scanner'
+  });
+  console.log('Device auth successful:', authResult);
+
+  // 2. Create and run a security scan
+  const scanClient = client.scanManagement;
+  const scanResult = await scanClient.createScan({
+    repositoryUrl: 'https://github.com/your-org/your-repo',
+    scanType: 'security',
+    branch: 'main'
+  });
+  console.log('Scan created:', scanResult);
+
+  // 3. Get AI-powered analysis
+  const aiClient = client.aiAnalysis;
+  const analysis = await aiClient.analyzeScan({ scanId: scanResult.id });
+  console.log('AI analysis found issues:', analysis.vulnerabilities.length);
+
+  // 4. Alternative: Use integrated scanner
+  const scanner = TavoSdk.createScanner();
+  const localResult = await scanner.scanDirectory('./my-project', {
+    plugins: ['security', 'performance'],
+    rules: ['custom-security-rules']
+  });
+  console.log('Local scan found issues:', localResult.totalIssues);
+}
+
+main().catch(console.error);
+```
+
+## Client Architecture
+
+The `TavoSdk` client provides access to all API endpoints through modular client properties:
+
+```typescript
+const client = TavoSdk.createClient({ apiKey: 'your-key' });
+
+// Access different API categories
+client.deviceAuth        // Device authentication
+client.scanManagement    // Scan lifecycle management
+client.aiAnalysis        // AI-powered analysis
+client.repositories      // Repository operations
+client.pluginMarketplace // Plugin management
+client.registry          // Registry operations
+// ... and 20+ more specialized clients
+```
+
+Each client provides fully typed async methods matching the REST API:
+
+```typescript
+// Type hints and IDE completion
+const result: ScanResult = await client.scanManagement.createScan({
+  repositoryUrl: "https://github.com/user/repo",
+  scanType: "security"
 });
+```
+
+## Error Handling
+
+The SDK provides comprehensive error handling with specific exception types:
+
+```typescript
+import { TavoSdk, TavoApiError, AuthenticationError } from '@tavoai/sdk';
+
+try {
+  const client = TavoSdk.createClient({ apiKey: 'invalid-key' });
+  const result = await client.health.getStatus();
+} catch (error) {
+  if (error instanceof AuthenticationError) {
+    console.log('Auth failed:', error.message);
+  } else if (error instanceof TavoApiError) {
+    console.log(`API error: ${error.statusCode} - ${error.message}`);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+## Best Practices
+
+### Connection Management
+```typescript
+// Reuse client instances for multiple requests
+const client = TavoSdk.createClient({ apiKey: 'your-key' });
+
+// Client automatically handles connection pooling
+const [scans, repos, models] = await Promise.all([
+  client.scanManagement.listScans(),
+  client.repositories.listRepositories(),
+  client.aiAnalysis.getModels()
+]);
+```
+
+### Timeout Configuration
+```typescript
+// Configure timeouts for long-running operations
+const client = TavoSdk.createClient({
+  apiKey: 'your-key',
+  timeout: 30000  // milliseconds
+});
+```
+
+### Logging
+```typescript
+// Enable debug logging
+const client = TavoSdk.createClient({
+  apiKey: 'your-key',
+  debug: true
+});
+// All requests now logged with timing and errors
 ```
 
 ## Authentication

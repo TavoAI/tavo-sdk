@@ -22,35 +22,57 @@ namespace TavoAI
             this.httpClient = httpClient;
         }
 
-
         /// <summary>
         /// POST /github
         /// </summary>
                 /// <param name="x_hub_signature_256">x_hub_signature_256 parameter</param>
         /// <param name="x_github_event">x_github_event parameter</param>
         /// <param name="x_github_delivery">x_github_delivery parameter</param>
-        public async Task<Task<Dict[str, Any]>> postgithub(string? x_hub_signature_256 = null, string? x_github_event = null, string? x_github_delivery = null)
-        {'                    var url = "/github";\n                    var content = JsonContent.Create(new { "x_hub_signature_256", x_hub_signature_256, "x_github_event", x_github_event, "x_github_delivery", x_github_delivery });\n                    var response = await this.httpClient.PostAsync(url, content);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<Dictionary<string, object>> postgithub(string? x_hub_signature_256 = null, string? x_github_event = null, string? x_github_delivery = null)
+        {
+                    var url = "/github";
+                    var content = JsonContent.Create(new { x_hub_signature_256 = x_hub_signature_256, x_github_event = x_github_event, x_github_delivery = x_github_delivery });
+                    var response = await this.httpClient.PostAsync(url, content);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// POST /{repository_id}/setup
         /// </summary>
                 /// <param name="repository_id">repository_id parameter</param>
-        public async Task<Task<WebhookSetupResponse>> post{repository_id}setup(string repository_id)
-        {'                    var url = "/{repository_id}/setup";\n                    var content = JsonContent.Create(repository_id);\n                    var response = await this.httpClient.PostAsync(url, content);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<object> postsetup(string repository_id)
+        {
+                    var url = "/{repository_id}/setup";
+                    var content = JsonContent.Create(repository_id);
+                    var response = await this.httpClient.PostAsync(url, content);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// GET /{repository_id}/status
         /// </summary>
                 /// <param name="repository_id">repository_id parameter</param>
-        public async Task<Task<WebhookStatusResponse>> get{repository_id}status(string repository_id)
-        {'                    var queryParams = new Dictionary<string, object?> { "repository_id", repository_id };\n                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));\n                    var url = "/{repository_id}/status" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");\n                    var content = null;\n                    var response = await this.httpClient.GetAsync(url);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
-
+        public async Task<object> getstatus(string repository_id)
+        {
+                    var queryParams = new Dictionary<string, object?> { "repository_id", repository_id };
+                    var queryString = string.Join("&", queryParams.Where(p => p.Value != null).Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value.ToString())}"));
+                    var url = $"{formatted_path}" + (string.IsNullOrEmpty(queryString) ? "" : $"?{queryString}");
+                    var content = null;
+                    var response = await this.httpClient.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
         /// <summary>
         /// DELETE /{repository_id}/webhook
         /// </summary>
                 /// <param name="repository_id">repository_id parameter</param>
-        public async Task<Task<Dict[str, str]>> delete{repository_id}webhook(string repository_id)
-        {'                    var url = "/{repository_id}/webhook";\n                    var content = JsonContent.Create(repository_id);\n                    var response = await this.httpClient.DeleteAsync(url);\n                    response.EnsureSuccessStatusCode();\n                    return await response.Content.ReadFromJsonAsync<object>();'}
+        public async Task<Dictionary<string, object>> deletewebhook(string repository_id)
+        {
+                    var url = "/{repository_id}/webhook";
+                    var content = JsonContent.Create(repository_id);
+                    var response = await this.httpClient.DeleteAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadFromJsonAsync<object>();
+        }
     }
 }

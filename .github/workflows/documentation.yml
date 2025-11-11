@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docs-build
-          path: docs-site/build/tavo-sdk/
+          path: docs-site/build/
           retention-days: 7
 
       - name: Setup Pages
@@ -63,7 +63,7 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs-site/build/tavo-sdk/
+          path: docs-site/build/
 
       - name: Deploy to GitHub Pages
         id: deployment
