@@ -105,7 +105,7 @@ const config: Config = {
             },
             {
               label: 'GitHub Action',
-              href: 'https://github.com/TavoAI/tavo-action',
+              href: 'https://github.com/TavoAI/tavo-github-action',
             },
             {
               label: 'Python SDK',
@@ -162,7 +162,7 @@ const config: Config = {
             },
             {
               label: 'GitHub Action',
-              href: 'https://github.com/TavoAI/tavo-action',
+              href: 'https://github.com/TavoAI/tavo-github-action',
             },
           ],
         },
