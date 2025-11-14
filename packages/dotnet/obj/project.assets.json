@@ -6156,19 +6156,19 @@
     ]
   },
   "packageFolders": {
-    "/home/ccham/.nuget/packages/": {}
+    "/home/runner/.nuget/packages/": {}
   },
   "project": {
     "version": "0.4.0",
     "restore": {
-      "projectUniqueName": "/home/ccham/work/TavoAI/repos/tavo-sdk/packages/dotnet/TavoAI.csproj",
+      "projectUniqueName": "/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/TavoAI.csproj",
       "projectName": "TavoAI",
-      "projectPath": "/home/ccham/work/TavoAI/repos/tavo-sdk/packages/dotnet/TavoAI.csproj",
-      "packagesPath": "/home/ccham/.nuget/packages/",
-      "outputPath": "/home/ccham/work/TavoAI/repos/tavo-sdk/packages/dotnet/obj/",
+      "projectPath": "/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/TavoAI.csproj",
+      "packagesPath": "/home/runner/.nuget/packages/",
+      "outputPath": "/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/ccham/.nuget/NuGet/NuGet.Config"
+        "/home/runner/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -6191,7 +6191,8 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      }
+      },
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -6250,7 +6251,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/snap/dotnet-sdk/256/sdk/8.0.407/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.306/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
