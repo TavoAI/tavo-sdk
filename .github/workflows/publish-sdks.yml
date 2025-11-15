@@ -1,0 +1,245 @@
+name: Publish SDKs
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk_type:
+        description: "SDK type to publish"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - dotnet
+          - typescript
+          - python
+          - java
+          - rust
+          - go
+          - vscode-extension
+      version:
+        description: "Version to publish (leave empty for auto)"
+        required: false
+        type: string
+
+jobs:
+  publish-dotnet:
+    if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'dotnet' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ vars.DOTNET_VERSION }}
+
+      - name: Build .NET SDK
+        run: |
+          cd packages/dotnet
+          dotnet build --configuration Release
+
+      - name: Publish to NuGet
+        run: |
+          cd packages/dotnet
+          dotnet nuget push "*.nupkg" \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source ${{ vars.NUGET_REGISTRY }} \
+            --skip-duplicate
+
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  publish-typescript:
+    if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'typescript' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+          registry-url: ${{ vars.NPM_REGISTRY }}
+
+      - name: Build TypeScript SDK
+        run: |
+          cd packages/typescript
+          npm ci
+          npm run build
+
+      - name: Publish to npm
+        run: |
+          cd packages/typescript
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  publish-python:
+    if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'python' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ vars.PYTHON_VERSION }}
+
+      - name: Build Python SDK
+        run: |
+          cd packages/python
+          python -m pip install --upgrade pip
+          pip install build
+          python -m build
+
+      - name: Publish to PyPI
+        run: |
+          cd packages/python
+          pip install twine
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  publish-java:
+    if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'java' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ vars.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup GPG
+        run: |
+          echo -n "$GPG_PRIVATE_KEY" | gpg --import --batch --yes
+          echo "GPG_KEY_ID=$(echo -n "$GPG_PRIVATE_KEY" | gpg --list-keys --with-colons | head -1 | cut -d: -f5)" >> $GITHUB_ENV
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Publish to Maven Central
+        run: |
+          cd packages/java
+          mvn clean deploy \
+            -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE }} \
+            -Dgpg.keyname=${{ env.GPG_KEY_ID }}
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  publish-rust:
+    if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'rust' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ vars.RUST_VERSION }}
+
+      - name: Publish to Crates.io
+        run: |
+          cd packages/rust
+          cargo login ${{ secrets.CRATES_IO_TOKEN }}
+          cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  publish-go:
+    if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'go' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ vars.GO_VERSION }}
+
+      - name: Publish Go Module
+        run: |
+          cd packages/go
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git tag "v${{ inputs.version || '1.0.0' }}"
+          git push origin "v${{ inputs.version || '1.0.0' }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GO_SDK_ACCESS_TOKEN }}
+
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  publish-vscode-extension:
+    if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'vscode-extension' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Publish to VS Code Marketplace
+        run: |
+          cd packages/vscode-extension
+          vsce publish -p ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX
+        run: |
+          cd packages/vscode-extension
+          npx ovsx publish -p ${{ secrets.OVSX_PAT }}
+
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
