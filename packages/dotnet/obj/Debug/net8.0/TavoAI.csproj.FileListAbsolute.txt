@@ -122,3 +122,7 @@
 /home/ccham/work/TavoAI/repos/tavo-sdk/packages/dotnet/bin/Debug/net8.0/runtimes/win/lib/net7.0/System.Diagnostics.EventLog.dll
 /home/ccham/work/TavoAI/repos/tavo-sdk/packages/dotnet/obj/Debug/net8.0/TavoAI.csproj.Up2Date
 /home/ccham/work/TavoAI/repos/tavo-sdk/packages/dotnet/obj/Debug/net8.0/TavoAI.genruntimeconfig.cache
+/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/obj/Debug/net8.0/TavoAI.csproj.AssemblyReference.cache
+/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/obj/Debug/net8.0/TavoAI.GeneratedMSBuildEditorConfig.editorconfig
+/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/obj/Debug/net8.0/TavoAI.csproj.CoreCompileInputs.cache
+/home/runner/work/tavo-sdk/tavo-sdk/packages/dotnet/obj/Debug/net8.0/TavoAI.sourcelink.json
