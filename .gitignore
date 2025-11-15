@@ -322,3 +322,5 @@ site/
 # .vscode/
 
 temp-test
+
+.secrets/
