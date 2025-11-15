@@ -1,11 +1,11 @@
 #!/bin/bash
-# Tavo SDK GitHub Secrets Setup
+# admin GitHub Secrets Setup
 # Loads secrets from template into GitHub repository
 #
 # Usage: ./setup-github-secrets.sh [secrets-file]
 # Example: ./setup-github-secrets.sh templates/github-secrets-template.env
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -21,10 +21,15 @@ NC='\033[0m' # No Color
 TEMPLATE_FILE="${1:-templates/github-secrets-template.env}"
 
 # Full path to template
-TEMPLATE_PATH="$REPO_ROOT/$TEMPLATE_FILE"
+if [[ "$TEMPLATE_FILE" == /* ]] || [[ "$TEMPLATE_FILE" == .*/* ]]; then
+    # Absolute path or relative to current directory (including .secrets/, ./, ../)
+    TEMPLATE_PATH="$TEMPLATE_FILE"
+else
+    # Relative to repo root
+    TEMPLATE_PATH="$REPO_ROOT/$TEMPLATE_FILE"
 
 echo "🚀 Setting up Tavo SDK GitHub Secrets"
-echo "====================================="
+echo "======================================="
 echo ""
 echo "Template file: $TEMPLATE_PATH"
 echo ""
@@ -33,18 +38,15 @@ echo ""
 if [ ! -f "$TEMPLATE_PATH" ]; then
     echo -e "${RED}❌ Template file not found: $TEMPLATE_PATH${NC}"
     exit 1
-fi
 
 # Check if GitHub CLI is available and authenticated
 if ! command -v gh >/dev/null 2>&1; then
     echo -e "${RED}❌ GitHub CLI not found. Install with: https://cli.github.com/${NC}"
     exit 1
-fi
 
 if ! gh auth status >/dev/null 2>&1; then
     echo -e "${RED}❌ Not authenticated with GitHub CLI. Run: gh auth login${NC}"
     exit 1
-fi
 
 echo -e "${BLUE}📋 Processing secrets from template...${NC}"
 echo ""
@@ -77,18 +79,16 @@ while IFS='=' read -r key value; do
     if [[ "$value" == *"REPLACE_WITH"* ]]; then
         echo -e "${YELLOW}⚠️  SKIPPED (placeholder value)${NC}"
         continue
-    fi
 
     # Determine if this should be a secret or variable
     if [[ "$key" == *"_SECRET" ]] || [[ "$key" == *"_KEY" ]] || [[ "$key" == *"_TOKEN" ]] || [[ "$key" == *"_PASSWORD" ]] || [[ "$key" == *"_PASSPHRASE" ]] || [[ "$key" == *"_PAT" ]] || [[ "$key" == *"_USERNAME" ]] || [[ "$key" == *"_WEBHOOK_URL" ]]; then
         # This is a secret - use gh secret set
-        if echo -n "$value" | gh secret set "$key" --input-file=- 2>/dev/null; then
+        if echo -n "$value" | gh secret set "$key" 2>/dev/null; then
             echo -e "${GREEN}✅ SECRET${NC}"
             ((secrets_set++))
         else
             echo -e "${RED}❌ SECRET FAILED${NC}"
             ((errors++))
-        fi
     else
         # This is a variable - use gh variable set
         if gh variable set "$key" --body "$value" 2>/dev/null; then
@@ -97,8 +97,6 @@ while IFS='=' read -r key value; do
         else
             echo -e "${RED}❌ VARIABLE FAILED${NC}"
             ((errors++))
-        fi
-    fi
 
 done < "$TEMPLATE_PATH"
 
@@ -108,14 +106,12 @@ echo "  Secrets set: $secrets_set"
 echo "  Variables set: $variables_set"
 if [ $errors -gt 0 ]; then
     echo -e "  ${RED}Errors: $errors${NC}"
-fi
 
 echo ""
 if [ $errors -eq 0 ]; then
     echo -e "${GREEN}✅ All GitHub secrets and variables set successfully!${NC}"
 else
     echo -e "${YELLOW}⚠️  Some secrets/variables failed to set. Check above for details.${NC}"
-fi
 
 echo ""
 echo -e "${BLUE}🔧 Manual Setup Required:${NC}"
