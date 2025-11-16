@@ -1154,7 +1154,7 @@ management.endpoints.web.exposure.include=health,info,metrics
 management.endpoint.health.show-details=when-authorized
 
 # Database configuration (if needed)
-spring.datasource.url=jdbc:postgresql://localhost:5432/tavo_db
+spring.datasource.url=jdbc:postgresql://localhost:5432/tavo-db
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 spring.jpa.hibernate.ddl-auto=validate
