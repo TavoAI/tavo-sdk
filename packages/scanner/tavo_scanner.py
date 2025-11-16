@@ -40,6 +40,7 @@ try:
     from .remote_scanner import RemoteScanner
     from .websocket_handler import WebSocketHandler
     from .usage_tracker import UsageTracker
+
     SDK_AVAILABLE = True
 except ImportError:
     SDK_AVAILABLE = False
@@ -55,15 +56,17 @@ class ScannerError(Exception):
 try:
     from .rules_loader import RulesLoader
     from .hybrid_rule_executor import HybridRuleExecutor
+    from .dual_distribution_manager import DualDistributionManager
+
     RULE_SYSTEM_AVAILABLE = True
 except ImportError:
     RULE_SYSTEM_AVAILABLE = False
 
 
 class RuleManager:
-    """Legacy rule manager for backward compatibility."""
+    """Enhanced rule manager with dual distribution support."""
 
-    def __init__(self, cache_dir: Optional[Path] = None):
+    def __init__(self, cache_dir: Optional[Path] = None, registry_manager=None):
         self.cache_dir = cache_dir or Path.home() / ".tavoai" / "rules"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.bundles: Dict[str, Dict[str, Any]] = {}
@@ -71,9 +74,30 @@ class RuleManager:
         # Use new rules loader if available
         self.rules_loader = RulesLoader() if RULE_SYSTEM_AVAILABLE else None
 
-    def download_bundle(self, bundle_name: str) -> Dict[str, Any]:
-        """Download a rule bundle from the repository."""
-        # For now, look locally in the workspace
+        # Initialize dual distribution manager
+        self.dual_distribution = (
+            DualDistributionManager(registry_manager=registry_manager)
+            if RULE_SYSTEM_AVAILABLE
+            else None
+        )
+
+    async def download_bundle(
+        self, bundle_name: str, version: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Download a rule bundle using dual distribution strategy."""
+        # Use dual distribution manager if available
+        if self.dual_distribution:
+            try:
+                bundle_data = await self.dual_distribution.load_bundle(
+                    bundle_name, version
+                )
+                self.bundles[bundle_name] = bundle_data
+                return bundle_data
+            except Exception as e:
+                # Log the error but try fallback methods
+                print(f"Dual distribution failed for {bundle_name}: {e}")
+
+        # Fallback: Look locally in the workspace
         bundle_dir = self._find_bundle_locally(bundle_name)
         if bundle_dir:
             if self.rules_loader:
@@ -81,7 +105,50 @@ class RuleManager:
             else:
                 return self._load_bundle_from_directory(bundle_dir)
 
-        raise ScannerError(f"Bundle '{bundle_name}' not found")
+        # Provide helpful error message
+        access_msg = ""
+        if self.dual_distribution:
+            access_msg = f" {self.dual_distribution.show_access_message(bundle_name)}"
+
+        raise ScannerError(f"Bundle '{bundle_name}' not found.{access_msg}")
+
+    def list_available_bundles(self) -> List[Dict[str, Any]]:
+        """List all available bundles based on access level."""
+        if self.dual_distribution:
+            bundles = self.dual_distribution.list_available_bundles()
+            return [
+                {
+                    "id": b.id,
+                    "name": b.name,
+                    "description": b.description,
+                    "version": b.version,
+                    "pricing_tier": b.pricing_tier,
+                    "category": b.category,
+                    "tags": b.tags,
+                    "requires_api_key": b.source.requires_api_key,
+                }
+                for b in bundles
+            ]
+
+        # Fallback: List local bundles
+        bundles = []
+        if Path.cwd().joinpath("tavo-rules", "bundles").exists():
+            bundle_root = Path.cwd() / "tavo-rules" / "bundles"
+            for bundle_dir in bundle_root.iterdir():
+                if bundle_dir.is_dir():
+                    bundles.append(
+                        {
+                            "id": bundle_dir.name,
+                            "name": bundle_dir.name.replace("-", " ").title(),
+                            "description": f"Local bundle: {bundle_dir.name}",
+                            "version": "1.0.0",
+                            "pricing_tier": "free",
+                            "category": "local",
+                            "tags": [],
+                            "requires_api_key": False,
+                        }
+                    )
+        return bundles
 
     def _find_bundle_locally(self, bundle_name: str) -> Optional[Path]:
         """Find bundle in local workspace."""
@@ -319,7 +386,12 @@ class OpenGrepEngine:
 class SecurityScanner:
     """Unified security scanner using OpenGrep with plugin support."""
 
-    def __init__(self, rule_manager: RuleManager, api_key: Optional[str] = None, sdk_integration: Optional[Any] = None):
+    def __init__(
+        self,
+        rule_manager: RuleManager,
+        api_key: Optional[str] = None,
+        sdk_integration: Optional[Any] = None,
+    ):
         self.rule_manager = rule_manager
         self.opengrep = OpenGrepEngine()
         self.api_key = api_key
@@ -332,7 +404,8 @@ class SecurityScanner:
                 self.hybrid_executor = HybridRuleExecutor(sdk_integration)
             except Exception as e:
                 print(
-                    f"Warning: Failed to initialize hybrid rule executor: {e}", file=sys.stderr
+                    f"Warning: Failed to initialize hybrid rule executor: {e}",
+                    file=sys.stderr,
                 )
                 RULE_SYSTEM_AVAILABLE = False
 
@@ -349,14 +422,14 @@ class SecurityScanner:
                 )
                 PLUGIN_SYSTEM_AVAILABLE = False
 
-    def scan_codebase(
+    async def scan_codebase(
         self,
         path: str,
         bundle_name: str = "llm-security",
         static_plugins: Optional[List[str]] = None,
         dynamic_plugins: Optional[List[str]] = None,
         plugin_config: Optional[Dict[str, Any]] = None,
-        mode: str = "local"
+        mode: str = "local",
     ) -> Dict[str, Any]:
         """Scan a codebase for security issues.
 
@@ -373,7 +446,7 @@ class SecurityScanner:
         start_time = time.time()
 
         path_obj = Path(path)
-        bundle = self.rule_manager.download_bundle(bundle_name)
+        bundle = await self.rule_manager.download_bundle(bundle_name)
 
         findings = []
         plugin_results = []
@@ -386,18 +459,17 @@ class SecurityScanner:
                 # Create code context for scanning
                 base_context = {
                     "file_path": str(path_obj),
-                    "language": self._detect_language(path_obj.name if path_obj.is_file() else ""),
+                    "language": self._detect_language(
+                        path_obj.name if path_obj.is_file() else ""
+                    ),
                     "code_snippet": "",  # Will be filled per file
                     "line_number": 1,
-                    "metadata": {
-                        "bundle_name": bundle_name,
-                        "scan_mode": mode
-                    }
+                    "metadata": {"bundle_name": bundle_name, "scan_mode": mode},
                 }
 
                 if path_obj.is_file():
                     # Scan single file
-                    with open(path_obj, 'r', encoding='utf-8', errors='ignore') as f:
+                    with open(path_obj, "r", encoding="utf-8", errors="ignore") as f:
                         code_content = f.read()
                         base_context["code_snippet"] = code_content
                         base_context["file_path"] = str(path_obj)
@@ -409,27 +481,38 @@ class SecurityScanner:
                     # Scan directory - process each file
                     for file_path in self._find_files_to_scan(path_obj):
                         try:
-                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            with open(
+                                file_path, "r", encoding="utf-8", errors="ignore"
+                            ) as f:
                                 code_content = f.read()
 
                             file_context = base_context.copy()
                             file_context["file_path"] = str(file_path)
                             file_context["code_snippet"] = code_content
-                            file_context["language"] = self._detect_language(file_path.name)
+                            file_context["language"] = self._detect_language(
+                                file_path.name
+                            )
 
                             file_results = asyncio.run(
-                                self.hybrid_executor.execute_bundle_rules(bundle, file_context)
+                                self.hybrid_executor.execute_bundle_rules(
+                                    bundle, file_context
+                                )
                             )
                             hybrid_results.extend(file_results)
                         except Exception as e:
-                            print(f"Warning: Failed to scan {file_path}: {e}", file=sys.stderr)
+                            print(
+                                f"Warning: Failed to scan {file_path}: {e}",
+                                file=sys.stderr,
+                            )
 
                 # Extract findings from hybrid results
                 for result in hybrid_results:
                     if result.heuristics and result.heuristics.findings:
                         # Add rule metadata to each finding
                         for finding in result.heuristics.findings:
-                            finding["rule_id"] = finding.get("rule_id", f"hybrid-{id(result)}")
+                            finding["rule_id"] = finding.get(
+                                "rule_id", f"hybrid-{id(result)}"
+                            )
                             finding["severity"] = finding.get("severity", "medium")
                             finding["category"] = finding.get("category", "security")
                         findings.extend(result.heuristics.findings)
@@ -440,8 +523,16 @@ class SecurityScanner:
                             "rule_id": f"ai-analysis-{id(result)}",
                             "message": result.ai_analysis.description,
                             "path": path,
-                            "start_line": result.ai_analysis.vulnerable_lines[0] if result.ai_analysis.vulnerable_lines else 1,
-                            "end_line": result.ai_analysis.vulnerable_lines[-1] if result.ai_analysis.vulnerable_lines else 1,
+                            "start_line": (
+                                result.ai_analysis.vulnerable_lines[0]
+                                if result.ai_analysis.vulnerable_lines
+                                else 1
+                            ),
+                            "end_line": (
+                                result.ai_analysis.vulnerable_lines[-1]
+                                if result.ai_analysis.vulnerable_lines
+                                else 1
+                            ),
                             "severity": result.ai_analysis.severity,
                             "category": "ai-analysis",
                             "metadata": {
@@ -449,13 +540,16 @@ class SecurityScanner:
                                 "owasp_mapping": result.ai_analysis.owasp_mapping,
                                 "confidence": result.ai_analysis.confidence,
                                 "tokens_used": result.ai_analysis.tokens_used,
-                                "cost_usd": result.ai_analysis.cost_usd
-                            }
+                                "cost_usd": result.ai_analysis.cost_usd,
+                            },
                         }
                         findings.append(ai_finding)
 
             except Exception as e:
-                print(f"Warning: Hybrid rule execution failed, falling back to legacy: {e}", file=sys.stderr)
+                print(
+                    f"Warning: Hybrid rule execution failed, falling back to legacy: {e}",
+                    file=sys.stderr,
+                )
                 # Fall back to legacy OpenGrep scanning
                 mode = "local"
 
@@ -467,7 +561,9 @@ class SecurityScanner:
                 if path_obj.is_file():
                     findings.extend(self.opengrep.scan_file(path_obj, opengrep_rules))
                 else:
-                    findings.extend(self.opengrep.scan_directory(path_obj, opengrep_rules))
+                    findings.extend(
+                        self.opengrep.scan_directory(path_obj, opengrep_rules)
+                    )
 
         # Execute plugins if available and requested
         if (
@@ -531,7 +627,18 @@ class SecurityScanner:
     def _find_files_to_scan(self, path_obj: Path) -> List[Path]:
         """Find files to scan in directory."""
         files = []
-        extensions = ['.py', '.js', '.ts', '.java', '.cpp', '.c', '.php', '.yaml', '.yml', '.rego']
+        extensions = [
+            ".py",
+            ".js",
+            ".ts",
+            ".java",
+            ".cpp",
+            ".c",
+            ".php",
+            ".yaml",
+            ".yml",
+            ".rego",
+        ]
 
         def traverse(current_path: Path):
             if not current_path.exists() or not current_path.is_dir():
@@ -539,9 +646,15 @@ class SecurityScanner:
 
             try:
                 for item in current_path.iterdir():
-                    if item.is_file() and any(item.name.endswith(ext) for ext in extensions):
+                    if item.is_file() and any(
+                        item.name.endswith(ext) for ext in extensions
+                    ):
                         files.append(item)
-                    elif item.is_dir() and not item.name.startswith(".") and item.name not in ["node_modules", "__pycache__", ".git"]:
+                    elif (
+                        item.is_dir()
+                        and not item.name.startswith(".")
+                        and item.name not in ["node_modules", "__pycache__", ".git"]
+                    ):
                         traverse(item)
             except PermissionError:
                 pass  # Skip directories we can't read
@@ -555,46 +668,46 @@ class SecurityScanner:
             return "unknown"
 
         extension_map = {
-            '.py': 'python',
-            '.js': 'javascript',
-            '.ts': 'typescript',
-            '.java': 'java',
-            '.cpp': 'cpp',
-            '.c': 'c',
-            '.h': 'c',
-            '.hpp': 'cpp',
-            '.cs': 'csharp',
-            '.php': 'php',
-            '.rb': 'ruby',
-            '.go': 'go',
-            '.rs': 'rust',
-            '.swift': 'swift',
-            '.kt': 'kotlin',
-            '.scala': 'scala',
-            '.clj': 'clojure',
-            '.hs': 'haskell',
-            '.ml': 'ocaml',
-            '.fs': 'fsharp',
-            '.vb': 'vb',
-            '.lua': 'lua',
-            '.pl': 'perl',
-            '.pm': 'perl',
-            '.r': 'r',
-            '.m': 'matlab',
-            '.sh': 'bash',
-            '.bash': 'bash',
-            '.zsh': 'zsh',
-            '.fish': 'fish',
-            '.ps1': 'powershell',
-            '.sql': 'sql',
-            '.xml': 'xml',
-            '.yaml': 'yaml',
-            '.yml': 'yaml',
-            '.json': 'json',
-            '.toml': 'toml',
-            '.ini': 'ini',
-            '.cfg': 'ini',
-            '.rego': 'rego'
+            ".py": "python",
+            ".js": "javascript",
+            ".ts": "typescript",
+            ".java": "java",
+            ".cpp": "cpp",
+            ".c": "c",
+            ".h": "c",
+            ".hpp": "cpp",
+            ".cs": "csharp",
+            ".php": "php",
+            ".rb": "ruby",
+            ".go": "go",
+            ".rs": "rust",
+            ".swift": "swift",
+            ".kt": "kotlin",
+            ".scala": "scala",
+            ".clj": "clojure",
+            ".hs": "haskell",
+            ".ml": "ocaml",
+            ".fs": "fsharp",
+            ".vb": "vb",
+            ".lua": "lua",
+            ".pl": "perl",
+            ".pm": "perl",
+            ".r": "r",
+            ".m": "matlab",
+            ".sh": "bash",
+            ".bash": "bash",
+            ".zsh": "zsh",
+            ".fish": "fish",
+            ".ps1": "powershell",
+            ".sql": "sql",
+            ".xml": "xml",
+            ".yaml": "yaml",
+            ".yml": "yaml",
+            ".json": "json",
+            ".toml": "toml",
+            ".ini": "ini",
+            ".cfg": "ini",
+            ".rego": "rego",
         }
 
         for ext, lang in extension_map.items():
@@ -607,8 +720,7 @@ class SecurityScanner:
 def create_scan_parser(subparsers):
     """Create scan command parser."""
     scan_parser = subparsers.add_parser(
-        "scan",
-        help="Scan code for security vulnerabilities"
+        "scan", help="Scan code for security vulnerabilities"
     )
     scan_parser.add_argument("path", help="Path to file or directory to scan")
     scan_parser.add_argument(
@@ -624,7 +736,9 @@ def create_scan_parser(subparsers):
         default="json",
         help="Output format (default: json)",
     )
-    scan_parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+    scan_parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Verbose output"
+    )
 
     # Plugin options
     scan_parser.add_argument(
@@ -654,217 +768,146 @@ def create_scan_parser(subparsers):
 
 def create_auth_parser(subparsers):
     """Create auth command parser."""
-    auth_parser = subparsers.add_parser(
-        "auth",
-        help="Manage authentication"
+    auth_parser = subparsers.add_parser("auth", help="Manage authentication")
+    auth_subparsers = auth_parser.add_subparsers(
+        dest="auth_command", help="Auth commands"
     )
-    auth_subparsers = auth_parser.add_subparsers(dest="auth_command", help="Auth commands")
 
     # Login command
     login_parser = auth_subparsers.add_parser(
-        "login",
-        help="Authenticate with device code flow"
+        "login", help="Authenticate with device code flow"
     )
     login_parser.add_argument(
         "--name",
         default="Tavo Scanner",
-        help="Client name for authentication (default: Tavo Scanner)"
+        help="Client name for authentication (default: Tavo Scanner)",
     )
 
     # Status command
-    auth_subparsers.add_parser(
-        "status",
-        help="Check authentication status"
-    )
+    auth_subparsers.add_parser("status", help="Check authentication status")
 
     # Logout command
-    auth_subparsers.add_parser(
-        "logout",
-        help="Clear authentication credentials"
-    )
+    auth_subparsers.add_parser("logout", help="Clear authentication credentials")
 
 
 def create_health_parser(subparsers):
     """Create health command parser."""
-    health_parser = subparsers.add_parser(
-        "health",
-        help="Check API server health"
-    )
+    health_parser = subparsers.add_parser("health", help="Check API server health")
     health_parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Show detailed health information"
+        "--verbose", "-v", action="store_true", help="Show detailed health information"
     )
 
 
 def create_registry_parser(subparsers):
     """Create registry command parser."""
-    registry_parser = subparsers.add_parser(
-        "registry",
-        help="Manage registry bundles"
+    registry_parser = subparsers.add_parser("registry", help="Manage registry bundles")
+    registry_subparsers = registry_parser.add_subparsers(
+        dest="registry_command", help="Registry commands"
     )
-    registry_subparsers = registry_parser.add_subparsers(dest="registry_command", help="Registry commands")
 
     # List command
-    list_parser = registry_subparsers.add_parser(
-        "list",
-        help="List available bundles"
-    )
-    list_parser.add_argument(
-        "--category",
-        help="Filter by category"
-    )
+    list_parser = registry_subparsers.add_parser("list", help="List available bundles")
+    list_parser.add_argument("--category", help="Filter by category")
     list_parser.add_argument(
         "--pricing",
         choices=["free", "paid", "enterprise"],
-        help="Filter by pricing tier"
+        help="Filter by pricing tier",
     )
+    list_parser.add_argument("--search", help="Search bundles by name/description")
     list_parser.add_argument(
-        "--search",
-        help="Search bundles by name/description"
-    )
-    list_parser.add_argument(
-        "--limit",
-        type=int,
-        default=20,
-        help="Maximum number of results (default: 20)"
+        "--limit", type=int, default=20, help="Maximum number of results (default: 20)"
     )
 
     # Install command
     install_parser = registry_subparsers.add_parser(
-        "install",
-        help="Install a bundle from registry"
+        "install", help="Install a bundle from registry"
     )
-    install_parser.add_argument(
-        "bundle_id",
-        help="Bundle ID to install"
-    )
+    install_parser.add_argument("bundle_id", help="Bundle ID to install")
 
     # Update command
     update_parser = registry_subparsers.add_parser(
-        "update",
-        help="Update bundles to latest versions"
+        "update", help="Update bundles to latest versions"
     )
     update_parser.add_argument(
         "bundle_id",
         nargs="?",
-        help="Bundle ID to update (updates all if not specified)"
+        help="Bundle ID to update (updates all if not specified)",
     )
 
     # Info command
-    info_parser = registry_subparsers.add_parser(
-        "info",
-        help="Show bundle information"
-    )
-    info_parser.add_argument(
-        "bundle_id",
-        help="Bundle ID to show info for"
-    )
+    info_parser = registry_subparsers.add_parser("info", help="Show bundle information")
+    info_parser.add_argument("bundle_id", help="Bundle ID to show info for")
 
     # Installed command
-    registry_subparsers.add_parser(
-        "installed",
-        help="List installed bundles"
-    )
+    registry_subparsers.add_parser("installed", help="List installed bundles")
 
 
 def create_submit_parser(subparsers):
     """Create submit command parser."""
     submit_parser = subparsers.add_parser(
-        "submit",
-        help="Submit code for remote analysis"
+        "submit", help="Submit code for remote analysis"
     )
     submit_parser.add_argument(
-        "target",
-        help="File, directory, or repository URL to submit"
+        "target", help="File, directory, or repository URL to submit"
     )
     submit_parser.add_argument(
-        "--wait",
-        action="store_true",
-        help="Wait for analysis to complete"
+        "--wait", action="store_true", help="Wait for analysis to complete"
     )
     submit_parser.add_argument(
         "--timeout",
         type=int,
         default=300,
-        help="Timeout for waiting (seconds, default: 300)"
+        help="Timeout for waiting (seconds, default: 300)",
     )
 
 
 def create_request_scan_parser(subparsers):
     """Create request-scan command parser."""
     scan_parser = subparsers.add_parser(
-        "request-scan",
-        help="Request remote scan of repository"
+        "request-scan", help="Request remote scan of repository"
     )
-    scan_parser.add_argument(
-        "repository_url",
-        help="Repository URL to scan"
-    )
+    scan_parser.add_argument("repository_url", help="Repository URL to scan")
     scan_parser.add_argument(
         "--type",
         default="security",
         choices=["security", "compliance", "vulnerability"],
-        help="Scan type (default: security)"
+        help="Scan type (default: security)",
     )
     scan_parser.add_argument(
-        "--wait",
-        action="store_true",
-        help="Wait for scan to complete"
+        "--wait", action="store_true", help="Wait for scan to complete"
     )
     scan_parser.add_argument(
         "--timeout",
         type=int,
         default=300,
-        help="Timeout for waiting (seconds, default: 300)"
+        help="Timeout for waiting (seconds, default: 300)",
     )
 
 
 def create_jobs_parser(subparsers):
     """Create jobs command parser."""
-    jobs_parser = subparsers.add_parser(
-        "jobs",
-        help="Manage background jobs"
+    jobs_parser = subparsers.add_parser("jobs", help="Manage background jobs")
+    jobs_subparsers = jobs_parser.add_subparsers(
+        dest="jobs_command", help="Job commands"
     )
-    jobs_subparsers = jobs_parser.add_subparsers(dest="jobs_command", help="Job commands")
 
     # List command
-    jobs_subparsers.add_parser(
-        "list",
-        help="List background jobs"
-    )
+    jobs_subparsers.add_parser("list", help="List background jobs")
 
     # Status command
-    status_parser = jobs_subparsers.add_parser(
-        "status",
-        help="Get job status"
-    )
-    status_parser.add_argument(
-        "job_id",
-        help="Job ID to check"
-    )
+    status_parser = jobs_subparsers.add_parser("status", help="Get job status")
+    status_parser.add_argument("job_id", help="Job ID to check")
 
     # Cancel command
-    cancel_parser = jobs_subparsers.add_parser(
-        "cancel",
-        help="Cancel a job"
-    )
-    cancel_parser.add_argument(
-        "job_id",
-        help="Job ID to cancel"
-    )
+    cancel_parser = jobs_subparsers.add_parser("cancel", help="Cancel a job")
+    cancel_parser.add_argument("job_id", help="Job ID to cancel")
 
 
 def create_usage_parser(subparsers):
     """Create usage command parser."""
-    usage_parser = subparsers.add_parser(
-        "usage",
-        help="Check token usage and budget"
-    )
+    usage_parser = subparsers.add_parser("usage", help="Check token usage and budget")
     usage_parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Show detailed usage information"
+        "--verbose", "-v", action="store_true", help="Show detailed usage information"
     )
 
 
@@ -898,7 +941,9 @@ async def handle_scan(args, auth_manager, sdk_integration):
         # Show system status
         if args.verbose:
             if RULE_SYSTEM_AVAILABLE and sdk_integration and args.mode == "hybrid":
-                print("Rule system: ✓ Hybrid mode (OpenGrep + OPA + AI)", file=sys.stderr)
+                print(
+                    "Rule system: ✓ Hybrid mode (OpenGrep + OPA + AI)", file=sys.stderr
+                )
             elif RULE_SYSTEM_AVAILABLE:
                 print("Rule system: ✓ Hybrid rules available", file=sys.stderr)
             else:
@@ -912,7 +957,10 @@ async def handle_scan(args, auth_manager, sdk_integration):
             opa_available = False
             try:
                 import subprocess
-                subprocess.run(['opa', '--version'], capture_output=True, check=True, timeout=5)
+
+                subprocess.run(
+                    ["opa", "--version"], capture_output=True, check=True, timeout=5
+                )
                 opa_available = True
             except:
                 pass
@@ -920,13 +968,18 @@ async def handle_scan(args, auth_manager, sdk_integration):
             if not opa_available:
                 try:
                     from opa_client import create_opa_client
+
                     # Test if OPA server is available
                     import asyncio
+
                     async def test_opa_server():
-                        client = create_opa_client(async_mode=True, host='localhost', port=8181)
+                        client = create_opa_client(
+                            async_mode=True, host="localhost", port=8181
+                        )
                         connected = await client.check_connection()
                         await client.close_connection()
                         return connected
+
                     opa_available = asyncio.run(test_opa_server())
                 except:
                     pass
@@ -957,21 +1010,30 @@ async def handle_scan(args, auth_manager, sdk_integration):
                 )
 
         # Initialize scanner
-        rule_manager = RuleManager()
+        registry_manager = None
+        if SDK_AVAILABLE and sdk_integration:
+            try:
+                registry_manager = RegistryManager(sdk_integration)
+            except Exception as e:
+                if args.verbose:
+                    print(
+                        f"Warning: Registry manager initialization failed: {e}",
+                        file=sys.stderr,
+                    )
+
+        rule_manager = RuleManager(registry_manager=registry_manager)
         scanner = SecurityScanner(
-            rule_manager,
-            api_key=api_key,
-            sdk_integration=sdk_integration
+            rule_manager, api_key=api_key, sdk_integration=sdk_integration
         )
 
         if args.verbose:
             print(
                 f"Scanning {args.path} with bundle '{args.bundle}' in {args.mode} mode...",
-                file=sys.stderr
+                file=sys.stderr,
             )
 
         # Perform scan
-        result = scanner.scan_codebase(
+        result = await scanner.scan_codebase(
             args.path,
             args.bundle,
             static_plugins=static_plugins,
@@ -1062,7 +1124,7 @@ async def handle_auth(args, auth_manager):
             print("✅ Authenticated")
             user_info = creds.user_info
             if user_info:
-                email = user_info.get('email', 'Unknown')
+                email = user_info.get("email", "Unknown")
                 print(f"User: {email}")
             else:
                 print("User: Unknown")
@@ -1124,7 +1186,7 @@ async def handle_registry(args, auth_manager, sdk_integration):
                 category=args.category,
                 pricing_tier=args.pricing,
                 search=args.search,
-                limit=args.limit
+                limit=args.limit,
             )
 
             if not bundles:
@@ -1138,7 +1200,9 @@ async def handle_registry(args, auth_manager, sdk_integration):
                 official = " 🏷️ " if bundle.is_official else ""
                 pricing = f"[{bundle.pricing_tier.upper()}]"
                 rating = f"⭐ {bundle.rating:.1f}" if bundle.rating > 0 else ""
-                downloads = f"⬇️ {bundle.download_count}" if bundle.download_count > 0 else ""
+                downloads = (
+                    f"⬇️ {bundle.download_count}" if bundle.download_count > 0 else ""
+                )
 
                 print(f"{bundle.id} {official} {pricing}")
                 print(f"  {bundle.name}")
@@ -1199,7 +1263,9 @@ async def handle_registry(args, auth_manager, sdk_integration):
                 print(f"Downloaded: {time.ctime(bundle_info['downloaded_at'])}")
             else:
                 # Show registry bundle info
-                bundle_details = await registry_manager.get_bundle_details(args.bundle_id)
+                bundle_details = await registry_manager.get_bundle_details(
+                    args.bundle_id
+                )
 
                 print(f"Bundle: {bundle_details.id}")
                 print(f"Name: {bundle_details.name}")
@@ -1212,7 +1278,9 @@ async def handle_registry(args, auth_manager, sdk_integration):
                 if bundle_details.tags:
                     print(f"Tags: {', '.join(bundle_details.tags)}")
                 print(f"Official: {'Yes' if bundle_details.is_official else 'No'}")
-                print(f"Rating: {bundle_details.rating:.1f} ({bundle_details.review_count} reviews)")
+                print(
+                    f"Rating: {bundle_details.rating:.1f} ({bundle_details.review_count} reviews)"
+                )
                 print(f"Downloads: {bundle_details.download_count}")
 
         elif args.registry_command == "installed":
@@ -1253,11 +1321,12 @@ async def handle_submit(args, auth_manager, sdk_integration, usage_tracker):
         print(f"Submitting {args.target} for remote analysis...")
 
         # Determine submission type
-        if args.target.startswith(('http://', 'https://', 'git@', 'ssh://')):
+        if args.target.startswith(("http://", "https://", "git@", "ssh://")):
             result = await code_submitter.submit_url(args.target)
         else:
             # Check if it's a file or directory
             from pathlib import Path
+
             target_path = Path(args.target)
             if target_path.is_file():
                 result = await code_submitter.submit_file(args.target)
@@ -1266,15 +1335,15 @@ async def handle_submit(args, auth_manager, sdk_integration, usage_tracker):
             else:
                 raise FileNotFoundError(f"Target not found: {args.target}")
 
-        submission_id = result.get('id', result.get('submission_id', 'unknown'))
+        submission_id = result.get("id", result.get("submission_id", "unknown"))
         print(f"✅ Submitted successfully (ID: {submission_id})")
 
         # Track usage
-        if usage_tracker and 'cost' in result:
+        if usage_tracker and "cost" in result:
             usage_tracker.record_usage(
-                operation='code_submission',
-                tokens_used=result.get('tokens_used', 0),
-                cost_usd=result.get('cost', 0.0)
+                operation="code_submission",
+                tokens_used=result.get("tokens_used", 0),
+                cost_usd=result.get("cost", 0.0),
             )
 
         # Wait for completion if requested
@@ -1285,21 +1354,26 @@ async def handle_submit(args, auth_manager, sdk_integration, usage_tracker):
 
                 # Poll until complete
                 import time
+
                 start_time = time.time()
                 while time.time() - start_time < args.timeout:
-                    status = final_result.get('status', '').lower()
-                    if status in ['completed', 'failed', 'error']:
+                    status = final_result.get("status", "").lower()
+                    if status in ["completed", "failed", "error"]:
                         break
 
                     print(f"Status: {status}...")
                     await asyncio.sleep(5)
-                    final_result = await code_submitter.get_submission_status(submission_id)
+                    final_result = await code_submitter.get_submission_status(
+                        submission_id
+                    )
 
-                if final_result.get('status', '').lower() == 'completed':
+                if final_result.get("status", "").lower() == "completed":
                     print("✅ Analysis completed")
                     # Could print summary here
                 else:
-                    print(f"⚠️  Analysis ended with status: {final_result.get('status', 'unknown')}")
+                    print(
+                        f"⚠️  Analysis ended with status: {final_result.get('status', 'unknown')}"
+                    )
 
             except Exception as e:
                 print(f"Warning: Failed to wait for completion: {e}")
@@ -1322,21 +1396,20 @@ async def handle_request_scan(args, auth_manager, sdk_integration, usage_tracker
     try:
         # Check budget before proceeding
         budget_status = remote_scanner.check_budget_before_scan()
-        if budget_status.get('blocked'):
+        if budget_status.get("blocked"):
             print("❌ Cannot proceed: Monthly budget exceeded")
-            for warning in budget_status.get('warnings', []):
-                if warning.get('level') == 'block':
+            for warning in budget_status.get("warnings", []):
+                if warning.get("level") == "block":
                     print(f"   {warning['message']}")
                     print(f"   {warning['action']}")
             sys.exit(1)
 
         print(f"Requesting remote scan of {args.repository_url}...")
         result = await remote_scanner.request_scan(
-            target=args.repository_url,
-            scan_type=args.type
+            target=args.repository_url, scan_type=args.type
         )
 
-        scan_id = result.get('id', result.get('scan_id', 'unknown'))
+        scan_id = result.get("id", result.get("scan_id", "unknown"))
         print(f"✅ Scan requested successfully (ID: {scan_id})")
 
         # Wait for completion if requested
@@ -1344,14 +1417,15 @@ async def handle_request_scan(args, auth_manager, sdk_integration, usage_tracker
             print("Waiting for scan to complete...")
             try:
                 final_result = await remote_scanner.wait_for_scan_completion(
-                    scan_id=scan_id,
-                    timeout_seconds=args.timeout
+                    scan_id=scan_id, timeout_seconds=args.timeout
                 )
 
-                status = final_result.get('status', '').lower()
-                if status == 'completed':
-                    vulnerabilities = final_result.get('vulnerabilities', [])
-                    print(f"✅ Scan completed - found {len(vulnerabilities)} vulnerabilities")
+                status = final_result.get("status", "").lower()
+                if status == "completed":
+                    vulnerabilities = final_result.get("vulnerabilities", [])
+                    print(
+                        f"✅ Scan completed - found {len(vulnerabilities)} vulnerabilities"
+                    )
                 else:
                     print(f"⚠️  Scan ended with status: {status}")
 
@@ -1383,18 +1457,18 @@ async def handle_jobs(args, auth_manager, sdk_integration):
             print()
 
             for job in jobs:
-                job_id = job.get('id', 'unknown')
-                status = job.get('status', 'unknown')
-                job_type = job.get('type', 'unknown')
-                created_at = job.get('created_at', 'unknown')
+                job_id = job.get("id", "unknown")
+                status = job.get("status", "unknown")
+                job_type = job.get("type", "unknown")
+                created_at = job.get("created_at", "unknown")
 
                 status_icon = {
-                    'running': '🔄',
-                    'completed': '✅',
-                    'failed': '❌',
-                    'pending': '⏳',
-                    'cancelled': '🚫'
-                }.get(status.lower(), '❓')
+                    "running": "🔄",
+                    "completed": "✅",
+                    "failed": "❌",
+                    "pending": "⏳",
+                    "cancelled": "🚫",
+                }.get(status.lower(), "❓")
 
                 print(f"{status_icon} {job_id}")
                 print(f"   Type: {job_type}")
@@ -1405,21 +1479,23 @@ async def handle_jobs(args, auth_manager, sdk_integration):
         elif args.jobs_command == "status":
             status_result = await sdk_integration.get_job_status(args.job_id)
 
-            job_id = status_result.get('id', args.job_id)
-            job_status = status_result.get('status', 'unknown')
-            progress = status_result.get('progress', {})
+            job_id = status_result.get("id", args.job_id)
+            job_status = status_result.get("status", "unknown")
+            progress = status_result.get("progress", {})
 
             print(f"Job: {job_id}")
             print(f"Status: {job_status}")
 
             if progress:
-                files_processed = progress.get('files_processed', 0)
-                total_files = progress.get('total_files', 0)
-                findings = progress.get('findings', 0)
+                files_processed = progress.get("files_processed", 0)
+                total_files = progress.get("total_files", 0)
+                findings = progress.get("findings", 0)
 
                 if total_files > 0:
                     percent = (files_processed / total_files) * 100
-                    print(f"Progress: {files_processed}/{total_files} files ({percent:.1f}%)")
+                    print(
+                        f"Progress: {files_processed}/{total_files} files ({percent:.1f}%)"
+                    )
                 print(f"Findings: {findings}")
 
         elif args.jobs_command == "cancel":
@@ -1446,22 +1522,22 @@ def handle_usage(args, usage_tracker):
         budget_status = usage_tracker.check_budget_status()
 
         print("Token Usage (Current Month):")
-        print(f"  Used: {monthly_usage['total_tokens']:,} tokens (${monthly_usage['total_cost_usd']:.2f})")
+        print(
+            f"  Used: {monthly_usage['total_tokens']:,} tokens (${monthly_usage['total_cost_usd']:.2f})"
+        )
         print(f"  Remaining: {monthly_usage['remaining_tokens']:,} tokens")
         print(f"  Usage: {monthly_usage['usage_percent']:.1f}% of monthly limit")
 
         # Show warnings
-        warnings = budget_status.get('warnings', [])
+        warnings = budget_status.get("warnings", [])
         if warnings:
             print("\n⚠️  Budget Warnings:")
             for warning in warnings:
-                level_icon = {
-                    'warning': '⚠️ ',
-                    'critical': '🚨',
-                    'block': '🚫'
-                }.get(warning.get('level'), '⚠️ ')
+                level_icon = {"warning": "⚠️ ", "critical": "🚨", "block": "🚫"}.get(
+                    warning.get("level"), "⚠️ "
+                )
                 print(f"  {level_icon} {warning['message']}")
-                if 'action' in warning:
+                if "action" in warning:
                     print(f"     → {warning['action']}")
 
         if args.verbose:
@@ -1469,13 +1545,17 @@ def handle_usage(args, usage_tracker):
             summary = usage_tracker.get_usage_summary(days=30)
             print(f"  Total tokens: {summary['total_tokens']:,}")
             print(f"  Total cost: ${summary['total_cost_usd']:.2f}")
-            print(f"  Daily average: {summary['average_daily_tokens']:.0f} tokens (${summary['average_daily_cost']:.2f})")
+            print(
+                f"  Daily average: {summary['average_daily_tokens']:.0f} tokens (${summary['average_daily_cost']:.2f})"
+            )
 
-            operations = summary.get('operations', {})
+            operations = summary.get("operations", {})
             if operations:
                 print("\n  By operation:")
                 for op_name, op_stats in operations.items():
-                    print(f"    {op_name}: {op_stats['tokens']:,} tokens (${op_stats['cost']:.2f})")
+                    print(
+                        f"    {op_name}: {op_stats['tokens']:,} tokens (${op_stats['cost']:.2f})"
+                    )
 
     except Exception as e:
         print(f"Usage command failed: {e}", file=sys.stderr)
@@ -1534,9 +1614,13 @@ def main():
         elif args.command == "registry":
             asyncio.run(handle_registry(args, auth_manager, sdk_integration))
         elif args.command == "submit":
-            asyncio.run(handle_submit(args, auth_manager, sdk_integration, usage_tracker))
+            asyncio.run(
+                handle_submit(args, auth_manager, sdk_integration, usage_tracker)
+            )
         elif args.command == "request-scan":
-            asyncio.run(handle_request_scan(args, auth_manager, sdk_integration, usage_tracker))
+            asyncio.run(
+                handle_request_scan(args, auth_manager, sdk_integration, usage_tracker)
+            )
         elif args.command == "jobs":
             asyncio.run(handle_jobs(args, auth_manager, sdk_integration))
         elif args.command == "usage":
@@ -1550,8 +1634,9 @@ def main():
         sys.exit(1)
     except Exception as e:
         print(f"Unexpected error: {e}", file=sys.stderr)
-        if hasattr(args, 'verbose') and args.verbose:
+        if hasattr(args, "verbose") and args.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 
