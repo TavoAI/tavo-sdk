@@ -17,7 +17,7 @@ const config: Config = {
   // Set the production url of your site here
   url: 'https://tavoai.net',
   // Set the /<baseUrl>/ pathname under which your site is served
-  baseUrl: '/docs/',
+  baseUrl: '/',
 
   onBrokenLinks: 'throw',
 
