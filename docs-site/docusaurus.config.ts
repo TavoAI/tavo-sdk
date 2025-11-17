@@ -15,13 +15,9 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://docs.tavoai.net',
+  url: 'https://tavoai.net',
   // Set the /<baseUrl>/ pathname under which your site is served
-  baseUrl: '/',
-
-  // GitHub pages deployment config.
-  organizationName: 'TavoAI', // Your GitHub org/user name.
-  projectName: 'tavo-sdk', // Your repo name.
+  baseUrl: '/docs/',
 
   onBrokenLinks: 'throw',
 
