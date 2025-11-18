@@ -308,7 +308,7 @@ jobs:
 
     - name: Upload Baseline
       if: github.ref == 'refs/heads/main'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v5
       with:
         name: security-baseline
         path: baseline.json
@@ -462,7 +462,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: '3.9'
 

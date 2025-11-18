@@ -27,7 +27,7 @@ jobs:
     if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'dotnet' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -60,10 +60,10 @@ jobs:
     if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'typescript' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ vars.NODE_VERSION }}
           registry-url: ${{ vars.NPM_REGISTRY }}
@@ -92,10 +92,10 @@ jobs:
     if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'python' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
 
@@ -126,7 +126,7 @@ jobs:
     if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'java' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -163,7 +163,7 @@ jobs:
     if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'rust' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -189,7 +189,7 @@ jobs:
     if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'go' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Go
         uses: actions/setup-go@v4
@@ -217,10 +217,10 @@ jobs:
     if: ${{ inputs.sdk_type == 'all' || inputs.sdk_type == 'vscode-extension' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ vars.NODE_VERSION }}
 

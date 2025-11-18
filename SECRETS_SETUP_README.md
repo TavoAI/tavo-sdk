@@ -147,7 +147,7 @@ Once secrets are set up, workflows can access them using:
   run: dotnet nuget push *.nupkg --api-key ${{ secrets.NUGET_API_KEY }}
 
 - name: Use Node version
-  uses: actions/setup-node@v4
+  uses: actions/setup-node@v6
   with:
     node-version: ${{ vars.NODE_VERSION }}
 ```
