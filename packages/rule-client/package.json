@@ -22,7 +22,7 @@
   "author": "TavoAI",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.6.0",
+    "axios": "^1.13.5",
     "zod": "^3.22.0"
   },
   "devDependencies": {
